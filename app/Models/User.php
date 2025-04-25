@@ -106,5 +106,9 @@ class User extends Authenticatable implements JWTSubject
         return $this->hasOne(Kurir::class, 'user_id');
     }
     
+    public function pengguna(){
+        return $this->hasOne(Pengguna::class, 'user_id');
+    }
+    
     
 }

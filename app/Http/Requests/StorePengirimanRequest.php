@@ -14,9 +14,11 @@ class StorePengirimanRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'no_resi' => 'required|unique:pengiriman,no_resi',
             'kurir_id' => 'required|exists:kurir,kurir_id',
             'paket' => 'required|string|max:255',
             'status' => 'required|in:dikemas,dikirim,diterima',
+            'tanggal_dibuat' => 'nullable|date',
             'tanggal_pengiriman' => 'nullable|date',
             'tanggal_penerimaan' => 'nullable|date',
             'penerima' => 'required|string|max:255',

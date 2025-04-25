@@ -81,9 +81,10 @@ function getEdit() {
   ApiService.get("kurir", props.selected)
     .then(({ data }) => {
       console.log(data);
-      // Pastikan struktur sesuai response dari backend
+      // Pastikan struktur sesuai response dar i backend
       kurir.value = {
-        status: data.user?.status || "Nonaktif", // Tambahkan status,
+        status: data.user.status || "nonaktif", // Tambahkan status,
+        // status: data.user?.status || "Nonaktif", // Tambahkan status,
         user: {
           name: data.user?.name || "",
           email: data.user?.email || "",
@@ -91,6 +92,7 @@ function getEdit() {
           photo: data.user?.photo || "",
         },
       };
+      console.log(kurir.value);
       photo.value = data.user.photo
         ? ["/storage/" + data.user.photo]
         : [];

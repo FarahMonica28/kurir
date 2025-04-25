@@ -1,0 +1,111 @@
+<script setup lang="ts">
+import { h, ref, watch } from "vue";
+import { useDelete } from "@/libs/hooks";
+import Form from "./form.vue";
+import { createColumnHelper } from "@tanstack/vue-table";
+import type { pengguna } from "@/types"; // Pastikan tipe data sesuai API
+
+const column = createColumnHelper<pengguna>();
+const paginateRef = ref<any>(null);
+const selected = ref<string>(""); // ID pengguna yang dipilih
+const openForm = ref<boolean>(false); // Form tambah/edit
+
+// Hook untuk menghapus data
+const { delete: deletePengguna } = useDelete({
+  onSuccess: () => paginateRef.value?.refetch(),
+  onError: (error) => alert(`Gagal menghapus pengguna: ${error.message}`),
+});
+
+// Definisi kolom tabel pengguna 
+const columns = [
+  column.accessor("no", { header: "#" }),
+  column.accessor("pengguna_id", { header: "ID Pengguna" }),
+  // column.accessor("phone", { header: "No. Telp" }),
+  // column.accessor("name", { header: "Nama Pengguna" }),
+  // column.accessor("email", { header: "Email" }),
+  column.accessor("user.name", { header: "Nama Pengguna" }),
+  column.accessor("user.email", { header: "Email" }),
+  column.accessor("user.phone", { header: "No. Telp" }),
+  column.accessor("user.photo", {
+    header: "Foto Profil",
+    cell: (cell) =>
+    cell.getValue()
+    ? h("img", {
+      src: `/storage/${cell.getValue()}`,
+      alt: "Foto Pengguna",
+      style: "width: 50px; height: 50px; border-radius: 8px;",
+    })
+    : "Tidak ada foto",
+  }),
+  column.accessor("alamat", { header: "Alamat" }),
+  // column.accessor("photo", {
+  //   header: "Foto Profil",
+  //   cell: (cell) =>
+  //     cell.getValue()
+  //       ? h("img", {
+  //         src: `/storage/${cell.getValue()}`,
+  //         alt: "Foto Pengguna",
+  //         style: "width: 50px; height: 50px; border-radius: 8px;",
+  //       })
+  //       : "Tidak ada foto",
+  // }),
+  column.accessor("pengguna_id", {
+    header: "Aksi",
+    cell: (cell) =>
+      h("div", { class: "d-flex gap-2" }, [
+        // Tombol Edit
+        h(
+          "button",
+          {
+            class: "btn btn-sm btn-info",
+            onClick: () => {
+              selected.value = cell.getValue();
+              openForm.value = true;
+            },
+          },
+          h("i", { class: "la la-pencil fs-2" }) // Ikon Edit
+        ),
+        // Tombol Hapus
+        h(
+          "button",
+          {
+            class: "btn btn-sm btn-danger",
+            onClick: () => {
+              // if (confirm("Apakah Anda yakin ingin menghapus pengguna ini?")) {
+              deletePengguna(`/pengguna/${cell.getValue()}`);
+              // }
+            },
+          },
+          h("i", { class: "la la-trash fs-2" }) // Ikon Hapus
+        ),
+      ]),
+  }),
+];
+
+// Fungsi untuk refresh data tabel
+const refresh = () => paginateRef.value?.refetch();
+
+// Reset selected ID saat form ditutup
+watch(openForm, (val) => {
+  if (!val) selected.value = "";
+  window.scrollTo(0, 0);
+});
+</script>
+
+<template>
+  <!-- Form Tambah/Edit Pengguna -->
+  <Form :selected="selected" @close="openForm = false" v-if="openForm" @refresh="refresh" />
+
+  <div class="card">
+    <div class="card-header align-items-center">
+      <h2 class="mb-0">List Pengguna</h2>
+      <!-- <button type="button" class="btn btn-sm btn-primary ms-auto" v-if="!openForm" @click="openForm = true">
+        Tambah
+        <i class="la la-plus"></i>
+      </button> -->
+    </div>
+    <div class="card-body">
+      <paginate ref="paginateRef" id="table-pengguna" url="/pengguna" :columns="columns"></paginate>
+    </div>
+  </div>
+</template>

@@ -15,8 +15,54 @@ const { delete: deleteKurir } = useDelete({
   onSuccess: () => paginateRef.value?.refetch(),
   onError: (error) => alert(`Gagal menghapus kurir: ${error.message}`),
 });
+// const toggleStatus = async (kurir_id: string) => {
+//   // const confirm = await Swal.fire({ ... });
 
-// Definisi kolom tabel kurir
+//   if (!confirm.isConfirmed) return;
+
+//   try {
+//     const response = await axios.put(`/kurir/${kurir_id}/toggle-status`);
+//     toast.success(response.data.message);
+
+//     // 🔽 Update langsung data lokal
+//     const kurir = paginateRef.value.items.find((k: kurir) => k.kurir_id === kurir_id);
+//     if (kurir) {
+//       kurir.status = kurir.status === "aktif" ? "nonaktif" : "aktif";
+//     }
+
+//   } catch (error) {
+//     toast.error("Gagal mengubah status");
+//   }
+// };
+const toggleStatus = async (kurir_id: string) => {
+  const confirm = await Swal.fire({
+    title: "Ubah Status?",
+    text: "Apakah kamu yakin ingin mengubah status kurir ini?",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonText: "Ya, ubah",
+    cancelButtonText: "Batal",
+  });
+
+  if (!confirm.isConfirmed) return;
+
+  try {
+    const response = await axios.put(`/kurir/${kurir_id}/toggle-status`);
+    toast.success(response.data.message);
+    console.log("Sebelum refetch");
+    paginateRef.value.refetch(); // ⬅️ cek apakah ini jalan
+    console.log("Setelah refetch");
+  } catch (error) {
+    toast.error("Gagal mengubah status");
+    console.error(error);
+  }
+};
+
+
+
+
+
+// Definisi kolom tabel kurir 
 const columns = [
   column.accessor("no", { header: "#" }),
   column.accessor("kurir_id", { header: "ID Kurir" }),
@@ -58,16 +104,18 @@ const columns = [
   //       : "Tidak ada foto",
   // }),
   column.accessor("status", {
-    header: "Status",
-    cell: (cell) =>
-      h(
-        "span",
-        {
-          class: `badge ${cell.getValue() === "aktif" ? "bg-success" : "bg-danger"}`,
-        },
-        cell.getValue() === "aktif" ? "Aktif" : "Nonaktif"
-      ),
-  }),
+  header: "Status",
+  cell: (cell) =>
+    h(
+      "button",
+      {
+        class: `btn btn-sm ${cell.getValue() === "aktif" ? "bg-success text-white" : "bg-danger text-white"}`,
+        onClick: () => toggleStatus(cell.row.original.kurir_id), // gunakan ID kurir  
+      },
+      cell.getValue() === "aktif" ? "Aktif" : "Nonaktif"
+    ),
+}),
+
   column.accessor("kurir_id", {
     header: "Aksi",
     cell: (cell) =>

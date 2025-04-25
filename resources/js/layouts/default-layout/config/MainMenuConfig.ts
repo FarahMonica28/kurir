@@ -9,6 +9,12 @@ const MainMenuConfig: Array<MenuItem> = [
                 route: "/dashboard",
                 keenthemesIcon: "element-11",
             },
+            {
+                heading: "Dashboardk", // ditampilan
+                name: "dashboardk", // di role
+                route: "/dashboardk",
+                keenthemesIcon: "element-11",
+            },
         ],
     },
 
@@ -40,6 +46,16 @@ const MainMenuConfig: Array<MenuItem> = [
                                 name: "master-user",
                                 route: "/dashboard/master/users",
                             },
+                            {
+                                heading: "Kurir",
+                                route: "/dashboard/kurir",
+                                name: "kurir",
+                            },
+                            {
+                                heading: "Pengguna",
+                                route: "/dashboard/pengguna",
+                                name: "pengguna",
+                            },
                         ],
                     },
                 ],
@@ -51,16 +67,34 @@ const MainMenuConfig: Array<MenuItem> = [
                 keenthemesIcon: "setting-2",
             },
             {
-                heading: "Data Kurir",
-                route: "/dashboard/datakurir",
-                name: "kurir",
-                keenthemesIcon: "bi bi-person-circle",
-            },
-            {
                 heading: "Akun",
                 route: "/dashboard/akun",
                 name: "akun",
                 keenthemesIcon: "bi bi-person-circle",
+            },
+            {
+                heading: "Order",
+                route: "/dashboard/order",
+                name: "transaksi",
+                keenthemesIcon: "bi bi-bookmark-plus",
+            },
+            {
+                heading: "Orderr",
+                route: "/dashboard/orderr",
+                name: "trans",
+                keenthemesIcon: "bi bi-bookmark-plus",
+            },
+            {
+                heading: "Riwayat",
+                route: "/dashboard/riwayat",
+                name: "riwayat",
+                keenthemesIcon: "bi bi-bookmark-check",
+            },
+            {
+                heading: "Riwayatt",
+                route: "/dashboard/riwayatt",
+                name: "riwayatt",
+                keenthemesIcon: "bi bi-bookmark-check",
             },
             {
                 heading: "Pengiriman",
@@ -71,8 +105,22 @@ const MainMenuConfig: Array<MenuItem> = [
             {
                 heading: "Tracking",
                 route: "/dashboard/Tracking",
-                name: "Tracking",
+                name: "tracking",
+                keenthemesIcon: "bi bi-geo-alt-fill",
+                
+            },
+            {
+                heading: "Pengirimans",
+                route: "/dashboardk/Pengirimans",
+                name: "pengirimans",
                 keenthemesIcon: "bi bi-truck",
+            },
+            {
+                heading: "Rute",
+                route: "/dashboardk/rute",
+                name: "rute",
+                keenthemesIcon: "bi bi-truck",
+                
             },
             
         ],

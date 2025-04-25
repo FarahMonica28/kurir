@@ -1,5 +1,9 @@
 export type { User } from "./user";
 export type { Role } from "./role";
 export type { Pengiriman } from "./pengiriman";
+export type { Pengirimans } from "./pengirimans";
 export type { Setting } from "./setting";
 export type { kurir } from "./kurir";
+export type { Pesanan } from "./pesanan";
+export type { transaksi } from "./transaksi";
+export type { pengguna } from "./pengguna";

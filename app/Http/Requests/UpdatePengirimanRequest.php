@@ -14,9 +14,11 @@ class UpdatePengirimanRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'no_resi' => 'required|unique:pengiriman,no_resi',
             'kurir_id' => 'sometimes|exists:kurir,kurir_id',
             'paket' => 'sometimes|string|max:255',
             'status' => 'sometimes|in:dikemas,dikirim,diterima',
+            'tanggal_dibuat' => 'nullable|date',
             'tanggal_pengiriman' => 'nullable|date',
             'tanggal_penerimaan' => 'nullable|date',
             'penerima' => 'sometimes|string|max:255',

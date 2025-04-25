@@ -168,6 +168,19 @@ class KurirController extends Controller
         ]);
     }
 
+    public function toggleStatus($kurir_id)
+    {
+        $kurir = Kurir::findOrFail($kurir_id);
+
+        $kurir->status = $kurir->status === 'aktif' ? 'nonaktif' : 'aktif';
+        $kurir->save();
+
+        return response()->json([
+            'message' => 'Status berhasil diperbarui.',
+            'status' => $kurir->status
+        ]);
+    }
+
     /**
      * Get all kurir
      */
@@ -177,6 +190,20 @@ class KurirController extends Controller
             'success' => true,
             'data' => Kurir::select('kurir_id', 'status', 'rating')->get()
             // 'data' => Kurir::select('kurir_id', 'name', 'email', 'phone', 'status', 'rating', 'photo')->get()
+        ]);
+    }
+
+    public function list()
+    {
+        $kurir = Kurir::with('user:id,name')->get()->map(function ($item) {
+            return [
+                'id' => $item->id,
+                'text' => $item->user->name,
+            ];
+        });
+
+        return response()->json([
+            'kurir' => $kurir,
         ]);
     }
 
@@ -240,7 +267,8 @@ class KurirController extends Controller
         'success' => true,
         'message' => 'Data kurir berhasil dihapus'
     ]);
-    }
+}
+}
 
     // app/Http/Controllers/KurirController.php
     // public function profile()
@@ -264,4 +292,4 @@ class KurirController extends Controller
     // }
 
 
-}
+

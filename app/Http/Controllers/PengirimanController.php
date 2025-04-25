@@ -27,20 +27,27 @@ class PengirimanController extends Controller
         $page = $request->page ? $request->page - 1 : 0;
         DB::statement(query: 'set @no=0+' . $page * $per);
         // $pengiriman = Pengiriman::with('user')
-        $data = Pengiriman::with('kurir')
+        // Pengiriman::with('kurir.user');
+        $data = Pengiriman::join('kurir','kurir.kurir_id', '=','pengiriman.kurir_id')->join('users','users.id','=','kurir.user_id')
             ->when($request->search, function (Builder $query, string $search) {
                 $query->where('no_resi', 'like', "%$search%")
                     ->orwhere('kurir_id', 'like', "%$search%")
                     ->orwhere('paket', 'like', "%$search%")
                     ->orWhere('status', 'like', "%$search%")
+                    ->orWhere('tanggal_dibuat', 'like', "%$search%")
                     ->orWhere('tanggal_pengiriman', 'like', "%$search%")
                     ->orWhere('tanggal_penerimaan', 'like', "%$search%")
                     ->orWhere('penerima', 'like', "%$search%")
                     ->orWhere('alamat', 'like', "%$search%")
                     ->orWhere('biaya', 'like', "%$search%");
             })
-            ->latest()
-            ->paginate($per, ['*', DB::raw('@no := @no + 1 AS no')]);
+            ->select('pengiriman.*', 'users.name as name')
+            ->latest()->paginate($per);
+            $no = ($data->currentPage()-1) * $per + 1;
+        foreach($data as $item){
+            $item->no = $no++;
+        }
+
 
 
 
@@ -63,6 +70,7 @@ class PengirimanController extends Controller
                 'kurir_id' => $pengiriman->kurir_id,
                 'paket' => $pengiriman->paket,
                 'status' => $pengiriman->status,
+                'tanggal_dibuat' => $pengiriman->tanggal_dibuat,
                 'tanggal_pengiriman' => $pengiriman->tanggal_pengiriman,
                 'tanggal_penerimaan' => $pengiriman->tanggal_penerimaan,
                 'penerima' => $pengiriman->penerima,
@@ -90,6 +98,7 @@ class PengirimanController extends Controller
             'kurir_id' => 'required|exists:kurir,kurir_id',
             'paket' => 'required|string|max:255',
             'status' => 'required|in:dikemas,dikirim,diterima',
+            'tanggal_dibuat' => 'nullable|date',
             'tanggal_pengiriman' => 'nullable|date',
             'tanggal_penerimaan' => 'nullable|date',
             'penerima' => 'required|string|max:255',
@@ -101,9 +110,10 @@ class PengirimanController extends Controller
             'no_resi' => $request->no_resi,
             'kurir_id' => $request->kurir_id,
             'paket' => $request->paket,
-            'status' => $request->status,
+            'status' => $request->status, 
             'penerima' => $request->penerima,
             'alamat' => $request->alamat,
+            'tanggal_dibuat' =>$request->tanggal_dibuat,
             'tanggal_penerimaan' =>$request->tanggal_penerimaan,
             'tanggal_pengiriman' =>$request->tanggal_pengiriman,
             'biaya'=>$request->biaya,
@@ -129,13 +139,62 @@ class PengirimanController extends Controller
             'data' => $pengiriman
         ]);
     }
+    // public function get()
+    // {
+    //     return response()->json([
+    //         'success' => true,
+    //         'data' => Kurir::select('no_resi', 'kurir_id', 'penerima', 'alamat', 'paket', 'status', 'tanggal_pengiriman', 'tanggal_penerimaan', 'biaya')->get()
+    //     ]);
+    // }
     public function get()
     {
+        $kurir = Kurir::with('user')
+            ->whereHas('user', function ($query) {
+                $query->where('role', 'kurir'); // pastikan hanya user dengan role kurir
+            })
+            ->get()
+            ->map(function ($k) {
+                return [
+                    // 'kurir_id' => $k->kurir_id,
+                    'nama_kurir' => $k->user->name,
+                ];
+            });
+
         return response()->json([
             'success' => true,
-            'data' => Kurir::select('no_resi', 'kurir_id', 'penerima', 'alamat', 'paket', 'status', 'tanggal_pengiriman', 'tanggal_penerimaan', 'biaya')->get()
+            'kurir' => $kurir,
         ]);
     }
+
+    public function updateStatus(Request $request, $id)
+    {
+        $request->validate([
+            'status' => 'required|in:Dikemas,Dikirim,Diterima',
+        ]);
+
+        $pengiriman = Pengiriman::findOrFail($id);
+
+        // Optional: pastikan yang update adalah kurir-nya
+        if ($pengiriman->kurir_id !== auth()->id()) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $pengiriman->status = $request->status;
+        $pengiriman->save();
+
+        return response()->json(['message' => 'Status updated']);
+    }
+
+    public function pengirimanKurir()
+    {
+        $pengiriman = Pengiriman::where('kurir_id', auth()->id())
+            ->with('kurir.user')
+            ->paginate(10); // sesuaikan dengan paginate-mu
+
+        return response()->json($pengiriman);
+    }
+
+
 
     // Menghapus pengiriman
     public function destroy($id)

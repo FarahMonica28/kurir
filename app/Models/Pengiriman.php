@@ -1,39 +1,31 @@
 <?php
 
+// app/Models/Pengiriman.php
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Pengiriman extends Model
 {
     use HasFactory;
 
     protected $table = 'pengiriman';
-    protected $primaryKey = 'id'; // Sesuaikan dengan primary key tabel
-
-    // protected $table = 'pengiriman';
-
+    
     protected $fillable = [
-        'kurir_id',
-        'paket',
-        'status',
-        'tanggal_pengiriman',
-        'tanggal_penerimaan',
-        'penerima',
-        'alamat',
-        'biaya'
+        'no_resi', 'paket', 'penerima', 'alamat',
+        'kurir_id', 'status', 'tanggal_dibuat','tanggal_pengiriman',
+        'tanggal_penerimaan', 'biaya',
     ];
+
+    public function trackingLogs()
+    {
+        return $this->hasMany(TrackingLog::class);
+    }
+
     public function kurir()
     {
-        return $this->belongsTo(Kurir::class, 'kurir_id', 'kurir_id');
+        return $this->belongsTo(Kurir::class);
     }
-    // public function kurir()
-    // {
-    //     return $this->belongsTo(Kurir::class);
-    // }
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
+    
 }

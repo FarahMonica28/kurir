@@ -1,0 +1,219 @@
+<script setup lang="ts">
+import { h, ref, watch } from "vue";
+import { useDelete } from "@/libs/hooks";
+// import Form from "./Form.vue";
+import { createColumnHelper } from "@tanstack/vue-table";
+import type { transaksi } from "@/types";
+import Swal from "sweetalert2";
+
+const column = createColumnHelper<transaksi>();
+const paginateRef = ref<any>(null);
+const selected = ref<string>("");
+const openForm = ref<boolean>(false);
+
+const statusBadgeClass = (status: string) => {
+  switch (status?.toLowerCase()) {
+    case 'terkirim':
+      return 'badge bg-success';
+    case 'diproses':
+      return 'badge bg-warning text-dark';
+    case 'dibatalkan':
+      return 'badge bg-danger';
+    default:
+      return 'badge bg-secondary';
+  }
+};
+
+const { delete: deleteOrder } = useDelete({
+  onSuccess: () => paginateRef.value.refetch(),
+});
+const detailData = ref<transaksi | null>(null);
+
+const showRincian = (data: transaksi) => {
+  detailData.value = data;
+};
+
+const closeDetail = () => {
+  detailData.value = null;
+};
+// const showRincian = (data: transaksi) => {
+//   Swal.fire({
+//     title: `<strong>Detail Transaksi</strong>`,
+//     html: `
+//       <div style="text-align: left; font-size: 1.1rem;">
+//         <p><b>No Order</b> ${data.id}</p>
+//         <p><b>Nama Barang:</b> ${data.nama_barang}</p>
+//         <p><b>Alamat Asal:</b> ${data.alamat_asal}</p>
+//         <p><b>Alamat Tujuan:</b> ${data.alamat_tujuan}</p>
+//         <p><b>Pengirim:</b> ${data.pengirim}</p>
+//         <p><b>Penerima:</b> ${data.penerima}</p>
+//         <p><b>No Hp Penerima:</b> ${data.no_hp_penerima}</p>
+//         <p><b>Status:</b> ${data.status}</p>
+//         <hr/>
+//         <p><b>Waktu Dibuat:</b> ${data.waktu || '-'}</p>
+//         <p><b>Waktu Penjemputan Barang:</b> ${data.waktu_penjemputan || '-'}</p>
+//         <p><b>Waktu Proses Pengiriman:</b> ${data.waktu_proses || '-'}</p>
+//         <p><b>Waktu Terkirim:</b> ${data.waktu_terkirim || '-'}</p>
+//         <hr/>
+//         <p><b>Penilaian:</b> ${data.penilaian || "belum ada penilaian"}</p>
+//         <p><b>Komentar:</b> ${data.komentar || "belum ada komentar"}</p>
+//       </div>
+//     `,
+//     // icon: "info",
+//     confirmButtonText: "Tutup",
+//     // customClass: {
+//     //   popup: 'text-start',
+//     // },
+//   });
+// };
+
+const columns = [
+  column.accessor("no", { header: "#" }),
+  column.accessor("id", {
+    header: "No Order",
+  }),
+  column.accessor("nama_barang", {
+    header: "Nama Barang",
+  }),
+  column.accessor("alamat_asal", {
+    header: "Alamat Asal",
+  }),
+  column.accessor("alamat_tujuan", {
+    header: "Alamat Tujuan",
+  }),
+  column.accessor("pengirim", {
+    header: "Pengirim",
+  }),
+  column.accessor("penerima", {
+    header: "Penerima",
+  }),
+  column.accessor("no_hp_penerima", {
+    header: "No HP Penerima",
+  }),
+  // column.accessor("status", {
+  //   header: "Status",
+  //   cell: (cell) => {
+  //     const status = cell.getValue();
+  //     const statusClass =
+  //       status === "Terkirim"
+  //         ? "badge bg-success fw-bold"
+  //         : status === "Belum Terkirim"
+  //           ? "badge bg-warning text-dark fw-bold"
+  //           : "badge bg-secondary fw-bold";
+
+
+  //     return h("span", { class: statusClass }, status);
+  //   },
+  // }),
+  column.accessor("penilaian", {
+  header: "Penilaian",
+  cell: (cell) => {
+    const val = cell.getValue();
+    const badgeClass = val ? "bg-success" : "bg-warning"; // hijau kalau ada, kuning kalau belum
+    return h("span", { class: `badge ${badgeClass}` }, val || "belum ada penilaian");
+  }
+}),
+
+  column.display({
+    id: "rincian",
+    header: "Aksi",
+    cell: (cell) =>
+      h(
+        "button",
+        {
+          class: "btn btn-sm btn-info d-flex align-items-center gap-1",
+          onClick: () => showRincian(cell.row.original),
+        },
+        [
+          h("i", { class: "bi bi-eye" }),
+          "Lihat"
+        ]
+      ),
+  }),
+];
+
+const refresh = () => paginateRef.value.refetch();
+
+watch(openForm, (val) => {
+  if (!val) {
+    selected.value = "";
+  }
+  window.scrollTo(0, 0);
+});
+</script>
+
+<template>
+  <Form :selected="selected" @close="openForm = false" v-if="openForm" @refresh="refresh" />
+
+  <div class="card">
+    <div class="card-header align-items-center">
+      <h2 class="mb-0">Riwayat Order</h2>
+      <!-- <button type="button" class="btn btn-sm btn-primary ms-auto" v-if="!openForm" @click="openForm = true">
+                Tambah
+                <i class="la la-plus"></i>
+            </button> -->
+    </div>
+    <div class="card-body">
+      <!-- <paginate ref="paginateRef" id="table-transaksi" url="/transaksi" :columns="columns"></paginate> -->
+      <paginate ref="paginateRef" id="table-transaksi" url="/transaksi?status=Terkirim" :columns="columns"></paginate>
+
+      <!-- DETAIL -->
+      <div v-if="detailData" class="card mt-5">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h3 class="mb-0">Detail Transaksi</h3>
+          <button class="btn btn-sm btn-danger" @click="closeDetail">
+            Tutup <i class="bi bi-x-circle"></i>
+          </button>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-6">
+              <p><strong>No Order:</strong> {{ detailData.id }}</p>
+              <p><strong>Nama Barang:</strong> {{ detailData.nama_barang }}</p>
+              <p><strong>Alamat Asal:</strong> {{ detailData.alamat_asal }}</p>
+              <p><strong>Alamat Tujuan:</strong> {{ detailData.alamat_tujuan }}</p>
+              <p><strong>Pengirim:</strong> {{ detailData.pengirim }}</p>
+            </div>
+            <div class="col-md-6">
+              <p><strong>Status:</strong> {{ detailData.status }}</p>
+              <p><strong>Penerima:</strong> {{ detailData.penerima }}</p>
+              <p><strong>No HP Penerima:</strong> {{ detailData.no_hp_penerima }}</p>
+              <p><strong>Jarak:</strong> {{ detailData.berat_barang }} km</p>
+              <p><strong>Biaya:</strong> Rp.{{ detailData.biaya }}</p>
+            </div>
+          </div>
+          <hr />
+          <div class="row">
+            <div class="col-md-6">
+              <p><strong>Waktu Dibuat:</strong> {{ detailData.waktu || '-' }}</p>
+              <p><strong>Waktu Penjemputan Barang:</strong> {{ detailData.waktu_penjemputan || '-' }}</p>
+            </div>
+            <div class="col-md-6">
+              <p><strong>Waktu Proses Pengiriman:</strong> {{ detailData.waktu_proses || '-' }}</p>
+              <p><strong>Waktu Terkirim:</strong> {{ detailData.waktu_terkirim || '-' }}</p>
+            </div>
+          </div>
+          <hr />
+          <div class="row">
+            <div class="col-md-12">
+              <!-- <p><strong>Kurir:</strong> {{ detailData.kurir_id}}</p> -->
+              <p><strong>Kurir:</strong> {{ detailData.kurir?.name || '-' }}</p>
+              <p><strong>Penilaian:</strong> {{ detailData.penilaian || 'belum ada penilaian' }}</p>
+              <p><strong>Komentar:</strong> {{ detailData.komentar || 'belum ada komentar' }}</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</template>
+
+<style>
+.swal-fire {
+  width: 50rem !important;
+  /* atur sesuai kebutuhan */
+  font-size: 1.2rem;
+  padding: 1.5rem;
+}
+</style>

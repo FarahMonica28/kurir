@@ -31,8 +31,9 @@ const emit = defineEmits(["close", "refresh"]);
 //   tanggal_penerimaan: null,
 //   biaya: 0,
 // });
+
 const pengiriman = ref<Pengiriman>({} as Pengiriman);
-  const kurir = ref<kurir>({} as kurir);
+const kurir = ref<kurir>({} as kurir);
 const formRef = ref();
 
 // Skema validasi Yup
@@ -74,9 +75,13 @@ function submit() {
   formData.append("kurir_id", Number(pengiriman.value.kurir_id)); // Kirim ID kurir
   formData.append("status", pengiriman.value.status);
   formData.append("biaya", String(pengiriman.value.biaya));
+  formData.append("tanggal_dibuat", Date(pengiriman.value.tanggal_dibuat));
   formData.append("tanggal_penerimaan", Date(pengiriman.value.tanggal_penerimaan));
   formData.append("tanggal_pengiriman", Date(pengiriman.value.tanggal_pengiriman));
 
+  if (pengiriman.value.tanggal_dibuat) {
+    formData.append("tanggal_dibuat", pengiriman.value.tanggal_dibuat);
+  }
   if (pengiriman.value.tanggal_pengiriman) {
     formData.append("tanggal_pengiriman", pengiriman.value.tanggal_pengiriman);
   }
@@ -174,16 +179,17 @@ watch(
           </div>
         </div>
         <div class="col-md-6">
-          <div class="fv-row mb-7">
-            <label class="form-label fw-bold fs-6 required">ID Kurir</label>
-            <Field class="form-control" type="text" name="kurir_id" v-model="pengiriman.kurir_id" placeholder="Masukan ID kurir"/>
-            <ErrorMessage name="kurir_id" class="text-danger" />
-          </div>
+          <select v-model="form.kurir_id">
+            <option v-for="k in kurirList" :key="k.kurir_id" :value="k.kurir_id">
+              {{ k.nama_kurir }}
+            </option>
+          </select>
         </div>
         <div class="col-md-6">
           <div class="fv-row mb-7">
             <label class="form-label fw-bold fs-6 required">Biaya (Rp)</label>
-            <Field class="form-control" type="number" name="biaya" v-model="pengiriman.biaya" placeholder="Masukkan Biaya" />
+            <Field class="form-control" type="number" name="biaya" v-model="pengiriman.biaya"
+              placeholder="Masukkan Biaya" />
             <ErrorMessage name="biaya" class="text-danger" />
           </div>
         </div>
@@ -196,6 +202,13 @@ watch(
               <option value="diterima">Diterima</option>
             </Field>
             <ErrorMessage name="status" class="text-danger" />
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="fv-row mb-7">
+            <label class="form-label fw-bold fs-6 required">Tanggal Dibuat</label>
+            <Field class="form-control" type="date" name="tanggal_dibuat" v-model="pengiriman.tanggal_dibuat" />
+            <ErrorMessage name="tanggal_dibuat" class="text-danger" />
           </div>
         </div>
         <div class="col-md-6">

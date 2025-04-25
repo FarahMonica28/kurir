@@ -34,12 +34,39 @@ const routes: Array<RouteRecordRaw> = [
                 },
             },
             {
-                path: "/dashboard/datakurir",
+                path: "/dashboardk/pengirimans",
+                name: "dashboardk.pengirimans",
+                component: () => import("@/pages/dashboardk/pengiriman/index.vue"),
+                meta: {
+                    pageTitle: "Halaman Pengiriman",
+                    // breadcrumbs: ["Dashboardk"],
+                },
+            },
+            {
+                path: "/dashboardk/rute",
+                name: "dashboardk.rute",
+                component: () => import("@/pages/dashboardk/rute/index.vue"),
+                meta: {
+                    pageTitle: "Halaman Rute",
+                    // breadcrumbs: ["Dashboardk"],
+                },
+            },
+            {
+                path: "/dashboard/kurir",
                 name: "dashboard.kurir",
                 component: () => import("@/pages/dashboard/kurir/index.vue"),
                 meta: {
-                    pageTitle: "Halaman Kurir",
-                    breadcrumbs: ["Halaman", "Kurir"],
+                    pageTitle: "Kurir",
+                    // breadcrumbs: ["Halaman", "Kurir"],
+                },
+            },
+            {
+                path: "/dashboard/pengguna",
+                name: "dashboard.pengguna",
+                component: () => import("@/pages/dashboard/pengguna/index.vue"),
+                meta: {
+                    pageTitle: "Pengguna",
+                    // breadcrumbs: ["Halaman", "Kurir"],
                 },
             },
             {
@@ -61,6 +88,33 @@ const routes: Array<RouteRecordRaw> = [
                 },
             },
             {
+                path: "/dashboard/tracking",
+                name: "dashboard.tracking",
+                component: () => import("@/pages/dashboard/tracking/index.vue"),
+                meta: {
+                    pageTitle: "Tracking",
+                    // breadcrumbs: ["Halaman", "Akun dan Profl"],
+                },
+            },
+            {
+                path: "/dashboard/orderr",
+                name: "dashboard.orderr",
+                component: () => import("@/pages/dashboard/trans/Inde.vue"),
+                meta: {
+                    pageTitle: "Halaman Order",
+                    // breadcrumbs: ["Halaman", "Akun dan Profl"],
+                },
+            },
+            {
+                path: "/dashboard/riwayat",
+                name: "dashboard.riwayat",
+                component: () => import("@/pages/dashboard/riwayat/index.vue"),
+                meta: {
+                    pageTitle: "Riwayat",
+                    // breadcrumbs: ["Halaman", "Akun dan Profl"],
+                },
+            },
+            {
                 path: "/dashboard/profile",
                 name: "dashboard.profile",
                 component: () => import("@/pages/dashboard/profile/Index.vue"),
@@ -78,7 +132,7 @@ const routes: Array<RouteRecordRaw> = [
                     breadcrumbs: ["Website", "Setting"],
                 },
             },
-
+            
             // MASTER
             {
                 path: "/dashboard/master/users/roles",
@@ -101,6 +155,34 @@ const routes: Array<RouteRecordRaw> = [
                 },
             },
         ],
+    },
+    
+    {
+        path: "/dashboardk",
+        name: "dashboardk",
+        component: () => import("@/pages/dashboardk/beranda.vue"),
+        meta: {
+            pageTitle: "Dashboardk",
+            breadcrumbs: ["Halaman Dashboardk"],
+        },
+    },
+    {
+        path: "/dashboard/order",
+        name: "dashboard.order",
+        component: () => import("@/pages/dashboard/transaksi/index.vue"),
+        meta: {
+            pageTitle: "Halaman Order Kurir",
+            // breadcrumbs: ["Halaman", "Akun dan Profl"],
+        },
+    },
+    {
+        path: "/dashboard/riwayatt",
+        name: "dashboard.riwayatt",
+        component: () => import("@/pages/dashboard/riwayatt/idex.vue"),
+        meta: {
+            pageTitle: "Riwayat",
+            // breadcrumbs: ["Halaman", "Akun dan Profl"],
+        },
     },
     {
         path: "/",

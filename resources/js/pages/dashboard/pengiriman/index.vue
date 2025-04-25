@@ -3,140 +3,105 @@ import { h, ref, watch } from "vue";
 import { useDelete } from "@/libs/hooks";
 import Form from "./form.vue";
 import { createColumnHelper } from "@tanstack/vue-table";
-import type { Pengiriman } from "@/types"; // Pastikan tipe data sesuai API
+import Swal from "sweetalert2";
+import type { Pengiriman } from "@/types";
 
-const currentRole = ref<string>("admin"); // bisa juga dari store seperti pinia atau dari props
 const column = createColumnHelper<Pengiriman>();
 const paginateRef = ref<any>(null);
-const selected = ref<string>(""); // ID pengiriman yang dipilih
-const openForm = ref<boolean>(false); // Form tambah/edit
+const selected = ref<string>("");
+const openForm = ref<boolean>(false);
 
-// Hook untuk menghapus data
 const { delete: deletePengiriman } = useDelete({
   onSuccess: () => refresh(),
-  onError: (error) => alert(`Gagal menghapus pengiriman: ${error.message}`),
 });
 
-// Definisi kolom tabel pengiriman
+// const showRincian = (data: Pengiriman) => {
+//   alert(`
+//     No Resi: ${data.no_resi}
+//     Paket: ${data.paket}
+//     Kurir: ${data.name}
+//     Penerima: ${data.penerima}
+//     Alamat: ${data.alamat}
+//     Tanggal Pengiriman: ${data.tanggal_pengiriman}
+//     Tanggal Penerimaan: ${data.tanggal_penerimaan || "-"}
+//     Status: ${data.status}
+//   `);
+// };
+const showRincian = (data: Pengiriman) => {
+  Swal.fire({
+    title: `<strong>Detail Pengiriman</strong>`,
+    html: `
+      <div style="text-align: left;">
+        <p><b>No Resi:</b> ${data.no_resi}</p>
+        <p><b>Paket:</b> ${data.paket}</p>
+        <p><b>Kurir:</b> ${data.name}</p>
+        <p><b>Penerima:</b> ${data.penerima}</p>
+        <p><b>Alamat:</b> ${data.alamat}</p>
+        <p><b>Tanggal Dibuat:</b> ${data.Tanggal_dibuat || "-"}</p>
+        <p><b>Tanggal Pengiriman:</b> ${data.tanggal_pengiriman || "-"}</p>
+        <p><b>Tanggal Penerimaan:</b> ${data.tanggal_penerimaan || "-"}</p>
+        <p><b>Status:</b> ${data.status}</p>
+      </div>
+    `,
+    // icon: "info",
+    confirmButtonText: "Tutup",
+    // customClass: {
+    //   popup: 'text-start',
+    // },
+  });
+};
+
 const columns = [
-  // column.accessor("no_resi", { header: "No. Resi" }),
   column.accessor("no", { header: "#" }),
-  column.accessor("kurir_id", { header: "Kurir_id" }),
+  column.accessor("no_resi", { header: "No. Resi" }),
   column.accessor("paket", { header: "Paket" }),
-  column.accessor("penerima", { header: "Penerima" }),
-  column.accessor("alamat", { header: "Alamat" }),
-  column.accessor("biaya", { header: "biaya" }),
-  column.accessor("status", {
-    header: "Status",
-    cell: (cell) => {
-      const status = cell.getValue();
-      let badgeClass = "bg-secondary";
-      let label = "Tidak Diketahui";
-
-      if (status === "dikemas") {
-        badgeClass = "bg-primary";
-        label = "Dikemas";
-      } else if (status === "dikirim") {
-        badgeClass = "bg-warning";
-        label = "Dikirim";
-      } else if (status === "diterima") {
-        badgeClass = "bg-success";
-        label = "Diterima";
-      }
-
-      return h("span", { class: `badge ${badgeClass}` }, label);
-    },
+  column.display({
+    id: "rincian",
+    header: "Detail Pengiriman",
+    cell: (cell) =>
+      h(
+        "button",
+        {
+          class: "btn btn-sm btn-info",
+          onClick: () => showRincian(cell.row.original),
+        },
+        "Lihat Detail"
+      ),
   }),
-  column.accessor("tanggal_pengiriman", { header: "Tgl Pengiriman" }),
-  column.accessor("tanggal_penerimaan", { header: "Tgl Penerimaan" }),
-  // column.accessor("id", {
-  //   header: "Aksi",
+  //   column.display({
+  //   id: "rincian",
+  //   header: "Tracking",
   //   cell: (cell) =>
-  //     h("div", { class: "d-flex gap-2" }, [
-  //       // Tombol Edit
-  //       h(
-  //         "button",
-  //         {
-  //           class: "btn btn-sm btn-info",
-  //           onClick: () => {
-  //             selected.value = cell.getValue();
-  //             openForm.value = true;
-  //           },
-  //         },
-  //         h("i", { class: "la la-pencil fs-2" })
-  //       ),
-  //       // Tombol Hapus
-  //       h(
-  //         "button",
-  //         {
-  //           class: "btn btn-sm btn-danger",
-  //           onClick: () => {
-  //             // if (confirm("Apakah Anda yakin ingin menghapus pengiriman ini?")) {
-  //               deletePengiriman(`/pengiriman/${cell.getValue()}`);
-  //             // }
-  //           },
-  //         },
-  //         h("i", { class: "la la-trash fs-2" })
-  //       ),
-  //     ]),
+  //     h(
+  //       resolveComponent("RouterLink"),
+  //       {
+  //         to: `/dashboard/tracking?resi=${cell.row.original.no_resi}`,
+  //         class: "btn btn-sm btn-info",
+  //       },
+  //       () => "Tracking"
+  //     ),
   // }),
   column.accessor("id", {
-  header: "Aksi",
-  cell: (cell) => {
-    const id = cell.getValue();
-    const aksiButtons = [];
-
-    // Admin: semua aksi
-    if (currentRole.value === "admin") {
-      aksiButtons.push(
-        h("button", {onClick: () => {
-              selected.value = id;
-              openForm.value = true;
-            },
-          },
-          h("i", { class: "la la-pencil fs-2" })
-        ),
+    header: "Aksi",
+    cell: (cell) =>
+      h("div", { class: "d-flex gap-2" }, [
         h(
           "button",
           {
             class: "btn btn-sm btn-danger",
             onClick: () => {
-              deletePengiriman(`/pengiriman/${id}`);
+              deletePengiriman(`/pengiriman/${cell.getValue()}`);
             },
           },
           h("i", { class: "la la-trash fs-2" })
-        )
-      );
-    }
-
-    // Kurir: hanya bisa ubah status
-    if (currentRole.value === "kurirs") {
-      aksiButtons.push(
-        h(
-          "button",
-          {
-            class: "btn btn-sm btn-warning",
-            onClick: () => {
-              selected.value = id;
-              openForm.value = true; // hanya status yang akan bisa diedit di form
-            },
-          },
-          h("i", { class: "la la-edit fs-2" })
-        )
-      );
-    }
-
-    // Pengguna biasa: tidak ada aksi
-    return h("div", { class: "d-flex gap-2" }, aksiButtons);
-  },
-}),
-
+        ),
+      ]),
+  }),
 ];
 
-// Fungsi untuk refresh data tabel
+
 const refresh = () => paginateRef.value?.refetch();
 
-// Reset selected ID saat form ditutup
 watch(openForm, (val) => {
   if (!val) {
     selected.value = "";
@@ -146,16 +111,11 @@ watch(openForm, (val) => {
 </script>
 
 <template>
-  <!-- Form Tambah/Edit Pengiriman -->
-  <Form v-if="openForm" :selected="selected" @close="openForm = false" @refresh="refresh" />
+  <Form :selected="selected" @close="openForm = false" v-if="openForm" @refresh="refresh" />
 
   <div class="card">
     <div class="card-header align-items-center">
       <h2 class="mb-0">List Pengiriman</h2>
-      <button type="button" class="btn btn-sm btn-primary ms-auto" v-if="!openForm" @click="openForm = true">
-        Tambah
-        <i class="la la-plus"></i>
-      </button>
     </div>
     <div class="card-body">
       <paginate ref="paginateRef" id="table-pengiriman" url="/pengiriman" :columns="columns"></paginate>
