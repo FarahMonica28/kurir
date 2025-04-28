@@ -106,13 +106,13 @@ const columns = [
   //   },
   // }),
   column.accessor("penilaian", {
-  header: "Penilaian",
-  cell: (cell) => {
-    const val = cell.getValue();
-    const badgeClass = val ? "bg-success" : "bg-warning"; // hijau kalau ada, kuning kalau belum
-    return h("span", { class: `badge ${badgeClass}` }, val || "belum ada penilaian");
-  }
-}),
+    header: "Penilaian",
+    cell: (cell) => {
+      const val = cell.getValue();
+      const badgeClass = val ? "bg-success" : "bg-warning"; // hijau kalau ada, kuning kalau belum
+      return h("span", { class: `badge ${badgeClass}` }, val || "belum ada penilaian");
+    }
+  }),
 
   column.display({
     id: "rincian",
@@ -155,7 +155,7 @@ watch(openForm, (val) => {
     </div>
     <div class="card-body">
       <!-- <paginate ref="paginateRef" id="table-transaksi" url="/transaksi" :columns="columns"></paginate> -->
-      <paginate ref="paginateRef" id="table-transaksi" url="/transaksi?status=Terkirim" :columns="columns"></paginate>
+      <paginate ref="paginateRef" id="table-transaksi" url="/trans" :columns="columns"></paginate>
 
       <!-- DETAIL -->
       <div v-if="detailData" class="card mt-5">
@@ -197,7 +197,7 @@ watch(openForm, (val) => {
           <div class="row">
             <div class="col-md-12">
               <!-- <p><strong>Kurir:</strong> {{ detailData.kurir_id}}</p> -->
-              <p><strong>Kurir:</strong> {{ detailData.kurir?.name || '-' }}</p>
+              <p><strong>Kurir:</strong> {{ detailData.kurir?.user.name || '-' }}</p>
               <p><strong>Penilaian:</strong> {{ detailData.penilaian || 'belum ada penilaian' }}</p>
               <p><strong>Komentar:</strong> {{ detailData.komentar || 'belum ada komentar' }}</p>
             </div>

@@ -80,7 +80,7 @@ Route::middleware(['auth', 'verified', 'json'])->group(function () {
 
     //pengguna
     Route::middleware('can:pengguna')->group(function () {
-        Route::get('pengguna', [PenggunaController::class, 'get'])->withoutMiddleware('can:pngguna');
+        Route::get('pengguna', [PenggunaController::class, 'get'])->withoutMiddleware('can:pengguna');
         Route::post('pengguna/store', [PenggunaController::class, 'store']);
         Route::post('pengguna', [PenggunaController::class, 'index']);
         Route::apiResource('pengguna', PenggunaController::class)
@@ -153,8 +153,8 @@ Route::middleware(['auth', 'verified', 'json'])->group(function () {
     Route::middleware('can:transaksi')->group(function () {
         // Menampilkan list transaksi (pada halaman index)
         Route::get('transaksi', [TransaksiController::class, 'get'])->withoutMiddleware('can:transaksi');
-        Route::post('transaksi', [TransaksiController::class, 'index'])->withoutMiddleware('can:transaksi'); // ini mengijinkan kurir mengambil data yang dimasukan pengguna
-        // Route::post('transaksi', [TransaksiController::class, 'index']); => ini salah mangkanya role kurir tidak memunculkan data        Route::get('pengirimans{id}', [PengirimansController::class, 'get'])->withoutMiddleware('can:pengirimans');
+        // Route::post('transaksi', [TransaksiController::class, 'index'])->withoutMiddleware('can:transaksi'); // ini mengijinkan kurir mengambil data yang dimasukan pengguna
+        Route::post('transaksi', [TransaksiController::class, 'index']); // => ini salah mangkanya role kurir tidak memunculkan data        Route::get('pengirimans{id}', [PengirimansController::class, 'get'])->withoutMiddleware('can:pengirimans');
         // Halaman untuk membuat transaksi baru
         Route::get('transaksi/create', [TransaksiController::class, 'create'])->name('transaksi.create');
         // Route::get('/transaksi', [TransaksiController::class, 'index'])->middleware('can:viewAny,App\Models\Transaksi');
@@ -163,9 +163,9 @@ Route::middleware(['auth', 'verified', 'json'])->group(function () {
         // Menampilkan list transaksi (misalnya untuk paginasi)
         Route::put('/transaksi/update-status/{id}', [TransaksiController::class, 'updateStatus']);
         Route::post('/transaksi/storer', [TransaksiController::class, 'storePenilaian']);
-        Route::middleware('auth')->group(function () {
-            // Route::put('/transaksi/{transaksi}', [TransaksiController::class, 'update']);
-        });
+        // Route::middleware('auth')->group(function () {
+        //     // Route::put('/transaksi/{transaksi}', [TransaksiController::class, 'update']);
+        // });
         Route::apiResource('transaksi', TransaksiController::class)
             ->except(['index', 'store']);
         // Route::middleware(['auth', 'can:update,transaksi'])->put('/transaksi/{transaksi}', [TransaksiController::class, 'update']);
@@ -176,16 +176,19 @@ Route::middleware(['auth', 'verified', 'json'])->group(function () {
     Route::middleware('can:trans')->group(function () {
         // Menampilkan list transaksi (pada halaman index)
         Route::get('trans', [TransController::class, 'get'])->withoutMiddleware('can:trans');
-        // Route::post('trans', [TransController::class, 'index'])->withoutMiddleware('can:trans'); // ini mengijinkan kurir mengambil data yang dimasukan pengguna
-        Route::post('trans', [TransController::class, 'index']); // ini salah mangkanya role kurir tidak memunculkan data        Route::get('pengirimans{id}', [PengirimansController::class, 'get'])->withoutMiddleware('can:pengirimans');
+        Route::post('trans', [TransController::class, 'index'])->withoutMiddleware('can:trans'); // ini mengijinkan kurir mengambil data yang dimasukan pengguna
+        // Route::post('trans', [TransController::class, 'index']); // ini salah mangkanya role kurir tidak memunculkan data        Route::get('pengirimans{id}', [PengirimansController::class, 'get'])->withoutMiddleware('can:pengirimans');
         // Halaman untuk membuat trans baru
         Route::get('trans/create', [TransController::class, 'create'])->name('trans.create');
+        Route::post('trans/store', [TransController::class, 'store']);
         // Menampilkan list trans (misalnya untuk paginasi)
+        // Route::get('/trans', [TransController::class, 'show']); 
+        Route::get('/trans/{transaksi}', [TransaksiController::class, 'show']);
         Route::put('/trans/update-status/{id}', [TransController::class, 'updateStatus']);
-        Route::post('/trans/storer', [TransController::class, 'storePenilaian']);
-        Route::middleware('auth')->group(function () {
-            // Route::put('/trans/{trans}', [TransController::class, 'update']);
-        });
+        // Route::post('/trans/storer', [TransController::class, 'storePenilaian']);
+        // Route::middleware('auth')->group(function () {
+        //     // Route::put('/trans/{trans}', [TransController::class, 'update']);
+        // });
         Route::apiResource('trans', TransController::class)
             ->except(['index', 'store']);
         // Route::middleware(['auth', 'can:update,trans'])->put('/trans/{trans}', [TransaksiController::class, 'update']);

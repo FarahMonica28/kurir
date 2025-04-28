@@ -17,7 +17,7 @@ class TransaksiController extends Controller
     
         DB::statement('set @no=0+' . $page * $per);
     
-        $data = Transaksi::with('kurir') // pastikan ada relasi ke kurir di model
+        $data = Transaksi::with('kurir.user') // pastikan ada relasi ke kurir di model
             ->when($request->search, function ($query, $search) {
                 $query->where('nama_barang', 'like', "%$search%")
                     ->orWhere('berat_barang', 'like', "%$search%")
@@ -66,8 +66,6 @@ class TransaksiController extends Controller
     {
         // $transaksi = Transaksi::with('kurir')->where('kurir_id', $id)->first();
         $transaksi->load('kurir');
-
-         $this->authorize('view', $transaksi);
 
         // $transaksi = Transaksi::with('kurir.user')->findOrFail($id);
         return response()->json( [ 

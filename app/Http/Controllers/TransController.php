@@ -17,7 +17,7 @@ class TransController extends Controller
     
         DB::statement('set @no=0+' . $page * $per);
     
-        $data = Transaksi::with('kurir') // pastikan ada relasi ke kurir di model
+        $data = Transaksi::with('kurir.user') // pastikan ada relasi ke kurir di model
             ->when($request->search, function ($query, $search) {
                 $query->where('nama_barang', 'like', "%$search%")
                     ->orWhere('berat_barang', 'like', "%$search%")
@@ -67,7 +67,7 @@ class TransController extends Controller
         // $transaksi = Transaksi::with('kurir')->where('kurir_id', $id)->first();
         $transaksi->load('kurir');
 
-         $this->authorize('view', $transaksi);
+        //  $this->authorize('view', $transaksi);
 
         // $transaksi = Transaksi::with('kurir.user')->findOrFail($id);
         return response()->json( [ 
@@ -79,7 +79,7 @@ class TransController extends Controller
                 'penerima' => $transaksi->penerima,
                 'pengirim' => $transaksi->pengirim,
                 'no_hp_penerima' => $transaksi->no_hp_penerima,
-                'berat_barang' => $transaksi->berat_barang,
+                'berat_barang' => $transaksi->berat_barang, 
                 'biaya' => $transaksi->biaya,
                 'status' => $transaksi->status,
                 'kurir' => $transaksi->kurir, // Tambahkan ini untuk frontend

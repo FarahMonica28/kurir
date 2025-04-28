@@ -222,7 +222,7 @@ watch(openForm, (val) => {
           <hr />
           <div class="row">
             <div class="col-md-12">
-              <p><strong>Kurir:</strong> {{ detailData.kurir_id }}</p>
+              <p><strong>Kurir:</strong> {{ detailData.kurir?.user.name }}</p>
               <p><strong>Penilaian:</strong> {{ detailData.penilaian || 'belum ada penilaian' }}</p>
               <p><strong>Komentar:</strong> {{ detailData.komentar || 'belum ada komentar' }}</p>
             </div>

@@ -38,12 +38,7 @@ class Kurir extends Model
 
     public function user()
     {
-        return $this->belongsTo(User::class, 'user_id', 'id');
-    }
-
-    public function kurir()
-    {
-        return $this->belongsTo(Kurir::class, 'kurir_id', 'kurir_id');
+        return $this->belongsTo(User::class, 'user_id');
     }
     
     public function transaksi()

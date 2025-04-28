@@ -10,7 +10,7 @@ export interface transaksi {
     berat_barang: number;      // Berat barang dalam kg
     biaya: number;             // Biaya pengiriman
     waktu: string;             // Tanggal dan waktu transaksi
-    status: "Belum Terkirim" | "Sedang Dikirim" | "Terkirim";  // Status pengiriman
+    status: "Belum Terkirim" | "Penjemputan Barang" | "Sedang Dikirim" | "Terkirim";  // Status pengiriman
     penilaian?: number | null; // Penilaian (1-5)
     komentar?: string | null;  // Komentar feedback
     // kurir_id: number;          // ID kurir yang mengantarkan

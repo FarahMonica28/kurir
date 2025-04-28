@@ -123,7 +123,7 @@ function getEdit() {
 function submit() {
   const formData = new FormData();
 
-  // formData.append("id", transaksi.value.id);
+  console.log("id", transaksi.value.id);
   formData.append("nama_barang", transaksi.value.nama_barang);
   formData.append("penerima", transaksi.value.penerima);
   formData.append("pengirim", transaksi.value.pengirim);
@@ -134,7 +134,7 @@ function submit() {
   // formData.append("biaya", transaksi.value.biaya);
   formData.append("biaya", biayaOtomatis.value.toString());
   formData.append("status", transaksi.value.status);
-  formData.append("kurir_id", transaksi.value.kurir_id);
+  formData.append("kurir_id", currentKurir.value.kurir.kurir_id);
   // formData.append("kurir_id", transaksi.value.kurir_id);
 
 
@@ -150,11 +150,11 @@ function submit() {
   // }
   if (props.selected) {
     formData.append("_method", "PUT");
-    // } else {
+  } else {
     //   formData.append("waktu", new Date().toISOString());
     //   // formData.append("status", "belum terkirim" || "sedang dikirim" || "terkirim");
-    //   // formData.append("status", transaksi.value.status);
-    //   formData.append("status", transaksi.value.status || "belum_dikirim");
+    // formData.append("status", transaksi.value.status);
+    formData.append("status", transaksi.value.status || "belum_dikirim");
 
   }
 
@@ -196,10 +196,10 @@ watch(
 );
 
 onMounted(() => {
-  if (!props.selected) {
-    // jika form baru (bukan edit), isi otomatis kurir dari yang login
-    transaksi.value.kurir_id = currentKurir.value?.kurir_id || "";
-  }
+
+  // jika form baru (bukan edit), isi otomatis kurir dari yang login
+  transaksi.value.kurir_id = currentKurir.value?.kurir.kurir_id || "";
+  console.log(transaksi.value.kurir_id)
 
   if (props.selected) getEdit();
 });
@@ -302,11 +302,11 @@ watch(
         <div class="col-md-3 mb-7">
           <label class="form-label required fw-bold" for="kurir">Kurir</label>
           <!-- <Field type="text" name="kurir_id" class="form-control" v-model="transaksi.kurir_id"> -->
-          <Field type="text" name="kurir_id" class="form-control" :value="`${currentKurir.name}`" readonly >
+          <Field type="text" name="kurir_id" class="form-control" :value="`${currentKurir.name}`" readonly>
           </Field>
           <ErrorMessage name="kurir_id" class="text-danger small" />
         </div>
-        
+
       </div>
     </div>
 
