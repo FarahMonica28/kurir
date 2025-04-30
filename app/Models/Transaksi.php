@@ -48,5 +48,9 @@ public function kurir()
 {
     return $this->belongsTo(Kurir::class, 'kurir_id', 'kurir_id');
 }
+public function user()
+{
+    return $this->belongsTo(User::class, 'user_id');
+}
 
 }

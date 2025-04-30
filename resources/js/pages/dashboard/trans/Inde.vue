@@ -10,6 +10,7 @@ const paginateRef = ref<any>(null);
 const selected = ref<string>("");
 const openForm = ref<boolean>(false);
 
+
 const columns = [
     // column.accessor("no", { header: "#" }),
     column.accessor("id", {
@@ -85,6 +86,7 @@ watch(openForm, (val) => {
         <div class="card-header align-items-center">
             <h2 class="mb-0">List Order</h2>
         </div>
+        
         <div class="card-body">
             <!-- <paginate ref="paginateRef" id="table-transaksi" url="/transaksi" :columns="columns"></paginate> -->
             <paginate ref="paginateRef" id="table-transaksi" url="/trans?exclude_status=Terkirim"

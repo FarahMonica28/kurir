@@ -6,7 +6,7 @@ export interface kurir {
     photo?: string;
     password: string;
     // rating: string;
-    status: "aktif" | "nonaktif";
+    status: "aktif" | "nonaktif" | "sedag menerima orderan";
     created_at?: string;
     updated_at?: string;
 }

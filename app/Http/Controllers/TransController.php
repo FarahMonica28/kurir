@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Kurir;
 use App\Models\Transaksi;
 // use App\Models\User;
 // use App\Models\Kurir;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class TransController extends Controller
 {
@@ -34,15 +36,24 @@ class TransController extends Controller
             ->when($request->has('exclude_status'), function ($query) use ($request) {
                 $query->where('status', '!=', $request->exclude_status);
             })
+            ->when(auth()->user()->role->name === 'kurir', function ($query) {
+                $query->where(function ($q) {
+                    $kurirId = auth()->user()->kurir->kurir_id;
+                    $q->whereNull('kurir_id') // hanya yang belum diambil kurir
+                      ->orWhere('kurir_id', $kurirId); // atau yang diambil oleh kurir tersebut
+                });
+            })
+            
                      
             // ->when($request->kurir_id, function ($query, $kurirId) {
             //     $query->where('kurir_id', $kurirId);
             // })
-            ->when(auth()->user()->role === 'kurir', function ($query) {
-                $query->where('kurir_id', auth()->user()->kurir->kurir_id);
-            })
+            // ->when(auth()->user()->role === 'kurir', function ($query) {
+            //     $query->where('kurir_id', auth()->user()->kurir->kurir_id);
+            // })
             ->latest()
             ->paginate($per);
+
     
         $no = ($data->currentPage() - 1) * $per + 1;
         foreach ($data as $item) {
@@ -116,27 +127,58 @@ class TransController extends Controller
             'kurir_id' => 'nullable|exists:kurir,kurir_id',
         ]);
 
+         // Cari kurir aktif
+        $kurir = Kurir::where('status', 'aktif')->first();
+
+        if (!$kurir) {
+            return response()->json(['message' => 'Tidak ada kurir aktif'], 422);
+        }
+
+        // $kurir = Kurir::where('status', 'aktif')->first();
+
+        // if (!$kurir) {
+        //     return response()->json(['message' => 'Tidak ada kurir aktif'], 422);
+        // }
+
+        // $transaksi = Transaksi::create([
+        //     'kurir_id' => $kurir->kurir_id,
+        //     'status' => 'menunggu penjemputan',
+        //     // data lainnya...
+        // ]);
+
+        // // Kurir langsung ubah status jadi "sedang menerima orderan"
+        // $kurir->status = 'sedang menerima orderan';
+        // $kurir->save();
+
+
         // $transaksi = Transaksi::create($data);
-        Transaksi::create([
-            'nama_barang' => $request->nama_barang,
-            'alamat_asal' => $request->alamat_asal,
-            'alamat_tujuan' => $request->alamat_tujuan,
-            'pengirim' => $request->pengirim,
-            'penerima' => $request->penerima,
-            'no_hp_penerima' => $request->no_hp_penerima,
-            // 'status' => $request->status ?? 'Dalam Proses',
-            'status' => $request->status,
-            'berat_barang' => $request->berat_barang,   
-            'biaya' => $request->biaya,
-            'penilaian' => $request->penilaian,
-            'komentar' => $request->komentar,
-            // 'waktu' => now()->format('d-m-Y H:i:s'),
-            'waktu' => now()->format('Y-m-d H:i:s'),
-            'kurir_id' => $request->kurir_id,
+        $transaksi = Transaksi::create([
+            'pengirim' => $transaksi['pengirim'],
+            'penerima' => $transaksi['penerima'],
+            'no_hp_penerima' => $transaksi['no_hp_penerima'],
+            'alamat_asal' => $transaksi['alamat_asal'],
+            'alamat_tujuan' => $transaksi['alamat_tujuan'],
+            'nama_barang' => $transaksi['nama_barang'],
+            'status' => 'Penjemputan Barang', // status default saat dibuat
+            'berat_barang' => $transaksi['berat_barang'] ?? null,
+            'biaya' => $transaksi['biaya'] ?? null,
+            'penilaian' => $transaksi['penilaian'] ?? null,
+            'komentar' => $transaksi['komentar'] ?? null,
+            'waktu' => now(), // waktu sekarang
+            'kurir_id' => $kurir->kurir_id,
         ]);
 
+        // Ubah status kurir menjadi "sedang menerima orderan"
+        $kurir->status = 'sedang menerima orderan';
+        $kurir->save();
+
+        return response()->json([
+            'message' => 'Berhasil menambahkan transaksi',
+            'data' => $transaksi,
+            'kurir' => $kurir
+        ]);
         // return response()->json($transaksi, 201);
-        return response()->json(['message' => 'Berhasil menambahkan transaksi', 'data' => $transaksi]);
+        // return response()->json(['message' => 'Berhasil menambahkan transaksi', 'data' => $transaksi]);
     }
 
     
@@ -192,6 +234,51 @@ class TransController extends Controller
     // }
 
     // TransaksiController.php
+
+    public function updateStatus(Request $request, $id)
+    {
+        $request->validate([
+            'status' => 'required|stringn',
+        ]);
+    
+        $transaksi = Transaksi::findOrFail($id);
+        $transaksi->status = $request->status;
+        $transaksi->save();
+
+        $user = auth()->user();
+        $kurirId = $user->kurir->kurir_id ?? null;
+         // Cegah kurir mengambil pesanan yang sudah diambil kurir lain
+        if ($user->role === 'kurir') {
+            if ($transaksi->kurir_id && $transaksi->kurir_id != $kurirId) {
+                return response()->json([
+                    'message' => 'Pesanan sudah diambil oleh kurir lain.'
+                ], 403);
+            }
+        }
+    
+        // Ambil kurir dari transaksi
+        $kurir = $transaksi->kurir;
+    
+        // Update status kurir berdasarkan status transaksi
+        if ($kurir) {
+            if (in_array($transaksi->status, ['penjemputan barang', 'sedang dikirim'])) {
+                $kurir->status = 'sedang menerima orderan';
+            } elseif ($transaksi->status === 'terkirim') {
+                $kurir->status = 'aktif';
+            } elseif ($transaksi->status === 'dibatalkan') {
+                $kurir->status = 'aktif'; // misalnya, kalau dibatalkan kurir juga bisa aktif lagi
+            }
+            $kurir->save();
+        }
+    
+        return response()->json([
+            'message' => 'Status transaksi dan status kurir berhasil diperbarui',
+            'transaksi' => $transaksi,
+            'kurir' => $kurir,
+        ]);
+    }
+    
+
 public function update(Request $request, $id)
 {
     $request->validate([
@@ -201,6 +288,23 @@ public function update(Request $request, $id)
     ]);
 
     $transaksi = Transaksi::where('id', $id)->firstOrFail();
+
+    // if ($transaksi->kurir_id && $transaksi->status !== 'Terkirim') {
+    //     return response()->json([
+    //         'message' => 'Kurir sudah memiliki order yang sedang diproses.'
+    //     ], 400);
+    // }
+    $user = auth()->user();
+    $kurirId = $user->kurir->kurir_id ?? null;
+
+    // Cegah kurir mengambil pesanan yang sudah diambil kurir lain
+    if ($user->role === 'kurir') {
+        if ($transaksi->kurir_id && $transaksi->kurir_id != $kurirId) {
+            return response()->json([
+                'message' => 'Pesanan sudah diambil oleh kurir lain.'
+            ], 403);
+        }
+    }
 
     // Update kolom waktu dengan status baru dan timestamp
     // $waktuLama = $transaksi->waktu ?? '';

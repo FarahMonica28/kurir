@@ -155,7 +155,7 @@ watch(openForm, (val) => {
     </div>
     <div class="card-body">
       <!-- <paginate ref="paginateRef" id="table-transaksi" url="/transaksi" :columns="columns"></paginate> -->
-      <paginate ref="paginateRef" id="table-transaksi" url="/trans" :columns="columns"></paginate>
+      <paginate ref="paginateRef" id="table-transaksi" url="/trans?status=Terkirim" :columns="columns"></paginate>
 
       <!-- DETAIL -->
       <div v-if="detailData" class="card mt-5">

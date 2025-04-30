@@ -32,6 +32,9 @@ const kurir = ref({
   },
 } as any); // atau define tipe kurir baru
 const formRef = ref();
+const avgRating = ref(0);
+
+
 
 // const formSchema = Yup.object().shape({
 //   // kurir_id: Yup.string().required("ID Kurir harus diisi"),
@@ -158,6 +161,10 @@ function submit() {
     });
 }
 
+onMounted(async () => {
+  const { data } = await axios.get('/kurir/ringkasan');
+  avgRating.value = data.avg_rating;
+});
 onMounted(() => {
   if (props.selected) {
     getEdit();
@@ -239,16 +246,16 @@ watch(
             <ErrorMessage name="rating" class="text-danger" />
           </div>
         </div> -->
-        <div class="col-md-6">
-          <div class="fv-row mb-7">
-            <label class="form-label fw-bold fs-6 required">Status</label>
-            <Field as="select" class="form-select form-select-solid" name="status" v-model="kurir.status">
-              <option value="aktif">Aktif</option>
-              <option value="nonaktif">Nonaktif</option>
-            </Field>
-            <ErrorMessage name="status" class="text-danger" />
-          </div>
-        </div>
+          <!-- <div class="col-md-6">
+            <div class="fv-row mb-7">
+              <label class="form-label fw-bold fs-6 required">Status</label>
+              <Field as="select" class="form-select form-select-solid" name="status" v-model="kurir.status">
+                <option value="aktif">Aktif</option>
+                <option value="nonaktif">Nonaktif</option>
+              </Field>
+              <ErrorMessage name="status" class="text-danger" />
+            </div>
+          </div> -->
         <div class="col-md-6">
           <div class="fv-row mb-7">
             <label class="form-label fw-bold fs-6">Foto Profil</label>

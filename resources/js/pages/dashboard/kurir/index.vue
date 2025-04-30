@@ -59,9 +59,6 @@ const toggleStatus = async (kurir_id: string) => {
 };
 
 
-
-
-
 // Definisi kolom tabel kurir 
 const columns = [
   column.accessor("no", { header: "#" }),

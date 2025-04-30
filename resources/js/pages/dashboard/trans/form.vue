@@ -13,6 +13,9 @@ import { useAuthStore } from "@/stores/auth";
 
 const authStore = useAuthStore();
 const currentKurir = computed(() => authStore.user); // misalnya di sini tersimpan data kurir yang login
+// Cek jika kurir sudah memiliki orderan yang sedang diproses
+const kurirOrder = ref(null);
+
 
 const props = defineProps({
   selected: { type: String, default: null },
@@ -24,8 +27,11 @@ const biayaOtomatis = computed(() => {
   const berat = parseFloat(transaksi.value.berat_barang);
   return isNaN(berat) ? 0 : berat * 10000;
 });
-const statuses = ["Belum Terkirim", "Penjemputan Barang", "Sedang Dikirim", "Terkirim"];
-
+const statuses = [
+  { label: "Penjemputan Barang", value: "Penjemputan Barang" },
+  { label: "Sedang Dikirim", value: "Sedang Dikirim" },
+  { label: "Terkirim", value: "Terkirim" },
+];
 
 
 
@@ -195,6 +201,7 @@ watch(
   }
 );
 
+
 onMounted(() => {
 
   // jika form baru (bukan edit), isi otomatis kurir dari yang login
@@ -224,7 +231,7 @@ watch(
 <template>
   <VForm class="form card mb-10" @submit="submit" :validation-schema="formSchema" id="form-transaksi" ref="formRef">
     <div class="card-header align-items-center">
-      <h2 class="mb-0">{{ selected ? "Edit" : "Tambah" }} Simpan</h2>
+      <h2 class="mb-0">{{ selected ? "Edit" : "Tambah" }} Order</h2>
       <button type="button" class="btn btn-sm btn-light-danger ms-auto" @click="emit('close')">
         Batal <i class="la la-times-circle p-0"></i>
       </button>
@@ -287,8 +294,8 @@ watch(
           <label class="form-label fw-bold">Status </label>
           <Field as="select" name="status" class="form-select" v-model="transaksi.status">
             <option value="" disabled>Pilih Status</option>
-            <option value="Belum Terkirim">Belum Dikirim</option>
-            <option value="Penjemputan Barang">Penjemputan Barang</option>
+            <option value="Belum Terkirim" disabled>Belum Dikirim</option>
+            <option value="Penjemputan Barang" >Penjemputan Barang</option>
             <option value="Sedang Dikirim">Sedang Dikirim</option>
             <option value="Terkirim">Terkirim</option>
           </Field>

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Kurir;
 use App\Http\Requests\StoreKurirRequest;
 use App\Http\Requests\UpdateKurirRequest;
+use App\Models\Transaksi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -168,6 +169,19 @@ class KurirController extends Controller
         ]);
     }
 
+//     public function ringkasanKurir()
+// {
+//     $kurirId = auth()->user()->kurir->kurir_id;
+
+//     $averageRating = Transaksi::where('kurir_id', $kurirId)
+//         ->whereNotNull('penilaian')
+//         ->avg('penilaian'); // asumsi kolomnya 'penilaian' adalah angka (1–5)
+
+//     return response()->json([
+//         'avg_rating' => round($averageRating, 2),
+//     ]);
+// }
+
     public function toggleStatus($kurir_id)
     {
         $kurir = Kurir::findOrFail($kurir_id);
@@ -180,6 +194,7 @@ class KurirController extends Controller
             'status' => $kurir->status
         ]);
     }
+
 
     /**
      * Get all kurir
