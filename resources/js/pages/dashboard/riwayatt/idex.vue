@@ -5,30 +5,13 @@ import Form from "./Form.vue";
 import { createColumnHelper } from "@tanstack/vue-table";
 import type { transaksi } from "@/types";
 import axios from "axios";
-import Swal from "sweetalert2"; 
+import Swal from "sweetalert2";
 
 const column = createColumnHelper<transaksi>();
 const paginateRef = ref<any>(null);
 const selected = ref<string>("");
 const openForm = ref<boolean>(false);
 
-const penilaian = ref<transaksi | null>(null);
-const showPenilaianForm = ref(false);
-
-const openPenilaian = (data: transaksi) => {
-  penilaian.value = data;
-  showPenilaianForm.value = true;
-};
-
-const closePenilaian = () => {
-  penilaian.value = null;
-  showPenilaianForm.value = false;
-};
-
-
-const { delete: deleteOrder } = useDelete({
-  onSuccess: () => paginateRef.value.refetch(),
-});
 const detailData = ref<transaksi | null>(null);
 
 const showRincian = (data: transaksi) => {
@@ -53,7 +36,7 @@ const columns = [
   column.accessor("alamat_tujuan", {
     header: "Alamat Tujuan",
   }),
-  column.accessor("pengirim", {
+  column.accessor("pengguna.user.name", {
     header: "Pengirim",
   }),
   column.accessor("penerima", {
@@ -71,8 +54,8 @@ const columns = [
         {
           class: "btn btn-sm btn-outline-warning",
           onClick: () => {
-              selected.value = cell.getValue();
-              openForm.value = true;
+            selected.value = cell.getValue();
+            openForm.value = true;
           },
         },
         transaksi.penilaian || "Beri Penilaian"
@@ -99,40 +82,24 @@ const columns = [
   }),
 ];
 
+function showKurirDetail(kurir) {
+  if (!kurir || !kurir.user) {
+    Swal.fire('Data tidak tersedia', 'Kurir belum ditugaskan', 'warning');
+    return;
+  }
+
+  Swal.fire({
+    title: kurir.user.name,
+    html: `
+      <img src="${kurir.user.photo  ? "/storage/" + kurir.user.photo : "/default-avatar.png"}" alt="Foto Kurir" class="rounded-circle" width="110" height="110">
+     <div style="margin-top: 15px;">
+      <p><strong>Email:</strong> ${kurir.user.email}</p>
+      <p><strong>Telepon:</strong> ${kurir.user.phone}</p>`,
+      showCloseButton: true,
+  });
+}
 
 
-// const submitPenilaian = async () => {
-//   if (!penilaian.value) return;
-
-//   try {
-//     await axios.put(`/transaksi/${props.penilaian}/storer`);
-//     // Swal.fire({
-//     //   icon: "success",
-//     //   title: "Berhasil",
-//     //   text: "Penilaian berhasil disimpan",
-//     //   customClass: { popup: "swal-fire" },
-//     // });
-
-//     Swal.fire({
-//       icon: "success",
-//       title: "Penilaian Disimpan",
-//       text: `Terima kasih atas penilaiannya!`,
-//       customClass: "swal-fire",
-//     });
-
-//     closePenilaian();
-//     paginateRef.value.refetch();
-//   } catch (error) {
-//     console.error("Gagal menyimpan penilaian", error);
-
-//     Swal.fire({
-//       icon: "error",
-//       title: "Gagal",
-//       text: "Terjadi kesalahan saat menyimpan penilaian.",
-//       customClass: "swal-fire",
-//     });
-//   }
-// };
 
 
 const refresh = () => paginateRef.value.refetch();
@@ -151,34 +118,7 @@ watch(openForm, (val) => {
   <div class="card">
     <div class="card-header align-items-center">
       <h2 class="mb-0">Riwayat Order</h2>
-      <!-- <button type="button" class="btn btn-sm btn-primary ms-auto" v-if="!openForm" @click="openForm = true">
-                Tambah
-                <i class="la la-plus"></i>
-            </button> -->
     </div>
-    <!-- <div v-if="showPenilaianForm" class="card mt-5">
-      <div class="card-header d-flex justify-content-between align-items-center">
-        <h3 class="mb-0">Beri Penilaian</h3>
-        <button class="btn btn-sm btn-danger" @click="closePenilaian">
-          Tutup <i class="bi bi-x-circle"></i>
-        </button>
-      </div>
-      <div class="card-body">
-        <p><strong>Order ID:</strong> {{ penilaian?.id }}</p>
-        <div class="mb-3">
-          <label class="form-label">Penilaian</label>
-          <input v-model="penilaian.penilaian" type="text" class="form-control" placeholder="Contoh: 1-100 atau baik" />
-        </div>
-        <div class="mb-3">
-          <label class="form-label">Komentar</label>
-          <textarea v-model="penilaian.komentar" class="form-control" rows="3"
-            placeholder="Tulis komentar..."></textarea>
-        </div>
-        <button class="btn btn-success" @click="submitPenilaian">
-          Simpan Penilaian
-        </button>
-      </div>
-    </div> -->
     <div class="card-body">
       <!-- <paginate ref="paginateRef" id="table-transaksi" url="/transaksi" :columns="columns"></paginate> -->
       <paginate ref="paginateRef" id="table-transaksi" url="/transaksi?status=Terkirim" :columns="columns"></paginate>
@@ -198,7 +138,7 @@ watch(openForm, (val) => {
               <p><strong>Nama Barang:</strong> {{ detailData.nama_barang }}</p>
               <p><strong>Alamat Asal:</strong> {{ detailData.alamat_asal }}</p>
               <p><strong>Alamat Tujuan:</strong> {{ detailData.alamat_tujuan }}</p>
-              <p><strong>Pengirim:</strong> {{ detailData.pengirim }}</p>
+              <p><strong>Pengirim:</strong> {{ detailData.pengguna?.user.name  }}</p>
             </div>
             <div class="col-md-6">
               <p><strong>Status:</strong> {{ detailData.status }}</p>
@@ -222,7 +162,12 @@ watch(openForm, (val) => {
           <hr />
           <div class="row">
             <div class="col-md-12">
-              <p><strong>Kurir:</strong> {{ detailData.kurir?.user.name }}</p>
+              <p><strong>Kurir : </strong>
+                <span @click="showKurirDetail(detailData.kurir)"
+                  style="cursor: pointer; color: blue; text-decoration: underline;">
+                  {{ detailData.kurir?.user.name || 'Tidak ada kurir' }}
+                </span>
+              </p>
               <p><strong>Penilaian:</strong> {{ detailData.penilaian || 'belum ada penilaian' }}</p>
               <p><strong>Komentar:</strong> {{ detailData.komentar || 'belum ada komentar' }}</p>
             </div>

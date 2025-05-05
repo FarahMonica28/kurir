@@ -29,8 +29,6 @@ class KurirController extends Controller
             ->when($request->search, function ($query, $search) {
                 // $query->where('name', 'like', "%$search%")
                     $query->where('kurir_id', 'like', "%$search%")
-                        // ->orWhere('email', 'like', "%$search%")
-                        // ->orWhere('phone', 'like', "%$search%")
                         ->orWhere('status', 'like', "%$search%")
                         ->orWhere('rating', 'like', "%$search%");
             })->latest()->paginate($per);
@@ -58,20 +56,6 @@ class KurirController extends Controller
             }
             $validatedData['photo'] = $request->file('photo')->store('photo', 'public');
         }
-        // $kurir = Kurir::create($validatedData);
-
-        // return response()->json([
-        //     'success' => true,
-        //     'kurir' => [
-        //         'kurir_id' => $kurir->kurir_id,
-        //         // 'name' => $kurir->name,
-        //         // 'email' => $kurir->email,
-        //         // 'phone' => $kurir->phone,
-        //         'status' => $kurir->status,
-        //         'rating' => $kurir->rating,
-        //         // 'photo' => $kurir->photo
-        //     ]
-        // ]);
 
         $kurir = Kurir::create($validatedData);
         $kurir->load('user'); // load relasi user
@@ -222,47 +206,6 @@ class KurirController extends Controller
         ]);
     }
 
-//     public function get()
-// {
-//     $data = Kurir::with('user') // ambil relasi user
-//         ->select('kurir_id', 'user_id', 'status', 'rating')
-//         ->get()
-//         ->map(function ($kurir) {
-//             return [
-//                 'kurir_id' => $kurir->kurir_id,
-//                 'status' => $kurir->status,
-//                 'rating' => $kurir->rating,
-//                 'user' => [
-//                     'name' => $kurir->user->name ?? null,
-//                     'email' => $kurir->user->email ?? null,
-//                     'phone' => $kurir->user->phone ?? null,
-//                     'photo' => $kurir->user->photo ?? null,
-//                 ],
-//             ];
-//         });
-
-//     return response()->json([
-//         'success' => true,
-//         'data' => $data
-//     ]);
-// }
-
-
-    /**
-     * Delete a kurir
-     */
-    // public function destroy(Kurir $kurir)
-    // {
-    //     // if ($kurir->photo) {
-    //     //     Storage::disk('public')->delete($kurir->photo);
-    //     // }
-
-    //     $kurir->delete();
-
-    //     return response()->json([
-    //         'success' => true
-    //     ]);
-    // }
     public function destroy(Kurir $kurir)
 {
     // Hapus foto dari storage jika user memiliki foto
@@ -284,27 +227,5 @@ class KurirController extends Controller
     ]);
 }
 }
-
-    // app/Http/Controllers/KurirController.php
-    // public function profile()
-    // {
-    //     // $user = auth()->user();
-
-    //     $kurir = $user->kurir; // relasi user -> kurir (pastikan sudah diset)
-
-    //     return response()->json([
-    //         'kurir' => [
-    //             'status' => $kurir?->status,
-    //             'rating' => $kurir?->rating,
-    //             'user' => [
-    //                 'name' => $user->name,
-    //                 'email' => $user->email,
-    //                 'phone' => $user->phone,
-    //                 'photo' => $user->photo,
-    //             ]
-    //         ]
-    //     ]);
-    // }
-
 
 

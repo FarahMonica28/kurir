@@ -26,27 +26,10 @@ const getProfile = async () => {
         email: store.user.email,
         phone: store.user.phone,
         photo: store.user.photo ? "/storage/" + store.user.photo : "/default-avatar.png",
-        // status: store.user.kurir?.status,
-        // status: store.user?.kurir?.status || "-",
         status: store.user.kurir?.status,
         rating: store.user.rating,
     };
 };
-
-// const getProfile = async () => {
-//     const response = await axios.get(`/kurir/`);
-//     console.log(response.data)
-//     const user = response.data;
-
-//     kurir.value = {
-//         name: user.name,
-//         email: user.email,
-//         phone: user.phone,
-//         photo: user.photo ? "/storage/" + user.photo : "/default-avatar.png",
-//         status: user.kurir?.status ?? "-",
-//         rating: user.kurir?.rating ?? 0,
-//     };
-// };
 
 onMounted(() => {
     getProfile();

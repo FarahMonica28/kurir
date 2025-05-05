@@ -15,6 +15,22 @@ const detailData = ref<transaksi | null>(null);
 const showRincian = (data: transaksi) => {
     detailData.value = data;
 };
+function showKurirDetail(kurir) {
+  if (!kurir || !kurir.user) {
+    Swal.fire('Data tidak tersedia', 'Kurir belum ditugaskan', 'warning');
+    return;
+  }
+
+  Swal.fire({
+    title: kurir.user.name,
+    html: `
+      <img src="${kurir.user.photo  ? "/storage/" + kurir.user.photo : "/default-avatar.png"}" alt="Foto Kurir" class="rounded-circle" width="110" height="110">
+     <div style="margin-top: 15px;">
+      <p><strong>Email:</strong> ${kurir.user.email}</p>
+      <p><strong>Telepon:</strong> ${kurir.user.phone}</p>`,
+      showCloseButton: true,
+  });
+}
 
 const closeDetail = () => {
     detailData.value = null;
@@ -38,9 +54,9 @@ const columns = [
     column.accessor("alamat_tujuan", {
         header: "Alamat Tujuan",
     }),
-    // column.accessor("pengirim", {
-    //     header: "Pengirim",
-    // }),
+    column.accessor("pengguna.user.name", {
+        header: "Pengirim",
+    }),
     column.accessor("penerima", {
         header: "Penerima",
     }),
@@ -51,12 +67,6 @@ const columns = [
         header: "Status",
         cell: (cell) => {
             const status = cell.getValue();
-            // const statusClass =
-            //     status === "Terkirim"
-            //         ? "badge bg-success fw-bold"
-            //         : status === "Belum Terkirim"
-            //             ? "badge bg-warning text-dark fw-bold"
-            //             : "badge bg-secondary fw-bold";
             const statusClass =
                 status === "Terkirim"
                     ? "badge bg-success fw-bold"
@@ -159,7 +169,8 @@ watch(openForm, (val) => {
                             <p><strong>Nama Barang:</strong> {{ detailData.nama_barang }}</p>
                             <p><strong>Alamat Asal:</strong> {{ detailData.alamat_asal }}</p>
                             <p><strong>Alamat Tujuan:</strong> {{ detailData.alamat_tujuan }}</p>
-                            <p><strong>Pengirim:</strong> {{ detailData.pengirim }}</p>
+                            <!-- <p><strong>Pengirim:</strong> {{ detailData.pengirim || '-' }}</p> -->
+                            <p><strong>Pengirim:</strong> {{ detailData.pengguna?.user.name || '-' }}</p>
                         </div>
                         <div class="col-md-6">
                             <p><strong>Status:</strong> {{ detailData.status }}</p>
@@ -183,8 +194,13 @@ watch(openForm, (val) => {
                     <hr />
                     <div class="row">
                         <div class="col-md-12">
-                            <!-- <p><strong>Kurir:</strong> {{ detailData.kurir_id}}</p> -->
-                            <p><strong>Kurir:</strong> {{ detailData.kurir?.user.name || '-' }}</p>
+                            <!-- <p><strong>Kurir:</strong> {{ detailData.kurir?.user.name || '-' }}</p> -->
+                            <p><strong>Kurir : </strong>
+                                <span @click="showKurirDetail(detailData.kurir)"
+                                    style="cursor: pointer; color: blue; text-decoration: underline;">
+                                    {{ detailData.kurir?.user.name || 'Tidak ada kurir' }}
+                                </span>
+                            </p>
                             <p><strong>Penilaian:</strong> {{ detailData.penilaian || 'belum ada penilaian' }}</p>
                             <p><strong>Komentar:</strong> {{ detailData.komentar || 'belum ada komentar' }}</p>
                         </div>

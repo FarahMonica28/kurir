@@ -20,9 +20,6 @@ const { delete: deletePengguna } = useDelete({
 const columns = [
   column.accessor("no", { header: "#" }),
   column.accessor("pengguna_id", { header: "ID Pengguna" }),
-  // column.accessor("phone", { header: "No. Telp" }),
-  // column.accessor("name", { header: "Nama Pengguna" }),
-  // column.accessor("email", { header: "Email" }),
   column.accessor("user.name", { header: "Nama Pengguna" }),
   column.accessor("user.email", { header: "Email" }),
   column.accessor("user.phone", { header: "No. Telp" }),
@@ -38,17 +35,6 @@ const columns = [
     : "Tidak ada foto",
   }),
   column.accessor("alamat", { header: "Alamat" }),
-  // column.accessor("photo", {
-  //   header: "Foto Profil",
-  //   cell: (cell) =>
-  //     cell.getValue()
-  //       ? h("img", {
-  //         src: `/storage/${cell.getValue()}`,
-  //         alt: "Foto Pengguna",
-  //         style: "width: 50px; height: 50px; border-radius: 8px;",
-  //       })
-  //       : "Tidak ada foto",
-  // }),
   column.accessor("pengguna_id", {
     header: "Aksi",
     cell: (cell) =>

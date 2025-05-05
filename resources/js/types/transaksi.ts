@@ -17,6 +17,9 @@ export interface transaksi {
     kurir: {
         name: string;   
     };
+    pengguna: {
+        name: string;   
+    };
     created_at?: string;       // Waktu dibuat
     updated_at?: string;       // Waktu diperbarui
 }

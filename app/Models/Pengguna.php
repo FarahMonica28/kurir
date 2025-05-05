@@ -35,7 +35,11 @@ class Pengguna extends Model
 
     public function pengguna()
     {
-        return $this->belongsTo(Pengguna::class, 'pengguna_id', 'pengguna_id');
+        return $this->belongsTo(Pengguna::class, 'pengguna_id');
+    }
+    public function transaksi()
+    {
+        return $this->hasMany(Transaksi::class, 'pengguna_id', 'pengguna_id');
     }
 
 }

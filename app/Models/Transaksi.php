@@ -23,7 +23,7 @@ class Transaksi extends Model
         'berat_barang',
         'biaya',
         'kurir_id', // kalau ini foreign key, ubah jadi 'kurir_id'
-        'nama_barang',
+        'pengguna_id', // kalau ini foreign key, ubah jadi 'kurir_id'
         'no_hp_penerima',
         'waktu',
         'status',
@@ -32,25 +32,19 @@ class Transaksi extends Model
     ];
 
     // Relasi ke Kurir
-    // public function kurir()
-    // {
-    //     // return $this->belongsTo(Kurir::class, 'kurir', 'nama'); // jika `kurir` adalah nama
-    //     return $this->belongsTo(Kurir::class, 'kurir_id'); // jika kamu ganti jadi ID
-    // }
-    // Transaksi.php
-    // public function kurir()
-    // {
-    //     return $this->belongsTo(Kurir::class, 'kurir_id')->with('user');
-    // }
+    public function kurir()
+    {
+        return $this->belongsTo(Kurir::class, 'kurir_id', 'kurir_id');
+    }
+    public function pengguna()
+    {
+        return $this->belongsTo(Pengguna::class, 'pengguna_id', 'pengguna_id');
+    }
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'pengguna_id', 'id');
+    }
 
-    // // App\Models\Transaksi.php
-public function kurir()
-{
-    return $this->belongsTo(Kurir::class, 'kurir_id', 'kurir_id');
-}
-public function user()
-{
-    return $this->belongsTo(User::class, 'user_id');
-}
+
 
 }

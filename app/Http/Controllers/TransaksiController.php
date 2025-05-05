@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Transaksi;
-use App\Models\Kurir;
+use App\Models\Pengguna;
 // use App\Models\User;
 // use App\Models\Kurir;
+use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -18,14 +20,22 @@ class TransaksiController extends Controller
         $page = $request->page ? $request->page - 1 : 0;
     
         DB::statement('set @no=0+' . $page * $per);
+        // $pengguna = Auth::guard('pengguna')->user();
+        // $pengguna_id = Auth::id(); // Ambil ID pengguna yang sedang login
 
-        Log::info(auth()->user()->role);
-    
-        $data = Transaksi::with('kurir.user') // pastikan ada relasi ke kurir di model
+        
+        // $pengguna = Auth::user(); 
+        
+        // Log::info(auth()->user()->role);
+        
+        // $data = Transaksi::where('pengguna_id', $pengguna_id)->get();
+        // // $data = Transaksi::where('pengguna_id', $pengguna->pengguna_id)->get();
+        // $data = Transaksi::with('pengguna.user');// pastikan ada relasi ke kurir di model
+        $data = Transaksi::with('kurir.user')->with('pengguna.user') // pastikan ada relasi ke kurir di model
             ->when($request->search, function ($query, $search) {
                 $query->where('nama_barang', 'like', "%$search%")
                     ->orWhere('berat_barang', 'like', "%$search%")
-                    ->orWhere('pengirim', 'like', "%$search%")
+                    // ->orWhere('pengirim', 'like', "%$search%")
                     ->orWhere('penerima', 'like', "%$search%")
                     ->orWhere('alamat_asal', 'like', "%$search%")
                     ->orWhere('alamat_tujuan', 'like', "%$search%")
@@ -37,10 +47,14 @@ class TransaksiController extends Controller
             })
             ->when($request->has('exclude_status'), function ($query) use ($request) {
                 $query->where('status', '!=', $request->exclude_status);
-                Log::info('e');
-            })
-            ->when(auth()->user()->role === 'kurir', function ($query) {
-                Log::info('e');
+                Log::info('a');
+            })     
+            // // Filter jika role pengguna (hanya bisa lihat order sendiri)
+            // ->when(auth()->user()->role === 'pengguna', function ($query) {
+            //     $query->where('pengguna_id', auth()->id());
+            // })
+            ->when(auth()->user()->role->name === 'kurir', function ($query) {
+                Log::info('b');
                 $query->where(function ($q) {
                     Log::info('e');
                     $kurirId = auth()->user()->kurir->kurir_id;
@@ -48,7 +62,13 @@ class TransaksiController extends Controller
                       ->orWhere('kurir_id', $kurirId); // atau yang diambil oleh kurir tersebut
                 });
             })
-            
+            ->when(auth()->user()->role->name === 'pengguna', function ($query) {
+                Log::info('pengguna');
+                $penggunaId = auth()->user()->pengguna->pengguna_id;
+                // Log::info('Pengguna',$penggunaId);
+                $query->Where('pengguna_id', $penggunaId); // atau yang diambil oleh kurir tersebut
+                
+            })
                      
             // ->when($request->kurir_id, function ($query, $kurirId) {
             //     $query->where('kurir_id', $kurirId);
@@ -70,18 +90,26 @@ class TransaksiController extends Controller
     
     public function riwayat()
     {
-        $kurirId = auth()->user()->kurir->kurir_id;
-        // $transaksi = Transaksi::where('status', 'Terkirim')->get();
-        // $transaksi = Transaksi::with('kurir')->where('status', 'Terkirim')->get();
-
-        $transaksi = Transaksi::where('kurir_id', $kurirId)
-        ->where('status', 'Terkirim') // hanya yang selesai
-        ->orderBy('waktu_terkirim', 'desc')
-        ->get();
-        // $transaksi = Transaksi::with('kurir.user')->where('status', 'Terkirim')->get();
-
+        $user = auth()->user();
+        if ($user->role === 'kurir') {
+            $kurirId = $user->kurir->kurir_id;
+            $transaksi = Transaksi::where('kurir_id', $kurirId)
+                ->where('status', 'Terkirim')
+                ->orderBy('waktu_terkirim', 'desc')
+                ->get();
+        } elseif ($user->role === 'pengguna') {
+            $penggunaId = $user->pengguna->pengguna_id;
+            $transaksi = Transaksi::where('pengguna_id', $penggunaId)
+                ->where('status', 'Terkirim')
+                ->orderBy('waktu_terkirim', 'desc')
+                ->get();
+        } else {
+            $transaksi = collect(); // empty collection
+        }
+    
         return response()->json($transaksi);
     }
+    
 
     public function updateStatus(Request $request, $id)
 {
@@ -116,8 +144,10 @@ class TransaksiController extends Controller
 
     public function show(Transaksi $transaksi)
     {
-        // $transaksi = Transaksi::with('kurir')->where('kurir_id', $id)->first();
-        $transaksi->load('kurir');
+
+        $transaksi->load('pengguna', 'kurir');
+        // $transaksi->load('kurir');
+        // $transaksi->load('pengguna');
 
         // $transaksi = Transaksi::with('kurir.user')->findOrFail($id);
         return response()->json( [ 
@@ -128,17 +158,15 @@ class TransaksiController extends Controller
                 'alamat_tujuan' => $transaksi->alamat_tujuan,
                 'penerima' => $transaksi->penerima,
                 'pengirim' => $transaksi->pengirim,
+                'pengguna_id' => $transaksi->pengguna_id,
                 'no_hp_penerima' => $transaksi->no_hp_penerima,
                 'berat_barang' => $transaksi->berat_barang,
                 'biaya' => $transaksi->biaya,
                 'status' => $transaksi->status,
-                'kurir' => $transaksi->kurir, // Tambahkan ini untuk frontend
+                'kurir' => $transaksi->kurir,
+                'pengguna' => $transaksi->pengguna, // Tambahkan ini untuk frontend
                 'penilaian' => $transaksi->penilaian, // Tambahkan ini untuk frontend
                 'komentar' => $transaksi->komentar, // Tambahkan ini untuk frontend
-                // 'kurir_id' => $transaksi->kurir->kurir_id,
-                // 'transaksi' => [
-                //     'status' => $transaksi->status,
-                // ]
         ]);
         
     }
@@ -146,9 +174,8 @@ class TransaksiController extends Controller
     public function store(Request $request)
     {
         $transaksi = $request->validate([
-            // 'id' => 'required|integer|exists:transaksi,id', 
-            // 'no_transaksi' => 'required|string|unique:transaksi,no_transaksi',
-            'pengirim' => 'required|string',
+            // 'pengirim' => 'required|string',
+            // 'pengirim' => 'required|string',
             'penerima' => 'required|string',
             'no_hp_penerima' => 'required|string',
             'alamat_asal' => 'required|string',
@@ -163,9 +190,12 @@ class TransaksiController extends Controller
             // 'komentar' => 'nullable|string',
             'penilaian' => 'nullable|integer',
             'komentar' => 'nullable|string',
+            'pengguna_id' => 'nullable|exists:pengguna,pengguna_id',
             // 'kurir_id' => 'nullable|exists:kurir,kurir_id',
             
         ]);
+
+        $pengguna = Pengguna::where('user_id', $request->id)->first();; // pastikan ini nama field-nya
         
         // $kurir = Kurir::where('status', 'aktif')->first();
 
@@ -189,7 +219,7 @@ class TransaksiController extends Controller
             'nama_barang' => $request->nama_barang,
             'alamat_asal' => $request->alamat_asal,
             'alamat_tujuan' => $request->alamat_tujuan,
-            'pengirim' => $request->pengirim,
+            // 'pengirim' => $request->pengirim,
             'penerima' => $request->penerima,
             'no_hp_penerima' => $request->no_hp_penerima,
             // 'status' => $request->status ?? 'Dalam Proses',
@@ -200,7 +230,8 @@ class TransaksiController extends Controller
             'komentar' => $request->komentar,
             // 'waktu' => now()->format('d-m-Y H:i:s'),
             'waktu' => now()->format('Y-m-d H:i:s'),
-            'kurir_id' => $request->kurir_id,
+            // 'kurir_id' => $request->kurir_id,
+            'pengguna_id' => $pengguna->pengguna_id
         ]);
 
         // Ambil 1 kurir aktif yang belum menangani order aktif (selain "Terkirim")
@@ -275,6 +306,7 @@ public function update(Request $request, $id)
     // Cegah kurir mengambil pesanan yang sudah diambil kurir lain
     $user = auth()->user();
     $kurirId = $user->kurir->kurir_id ?? null;
+    $penggunaId = $user->pengguna->pengguna_id ?? null;
 
     // Cegah kurir mengambil pesanan yang sudah diambil kurir lain
     if ($user->role === 'kurir') {
@@ -282,6 +314,13 @@ public function update(Request $request, $id)
             return response()->json([
                 'message' => 'Pesanan sudah diambil oleh kurir lain.'
             ], 403);
+        }
+    }
+    if ($user->role === 'pengguna') {
+        if ($transaksi->pengguna_id && $transaksi->pengguna_id != $penggunaId) {
+            return response()->json([
+                // 'message' => 'Pesanan sudah diambil oleh kurir lain.'
+            ], 402);
         }
     }
 
@@ -317,8 +356,7 @@ public function update(Request $request, $id)
             $transaksi->waktu_terkirim = now();
             break;
     }
-    $transaksi->save();
-
+    
     $transaksi->update([
         'status' => $request->status,
         'berat_barang' => $request->berat_barang,
@@ -326,9 +364,10 @@ public function update(Request $request, $id)
         'kurir_id' => $request->kurir_id,
         // 'kurir_id' => $request->kurir->kurir_id,
         // 'waktu' => $waktuLama ? $waktuLama . '<br>' . $statusString : $statusString,
-        ]);
-        
-        
+    ]);
+    
+    
+    $transaksi->save();
 
     return response()->json([
         'message' => 'Status berhasil diperbarui',

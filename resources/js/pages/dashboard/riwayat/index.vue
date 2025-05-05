@@ -23,6 +23,22 @@ const statusBadgeClass = (status: string) => {
       return 'badge bg-secondary';
   }
 };
+function showKurirDetail(pengguna) {
+  if (!pengguna || !pengguna.user) {
+    Swal.fire('Data tidak tersedia', 'pengguna tidak ditemukan', 'warning');
+    return;
+  }
+
+  Swal.fire({
+    title: pengguna.user.name,
+    html: `
+      <img src="${pengguna.user.photo ? "/storage/" + pengguna.user.photo : "/default-avatar.png"}" alt="Foto Kurir" class="rounded-circle" width="110" height="110">
+     <div style="margin-top: 15px;">
+      <p><strong>Email:</strong> ${pengguna.user.email}</p>
+      <p><strong>Telepon:</strong> ${pengguna.user.phone}</p>`,
+    showCloseButton: true,
+  });
+}
 
 const { delete: deleteOrder } = useDelete({
   onSuccess: () => paginateRef.value.refetch(),
@@ -36,36 +52,6 @@ const showRincian = (data: transaksi) => {
 const closeDetail = () => {
   detailData.value = null;
 };
-// const showRincian = (data: transaksi) => {
-//   Swal.fire({
-//     title: `<strong>Detail Transaksi</strong>`,
-//     html: `
-//       <div style="text-align: left; font-size: 1.1rem;">
-//         <p><b>No Order</b> ${data.id}</p>
-//         <p><b>Nama Barang:</b> ${data.nama_barang}</p>
-//         <p><b>Alamat Asal:</b> ${data.alamat_asal}</p>
-//         <p><b>Alamat Tujuan:</b> ${data.alamat_tujuan}</p>
-//         <p><b>Pengirim:</b> ${data.pengirim}</p>
-//         <p><b>Penerima:</b> ${data.penerima}</p>
-//         <p><b>No Hp Penerima:</b> ${data.no_hp_penerima}</p>
-//         <p><b>Status:</b> ${data.status}</p>
-//         <hr/>
-//         <p><b>Waktu Dibuat:</b> ${data.waktu || '-'}</p>
-//         <p><b>Waktu Penjemputan Barang:</b> ${data.waktu_penjemputan || '-'}</p>
-//         <p><b>Waktu Proses Pengiriman:</b> ${data.waktu_proses || '-'}</p>
-//         <p><b>Waktu Terkirim:</b> ${data.waktu_terkirim || '-'}</p>
-//         <hr/>
-//         <p><b>Penilaian:</b> ${data.penilaian || "belum ada penilaian"}</p>
-//         <p><b>Komentar:</b> ${data.komentar || "belum ada komentar"}</p>
-//       </div>
-//     `,
-//     // icon: "info",
-//     confirmButtonText: "Tutup",
-//     // customClass: {
-//     //   popup: 'text-start',
-//     // },
-//   });
-// };
 
 const columns = [
   column.accessor("no", { header: "#" }),
@@ -81,7 +67,7 @@ const columns = [
   column.accessor("alamat_tujuan", {
     header: "Alamat Tujuan",
   }),
-  column.accessor("pengirim", {
+  column.accessor("pengguna.user.name", {
     header: "Pengirim",
   }),
   column.accessor("penerima", {
@@ -90,21 +76,6 @@ const columns = [
   column.accessor("no_hp_penerima", {
     header: "No HP Penerima",
   }),
-  // column.accessor("status", {
-  //   header: "Status",
-  //   cell: (cell) => {
-  //     const status = cell.getValue();
-  //     const statusClass =
-  //       status === "Terkirim"
-  //         ? "badge bg-success fw-bold"
-  //         : status === "Belum Terkirim"
-  //           ? "badge bg-warning text-dark fw-bold"
-  //           : "badge bg-secondary fw-bold";
-
-
-  //     return h("span", { class: statusClass }, status);
-  //   },
-  // }),
   column.accessor("penilaian", {
     header: "Penilaian",
     cell: (cell) => {
@@ -172,7 +143,13 @@ watch(openForm, (val) => {
               <p><strong>Nama Barang:</strong> {{ detailData.nama_barang }}</p>
               <p><strong>Alamat Asal:</strong> {{ detailData.alamat_asal }}</p>
               <p><strong>Alamat Tujuan:</strong> {{ detailData.alamat_tujuan }}</p>
-              <p><strong>Pengirim:</strong> {{ detailData.pengirim }}</p>
+              <!-- <p><strong>Pengirim:</strong> {{ detailData.pengguna?.user.name  }}</p> -->
+              <p><strong>Pengirim : </strong>
+                <span @click="showKurirDetail(detailData.pengguna)"
+                  style="cursor: pointer; color: blue; text-decoration: underline;">
+                  {{ detailData.pengguna?.user.name || 'Tidak ada pengguna' }}
+                </span>
+              </p>
             </div>
             <div class="col-md-6">
               <p><strong>Status:</strong> {{ detailData.status }}</p>

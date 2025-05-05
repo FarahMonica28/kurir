@@ -40,7 +40,7 @@ const formSchema = Yup.object().shape({
   nama_barang: Yup.string().required("Nama Barang harus diisi"),
   // pengirim: Yup.string().required("Nama Pengirim harus diisi"),
   penerima: Yup.string().required("Nama Penerima harus diisi"),
-  pengirim: Yup.string().required("Nama Pengirim harus diisi"),
+  // pengirim: Yup.string().required("Nama Pengirim harus diisi"),
   alamat_asal: Yup.string().required("Alamat Asal harus diisi"),
   alamat_tujuan: Yup.string().required("Alamat Tujuan harus diisi"),
   no_hp_penerima: Yup.string().required("No HP Penerima harus diisi"),
@@ -61,6 +61,7 @@ function getEdit() {
         nama_barang: data.nama_barang || "",
         penerima: data.penerima || "",
         pengirim: data.pengirim || "",
+        // pengguna_id: data.pengguna_id || "",
         alamat_asal: data.alamat_asal || "",
         alamat_tujuan: data.alamat_tujuan || "",
         no_hp_penerima: data.no_hp_penerima || "",
@@ -79,52 +80,6 @@ function getEdit() {
       unblock(document.getElementById("form-transaksi"));
     });
 }
-// function antar() {
-//   const formData = new FormData();
-//   formData.append("id", transaksi.value.id);
-//   formData.append("status", "belum dikirim", "sedang dikirim", "terkirim"); // atau sesuaikan nilai status yang kamu pakai
-//   formData.append("berat_barang", transaksi.value.berat_barang?.toString() || "0");
-//   formData.append("biaya", transaksi.value.biaya?.toString() || "0");
-
-//   block(document.getElementById("form-transaksi"));
-//   axios({
-//     method: "get",
-//     url: `/transaksi/${props.selected}`,
-//     data: formData,
-//     headers: {
-//       "Content-Type": "multipart/form-data",
-//     },
-//   })
-//     // .then(() => {
-//     //   emit("close");
-//     //   emit("refresh");
-//     //   toast.success("Status berhasil diubah menjadi dikirim");
-//     // })
-//     .catch((err: any) => {
-//       toast.error(err.response.data.message || "Gagal mengubah status");
-//     })
-//     .finally(() => {
-//       unblock(document.getElementById("form-transaksi"));
-//     });
-// }
-
-
-// const kurir = useKurir();
-// const status = useStatusPengiriman();
-
-// const listKurir = computed(() =>
-//   kurir.data.value?.map((item: Kurir) => ({
-//     id: item.id,
-//     text: item.user?.name ?? "-",
-//   }))
-// );
-
-// const listStatus = computed(() =>
-//   status.data.value?.map((item: PengirimanStatus) => ({
-//     id: item.id,
-//     text: item.nama_status,
-//   }))
-// );
 
 function submit() {
   const formData = new FormData();
@@ -137,29 +92,14 @@ function submit() {
   formData.append("alamat_tujuan", transaksi.value.alamat_tujuan);
   formData.append("no_hp_penerima", transaksi.value.no_hp_penerima);
   formData.append("berat_barang", transaksi.value.berat_barang);
-  // formData.append("biaya", transaksi.value.biaya);
   formData.append("biaya", biayaOtomatis.value.toString());
   formData.append("status", transaksi.value.status);
   formData.append("kurir_id", currentKurir.value.kurir.kurir_id);
-  // formData.append("kurir_id", transaksi.value.kurir_id);
 
-
-  // formData.append("waktu", transaksi.value.waktu);
-
-  // formData.append("penilaian", transaksi.value.penilaian || ''); // opsional
-  // formData.append("komentar", transaksi.value.komentar || '');   // opsional
-  // formData.append("kurir_id", transaksi.value.kurir_id);
-
-
-  // if (props.selected) {
-  //   formData.append("_method", "PUT");
-  // }
   if (props.selected) {
     formData.append("_method", "PUT");
   } else {
     //   formData.append("waktu", new Date().toISOString());
-    //   // formData.append("status", "belum terkirim" || "sedang dikirim" || "terkirim");
-    // formData.append("status", transaksi.value.status);
     formData.append("status", transaksi.value.status || "belum_dikirim");
 
   }
@@ -207,7 +147,6 @@ onMounted(() => {
   // jika form baru (bukan edit), isi otomatis kurir dari yang login
   transaksi.value.kurir_id = currentKurir.value?.kurir.kurir_id || "";
   console.log(transaksi.value.kurir_id)
-
   if (props.selected) getEdit();
 });
 // onMounted(() => {
@@ -220,12 +159,6 @@ watch(
     if (props.selected) getEdit();
   }
 );
-// watch(
-//   () => props.selected,
-//   () => {
-//     if (props.selected) antar();
-//   }
-// );
 </script>
 
 <template>
@@ -260,8 +193,8 @@ watch(
 
         <div class="col-md-6 mb-7">
           <label class="form-label required fw-bold">Pengirim</label>
-          <Field class="form-control" name="pengirim" v-model="transaksi.pengirim" disabled />
-          <ErrorMessage name="pengirim" class="text-danger small" />
+          <Field class="form-control" name="pengguna_id" v-model="transaksi.pengirim" disabled />
+          <ErrorMessage name="pengguna_id" class="text-danger small" />
         </div>
 
         <div class="col-md-6 mb-7">
@@ -295,14 +228,16 @@ watch(
           <Field as="select" name="status" class="form-select" v-model="transaksi.status">
             <option value="" disabled>Pilih Status</option>
             <option value="Belum Terkirim" disabled>Belum Dikirim</option>
-            <option value="Penjemputan Barang" >Penjemputan Barang</option>
-            <option value="Sedang Dikirim">Sedang Dikirim</option>
-            <option value="Terkirim">Terkirim</option>
+            <option value="Penjemputan Barang" :disabled="['Sedang Dikirim', 'Terkirim'].includes(transaksi.status)">
+              Penjemputan Barang
+            </option>
+            <option value="Sedang Dikirim" :disabled="transaksi.status === 'Terkirim'">
+              Sedang Dikirim
+            </option>
+            <option value="Terkirim">
+              Terkirim
+            </option>
           </Field>
-          <!-- <Field as="select" name="status" class="form-select" v-model="transaksi.status">
-            <option value="" disabled>Pilih Status</option>
-            <option v-for="status in statuses" :key="status" :value="status">{{ status }}</option>
-          </Field> -->
           <ErrorMessage name="status" class="text-danger small" />
         </div>
 

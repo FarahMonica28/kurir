@@ -15,9 +15,6 @@ const props = defineProps({
 });
 
 const emit = defineEmits(["close", "refresh"]);
-
-// const kurir = ref<kurir>({} as kurir);
-// // const fileTypes = ref(["image/jpeg", "image/png", "image/jpg"]);
 // // const photo = ref<any>([]);
 const photo = ref<any[]>([]);
 const fileTypes = ref(["image/jpeg", "image/png", "image/jpg"]);
@@ -34,35 +31,6 @@ const kurir = ref({
 const formRef = ref();
 const avgRating = ref(0);
 
-
-
-// const formSchema = Yup.object().shape({
-//   // kurir_id: Yup.string().required("ID Kurir harus diisi"),
-//   // name: Yup.string().required("Nama kurir harus diisi"),
-//   // email: Yup.string().email("Email harus valid").required("Email harus diisi"),
-//   // phone: Yup.string().required("Nomor Telepon harus diisi"),
-//   // password: Yup.string()
-//   //   .min(6, "Password minimal 6 karakter")
-//   //   .optional(),
-//   status: Yup.string().required("Pilih status kurir"),
-//   rating: Yup.number().min(1).max(5).required("Pilih rating"),
-// });
-
-// function getEdit() {
-//   block(document.getElementById("form-kurir"));
-//   ApiService.get("kurir", props.selected)
-//     // .then(({ data }) => {
-//     //   kurir.value = data.kurir;
-//     //   photo.value = data.kurir.photo ? ["/storage/" + data.kurir.photo] : [];
-//     //   kurir.value.password = ""; // Kosongkan password saat edit
-//     // })
-//     .catch((err: any) => {
-//       toast.error(err.response.data.message);
-//     })
-//     .finally(() => {
-//       unblock(document.getElementById("form-kurir"));
-//     });
-// }
 
 const formSchema = Yup.object().shape({
   // kurir_id: Yup.string().required("ID Kurir harus diisi"),
@@ -120,14 +88,6 @@ function submit() {
   formData.append("status", kurir.value.status);
   // formData.append("rating", kurir.value.rating.toString());
 
-
-  // if (kurir.value.password) {
-  //   formData.append("password", kurir.value.password);
-  // }
-
-  // if (photo.value.length) {
-  //   formData.append("photo", photo.value[0].file);
-  // }
   if (photo.value.length && photo.value[0].file) {
     formData.append("photo", photo.value[0].file);
   }
@@ -192,13 +152,6 @@ watch(
     </div>
     <div class="card-body">
       <div class="row">
-        <!-- <div class="col-md-6">
-          <div class="fv-row mb-7">
-            <label class="form-label fw-bold fs-6 required">ID Kurir</label>
-            <Field class="form-control form-control-lg form-control-solid" type="text" name="kurir_id" v-model="kurir.kurir_id" placeholder="Masukkan ID Kurir" />
-            <ErrorMessage name="kurir_id" class="text-danger" />
-          </div>
-        </div> -->
 
         <div class="col-md-6">
           <div class="fv-row mb-7">
@@ -232,30 +185,6 @@ watch(
             <ErrorMessage name="password" class="text-danger" />
           </div>
         </div>
-        <!-- <div class="col-md-6">
-          <div class="fv-row mb-7">
-            <label class="form-label fw-bold fs-6 required">Rating</label>
-            <Field as="select" class="form-select form-select-solid" name="rating" v-model="kurir.rating">
-              <option value="0">Pilih Rating</option>
-              <option value="1">⭐</option>
-              <option value="2">⭐⭐</option>
-              <option value="3">⭐⭐⭐</option>
-              <option value="4">⭐⭐⭐⭐</option>
-              <option value="5">⭐⭐⭐⭐⭐</option>
-            </Field>
-            <ErrorMessage name="rating" class="text-danger" />
-          </div>
-        </div> -->
-          <!-- <div class="col-md-6">
-            <div class="fv-row mb-7">
-              <label class="form-label fw-bold fs-6 required">Status</label>
-              <Field as="select" class="form-select form-select-solid" name="status" v-model="kurir.status">
-                <option value="aktif">Aktif</option>
-                <option value="nonaktif">Nonaktif</option>
-              </Field>
-              <ErrorMessage name="status" class="text-danger" />
-            </div>
-          </div> -->
         <div class="col-md-6">
           <div class="fv-row mb-7">
             <label class="form-label fw-bold fs-6">Foto Profil</label>

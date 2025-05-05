@@ -5,8 +5,6 @@ import * as Yup from "yup";
 import axios from "@/libs/axios";
 import { toast } from "vue3-toastify";
 import ApiService from "@/core/services/ApiService";
-// import { useKurir } from "@/services/useKurir";
-// import { useStatusPengiriman } from "@/services/useStatusPengiriman";
 import type { transaksi } from "@/types";
 import Swal from "sweetalert2";
 
@@ -18,8 +16,8 @@ const transaksi = ref<transaksi>({} as transaksi);
 const formRef = ref();
 
 const formSchema = Yup.object().shape({
-  // penilaian: Yup.string().required("Penilaian harus diisi"),
-  // komentar: Yup.string().required("komentar harus diisi"),
+  penilaian: Yup.string().required("Penilaian harus diisi"),
+  komentar: Yup.string().required("komentar harus diisi"),
 });
 
 function getEdit() {
@@ -107,16 +105,6 @@ watch(
     if (props.selected) getEdit();
   }
 );
-// onMounted(() => {
-//   if (props.selected) antar();
-// });
-
-// watch(
-//   () => props.selected,
-//   () => {
-//     if (props.selected) antar();
-//   }
-// );
 </script>
 
 <template>  

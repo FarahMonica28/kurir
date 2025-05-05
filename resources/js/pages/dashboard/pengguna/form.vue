@@ -15,10 +15,6 @@ const props = defineProps({
 });
 
 const emit = defineEmits(["close", "refresh"]);
-
-// const pengguna = ref<pengguna>({} as pengguna);
-// // const fileTypes = ref(["image/jpeg", "image/png", "image/jpg"]);
-// // const photo = ref<any>([]);
 const photo = ref<any[]>([]);
 const fileTypes = ref(["image/jpeg", "image/png", "image/jpg"]);
 const pengguna = ref({
@@ -44,7 +40,6 @@ const formSchema = Yup.object().shape({
     .min(6, "Password minimal 8 karakter")
     .optional(), // opsional saat edit
   alamat: Yup.string().required("Pilih alamat pengguna"),
-  // rating: Yup.number().min(1).max(5).required("Pilih rating"),
 });
 
 
@@ -56,7 +51,6 @@ function getEdit() {
       // Pastikan struktur sesuai response dar i backend
       pengguna.value = {
         alamat: data.user.alamat || "nonaktif", // Tambahkan alamat,
-        // alamat: data.user?.alamat || "Nonaktif", // Tambahkan alamat,
         user: {
           name: data.user?.name || "",
           email: data.user?.email || "",
@@ -89,14 +83,6 @@ function submit() {
   formData.append("alamat", pengguna.value.alamat);
   // formData.append("rating", pengguna.value.rating.toString());
 
-
-  // if (pengguna.value.password) {
-  //   formData.append("password", pengguna.value.password);
-  // }
-
-  // if (photo.value.length) {
-  //   formData.append("photo", photo.value[0].file);
-  // }
   if (photo.value.length && photo.value[0].file) {
     formData.append("photo", photo.value[0].file);
   }
@@ -157,13 +143,6 @@ watch(
     </div>
     <div class="card-body">
       <div class="row">
-        <!-- <div class="col-md-6">
-          <div class="fv-row mb-7">
-            <label class="form-label fw-bold fs-6 required">ID Pengguna</label>
-            <Field class="form-control form-control-lg form-control-solid" type="text" name="pengguna_id" v-model="pengguna.pengguna_id" placeholder="Masukkan ID Pengguna" />
-            <ErrorMessage name="pengguna_id" class="text-danger" />
-          </div>
-        </div> -->
 
         <div class="col-md-6">
           <div class="fv-row mb-7">

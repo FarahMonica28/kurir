@@ -10,9 +10,8 @@ const paginateRef = ref<any>(null);
 const selected = ref<string>("");
 const openForm = ref<boolean>(false);
 
-
 const columns = [
-    // column.accessor("no", { header: "#" }),
+    column.accessor("no", { header: "#" }),
     column.accessor("id", {
         header: "No Order",
     }),
@@ -25,7 +24,7 @@ const columns = [
     column.accessor("alamat_tujuan", {
         header: "Alamat Tujuan",
     }),
-    column.accessor("pengirim", {
+    column.accessor("pengguna.user.name", {
         header: "Pengirim",
     }),
     column.accessor("penerima", {
@@ -53,21 +52,22 @@ const columns = [
     column.accessor("id", {
         header: "Aksi",
         cell: (cell) =>
-            h("div", { class: "d-flex gap-2" }, [
+            // h("div", { class: "d-flex gap-5" }, [
                 h(
                     "button",
                     {
-                        class: "btn btn-sm btn-icon btn-info",
+                        class: "btn btn-sm btn-info d-flex align-items-center gap-1",
                         onClick: () => {
                             selected.value = cell.getValue();
                             openForm.value = true;
                         },
                     },
-                    h("i", { class: "la la-pencil fs-2" })
+                    // h("i", { class: "la la-pencil fs-2" })
+                    "Antar"
                 ),
-            ]),
+            // ]),
     }),
-];
+]
 
 const refresh = () => paginateRef.value.refetch();
 
@@ -86,11 +86,9 @@ watch(openForm, (val) => {
         <div class="card-header align-items-center">
             <h2 class="mb-0">List Order</h2>
         </div>
-        
         <div class="card-body">
             <!-- <paginate ref="paginateRef" id="table-transaksi" url="/transaksi" :columns="columns"></paginate> -->
-            <paginate ref="paginateRef" id="table-transaksi" url="/trans?exclude_status=Terkirim"
-                :columns="columns" />
+            <paginate ref="paginateRef" id="table-transaksi" url="/trans?exclude_status=Terkirim" :columns="columns" />
 
         </div>
     </div>
