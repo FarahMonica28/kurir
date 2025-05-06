@@ -50,7 +50,8 @@ const toggleStatus = async (kurir_id: string) => {
     const response = await axios.put(`/kurir/${kurir_id}/toggle-status`);
     toast.success(response.data.message);
     console.log("Sebelum refetch");
-    paginateRef.value.refetch(); // ⬅️ cek apakah ini jalan
+    paginateRef.value.refetch();
+    refresh(); // ⬅️ cek apakah ini jalan
     console.log("Setelah refetch");
   } catch (error) {
     toast.error("Gagal mengubah status");
@@ -63,23 +64,20 @@ const toggleStatus = async (kurir_id: string) => {
 const columns = [
   column.accessor("no", { header: "#" }),
   column.accessor("kurir_id", { header: "ID Kurir" }),
-  // column.accessor("phone", { header: "No. Telp" }),
-  // column.accessor("name", { header: "Nama Kurir" }),
-  // column.accessor("email", { header: "Email" }),
   column.accessor("user.name", { header: "Nama Kurir" }),
   column.accessor("user.email", { header: "Email" }),
   column.accessor("user.phone", { header: "No. Telp" }),
   column.accessor("user.photo", {
-  header: "Foto Profil",
-  cell: (cell) =>
-    cell.getValue()
-      ? h("img", {
+    header: "Foto Profil",
+    cell: (cell) =>
+      cell.getValue()
+        ? h("img", {
           src: `/storage/${cell.getValue()}`,
           alt: "Foto Kurir",
           style: "width: 50px; height: 50px; border-radius: 8px;",
         })
-      : "Tidak ada foto",
-}),
+        : "Tidak ada foto",
+  }),
   column.accessor("rating", {
     header: "Rating",
     cell: (cell) => {
@@ -89,29 +87,35 @@ const columns = [
         : "Belum ada rating";
     },
   }),
-  // column.accessor("photo", {
-  //   header: "Foto Profil",
-  //   cell: (cell) =>
-  //     cell.getValue()
-  //       ? h("img", {
-  //         src: `/storage/${cell.getValue()}`,
-  //         alt: "Foto Kurir",
-  //         style: "width: 50px; height: 50px; border-radius: 8px;",
-  //       })
-  //       : "Tidak ada foto",
-  // }),
   column.accessor("status", {
-  header: "Status",
-  cell: (cell) =>
-    h(
-      "button",
-      {
-        class: `btn btn-sm ${cell.getValue() === "aktif" ? "bg-success text-white" : "bg-danger text-white"}`,
-        onClick: () => toggleStatus(cell.row.original.kurir_id), // gunakan ID kurir  
-      },
-      cell.getValue() === "aktif" ? "Aktif" : "Nonaktif"
-    ),
-}),
+    header: "Status",
+    cell: (cell) => {
+      const status = cell.getValue();
+      let btnClass = "btn btn-sm ";
+
+      if (status === "aktif") {
+        btnClass += "bg-success text-white";
+      } else if (status === "nonaktif") {
+        btnClass += "bg-danger text-white";
+      } else if (status === "sedang menerima orderan") {
+        btnClass += "bg-warning text-dark";
+      }
+
+      return h(
+        "button",
+        {
+          class: btnClass,
+          onClick: () => toggleStatus(cell.row.original.kurir_id),
+        },
+        status === "aktif"
+          ? "Aktif"
+          : status === "nonaktif"
+            ? "Nonaktif"
+            : "Sedang Menerima Orderan"
+      );
+    },
+  }),
+
 
   column.accessor("kurir_id", {
     header: "Aksi",

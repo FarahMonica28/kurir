@@ -18,6 +18,30 @@ const kurir = ref({
     status: "",
     rating: 0,
 });
+const toggleStatus = async (kurir_id: string) => {
+  const confirm = await Swal.fire({
+    title: "Ubah Status?",
+    text: "Apakah kamu yakin ingin mengubah status kurir ini?",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonText: "Ya, ubah",
+    cancelButtonText: "Batal",
+  });
+
+  if (!confirm.isConfirmed) return;
+
+  try {
+    const response = await axios.put(`/kurir/${kurir_id}/toggle-status`);
+    toast.success(response.data.message);
+    console.log("Sebelum refetch");
+    paginateRef.value.refetch();
+    refresh(); // ⬅️ cek apakah ini jalan
+    console.log("Setelah refetch");
+  } catch (error) {
+    toast.error("Gagal mengubah status");
+    console.error(error);
+  }
+};
 
 const getProfile = async () => {
     console.log(store.user)
@@ -55,8 +79,12 @@ onMounted(() => {
 
                     <p>
                         <strong>Status :</strong>
-                        <span :class="kurir.status === 'aktif' ? 'text-success' : 'text-danger'">
-                            {{ kurir.status }}
+                        <span :class="{
+                            'text-success': kurir.status === 'aktif',
+                            'text-danger': kurir.status === 'nonaktif',
+                            'text-warning': kurir.status === 'sedang menerima orderan'
+                        }">
+                            {{ kurir.status === 'sedang menerima orderan' ? 'Sedang Menerima orderan' : kurir.status }}
                         </span>
                     </p>
 

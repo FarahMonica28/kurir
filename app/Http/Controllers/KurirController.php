@@ -170,8 +170,10 @@ class KurirController extends Controller
     {
         $kurir = Kurir::findOrFail($kurir_id);
 
-        $kurir->status = $kurir->status === 'aktif' ? 'nonaktif' : 'aktif';
-        $kurir->save();
+        if($kurir->status != 'sedang menerima orderan'){
+            $kurir->status = $kurir->status === 'aktif' ? 'nonaktif' : 'aktif';
+            $kurir->save();
+        }
 
         return response()->json([
             'message' => 'Status berhasil diperbarui.',

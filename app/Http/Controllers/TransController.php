@@ -295,14 +295,23 @@ public function update(Request $request, $id)
         'biaya' => 'required|numeric|min:0',
         // 'pengguna_id' => $request->input('pengguna_id'),
     ]);
+    $transaksi = Transaksi::findOrFail($id);
 
-    $transaksi = Transaksi::where('id', $id)->firstOrFail();
+    $transaksi->update($request->all());
 
-    // if ($transaksi->kurir_id && $transaksi->status !== 'Terkirim') {
-    //     return response()->json([
-    //         'message' => 'Kurir sudah memiliki order yang sedang diproses.'
-    //     ], 400);
-    // }
+    // Ambil kurir terkait
+    $kurir = $transaksi->kurir;
+
+    // Jika status diubah menjadi 'Penjemputan Barang', ubah status kurir
+    if ($request->status === 'Penjemputan Barang' && $kurir) {
+        $kurir->update(['status' => 'sedang menerima orderan']);
+    }
+
+    // Jika status diubah menjadi 'Terkirim', ubah status kurir kembali ke 'aktif'
+    if ($request->status === 'Terkirim' && $kurir) {
+        $kurir->update(['status' => 'aktif']);
+    }
+
     $user = auth()->user();
     $kurirId = $user->kurir->kurir_id ?? null;
 
@@ -360,8 +369,7 @@ public function update(Request $request, $id)
 
     return response()->json([
         'message' => 'Status berhasil diperbarui',
-        'status' => $transaksi->status,
-        
+        'status' => $request->status,
     ]);
 }   
 public function storePenilaian(Request $request)

@@ -54,6 +54,36 @@ class TransaksiController extends Controller
                       ->orWhere('kurir_id', $kurirId); // atau yang diambil oleh kurir tersebut
                 });
             })
+            ->when(auth()->user()->role->name === 'kurir', function ($query) {
+                $user = auth()->user();
+                $kurir = $user->kurir;
+            
+                // Jika tidak ada data kurir atau status bukan aktif atau sedang menerima
+                if (!$kurir || !in_array($kurir->status, ['aktif', 'sedang menerima orderan'])) {
+                    abort(403, 'Kurir tidak aktif');
+                }
+            
+                $kurirId = $kurir->kurir_id;
+            
+                // Cek apakah kurir sedang memiliki order aktif
+                $hasOrder = Transaksi::where('kurir_id', $kurirId)
+                    ->whereIn('status', ['Penjemputan Barang', 'Sedang Dikirim']) // status aktif
+                    ->exists();
+            
+                // Update status kurir berdasarkan kondisi order aktif
+                if ($hasOrder && $kurir->status === 'aktif') {
+                    $kurir->update(['status' => 'sedang menerima orderan']);
+                } elseif (!$hasOrder && $kurir->status === 'sedang menerima orderan') {
+                    $kurir->update(['status' => 'aktif']);
+                }
+            
+                // Hanya tampilkan order yang belum diambil atau milik kurir ini
+                $query->where(function ($q) use ($kurirId) {
+                    $q->whereNull('kurir_id')
+                      ->orWhere('kurir_id', $kurirId);
+                });
+            })
+            
             ->when(auth()->user()->role->name === 'pengguna', function ($query) {
                 Log::info('pengguna');
                 $penggunaId = auth()->user()->pengguna->pengguna_id;
