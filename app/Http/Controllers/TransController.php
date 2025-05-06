@@ -22,8 +22,9 @@ class TransController extends Controller
         $data = Transaksi::with('kurir.user') // pastikan ada relasi ke kurir di model
             ->when($request->search, function ($query, $search) {
                 $query->where('nama_barang', 'like', "%$search%")
-                    ->orWhere('berat_barang', 'like', "%$search%")
-                    ->orWhere('pengirim', 'like', "%$search%")
+                    ->orWhere('jarak', 'like', "%$search%")
+                    // ->orWhere('pengirim', 'like', "%$search%")
+                    ->orWhere('pengguna_id', 'like', "%$search%")
                     ->orWhere('penerima', 'like', "%$search%")
                     ->orWhere('alamat_asal', 'like', "%$search%")
                     ->orWhere('alamat_tujuan', 'like', "%$search%")
@@ -67,8 +68,9 @@ class TransController extends Controller
         $data = Transaksi::with('kurir.user') // pastikan ada relasi ke kurir di model
             ->when($request->search, function ($query, $search) {
                 $query->where('nama_barang', 'like', "%$search%")
-                    ->orWhere('berat_barang', 'like', "%$search%")
-                    ->orWhere('pengirim', 'like', "%$search%")
+                    ->orWhere('jarak', 'like', "%$search%")
+                    ->orWhere('pengguna_id', 'like', "%$search%")
+                    // ->orWhere('pengirim', 'like', "%$search%")
                     ->orWhere('penerima', 'like', "%$search%")
                     ->orWhere('alamat_asal', 'like', "%$search%")
                     ->orWhere('alamat_tujuan', 'like', "%$search%")
@@ -105,7 +107,8 @@ class TransController extends Controller
     public function show(Transaksi $transaksi)
     {
         // $transaksi = Transaksi::with('kurir')->where('kurir_id', $id)->first();
-        $transaksi->load('kurir');
+        $transaksi->load('kurir.user');
+        Log::info('Transaksi');
         return response()->json( [ 
 
                 // 'id' => $transaksi->id,
@@ -113,9 +116,10 @@ class TransController extends Controller
                 'alamat_asal' => $transaksi->alamat_asal,
                 'alamat_tujuan' => $transaksi->alamat_tujuan,
                 'penerima' => $transaksi->penerima,
-                'pengirim' => $transaksi->pengirim,
+                'pengguna_id' => $transaksi->pengguna_id,
+                // 'pengirim' => $transaksi->pengirim,
                 'no_hp_penerima' => $transaksi->no_hp_penerima,
-                'berat_barang' => $transaksi->berat_barang, 
+                'jarak' => $transaksi->jarak, 
                 'biaya' => $transaksi->biaya,
                 'status' => $transaksi->status,
                 'kurir' => $transaksi->kurir, // Tambahkan ini untuk frontend
@@ -128,14 +132,15 @@ class TransController extends Controller
     public function store(Request $request)
     {
         $transaksi = $request->validate([
-            'pengirim' => 'required|string',
+            // 'pengirim' => 'required|string',
+            'pengguna_id' => 'nullable|exists:pengguna,pengguna_id',
             'penerima' => 'required|string',
             'no_hp_penerima' => 'required|string',
             'alamat_asal' => 'required|string',
             'alamat_tujuan' => 'required|string',
             'nama_barang' => 'required|string',
             'status' => 'required|string',
-            'berat_barang' => ' nullable|numeric|min:0',
+            'jarak' => ' nullable|numeric|min:0',
             'biaya' => 'nullable|numeric|min:0',
             'waktu' => 'nullable|date|before_or_equal:now',
             'penilaian' => 'nullable|integer',
@@ -164,14 +169,15 @@ class TransController extends Controller
 
         // $transaksi = Transaksi::create($data);
         $transaksi = Transaksi::create([
-            'pengirim' => $transaksi['pengirim'],
+            // 'pengirim' => $transaksi['pengirim'],
+            'pengguna_id' => $transaksi['pengguna_id'],
             'penerima' => $transaksi['penerima'],
             'no_hp_penerima' => $transaksi['no_hp_penerima'],
             'alamat_asal' => $transaksi['alamat_asal'],
             'alamat_tujuan' => $transaksi['alamat_tujuan'],
             'nama_barang' => $transaksi['nama_barang'],
             'status' => 'Penjemputan Barang', // status default saat dibuat
-            'berat_barang' => $transaksi['berat_barang'] ?? null,
+            'jarak' => $transaksi['jarak'] ?? null,
             'biaya' => $transaksi['biaya'] ?? null,
             'penilaian' => $transaksi['penilaian'] ?? null,
             'komentar' => $transaksi['komentar'] ?? null,
@@ -285,8 +291,9 @@ public function update(Request $request, $id)
 {
     $request->validate([
         'status' => 'required|string',
-        'berat_barang' => 'required|numeric|min:1',
+        'jarak' => 'required|numeric|min:1',
         'biaya' => 'required|numeric|min:0',
+        // 'pengguna_id' => $request->input('pengguna_id'),
     ]);
 
     $transaksi = Transaksi::where('id', $id)->firstOrFail();
@@ -344,7 +351,7 @@ public function update(Request $request, $id)
 
     $transaksi->update([
         'status' => $request->status,
-        'berat_barang' => $request->berat_barang,
+        'jarak' => $request->jarak,
         'biaya' => $request->biaya,
         'kurir_id' => $request->kurir_id,
         // 'kurir_id' => $request->kurir->kurir_id,

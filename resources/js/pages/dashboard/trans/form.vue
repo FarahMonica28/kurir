@@ -24,7 +24,7 @@ const emit = defineEmits(["close", "refresh"]);
 const transaksi = ref<transaksi>({} as transaksi);
 const formRef = ref();
 const biayaOtomatis = computed(() => {
-  const berat = parseFloat(transaksi.value.berat_barang);
+  const berat = parseFloat(transaksi.value.jarak);
   return isNaN(berat) ? 0 : berat * 10000;
 });
 const statuses = [
@@ -44,7 +44,7 @@ const formSchema = Yup.object().shape({
   alamat_asal: Yup.string().required("Alamat Asal harus diisi"),
   alamat_tujuan: Yup.string().required("Alamat Tujuan harus diisi"),
   no_hp_penerima: Yup.string().required("No HP Penerima harus diisi"),
-  // berat_barang: Yup.number().required("Berat Barang harus diisi"),
+  // jarak: Yup.number().required("Berat Barang harus diisi"),
   // biaya: Yup.number().required("Biaya harus diisi"),
   // waktu: Yup.string().required("Waktu harus diisi"),
   // kurir_id: Yup.string().required("Kurir harus dipilih"),
@@ -60,12 +60,14 @@ function getEdit() {
       transaksi.value = {
         nama_barang: data.nama_barang || "",
         penerima: data.penerima || "",
-        pengirim: data.pengirim || "",
+        pengirim: data.pengguna?.id || "",
         // pengguna_id: data.pengguna_id || "",
+        // pengguna_id: data.pengguna?.pengguna_id || '',
+        pengguna: data.pengguna,
         alamat_asal: data.alamat_asal || "",
         alamat_tujuan: data.alamat_tujuan || "",
         no_hp_penerima: data.no_hp_penerima || "",
-        berat_barang: data.berat_barang || "",
+        jarak: data.jarak || "",
         biaya: data.biaya || "",
         status: data.status || "belum_dikirim",
         // kurir_id: data.kurir.user.kurir_id || "",        // status: data.status || "belum dikirim" || "Sedang Dikirim" || "Terkirim",
@@ -91,7 +93,7 @@ function submit() {
   formData.append("alamat_asal", transaksi.value.alamat_asal);
   formData.append("alamat_tujuan", transaksi.value.alamat_tujuan);
   formData.append("no_hp_penerima", transaksi.value.no_hp_penerima);
-  formData.append("berat_barang", transaksi.value.berat_barang);
+  formData.append("jarak", transaksi.value.jarak);
   formData.append("biaya", biayaOtomatis.value.toString());
   formData.append("status", transaksi.value.status);
   formData.append("kurir_id", currentKurir.value.kurir.kurir_id);
@@ -130,7 +132,7 @@ function submit() {
 }
 
 watch(
-  () => transaksi.value.berat_barang,
+  () => transaksi.value.jarak,
   (newBerat) => {
     const berat = parseFloat(newBerat);
     if (!isNaN(berat)) {
@@ -191,11 +193,22 @@ watch(
           <ErrorMessage name="alamat_tujuan" class="text-danger small" />
         </div>
 
-        <div class="col-md-6 mb-7">
+        <!-- <div class="col-md-6 mb-7">
           <label class="form-label required fw-bold">Pengirim</label>
           <Field class="form-control" name="pengguna_id" v-model="transaksi.pengirim" disabled />
           <ErrorMessage name="pengguna_id" class="text-danger small" />
+        </div> -->
+
+        <!-- Tampilkan nama pengguna -->
+        <div class="col-md-6 mb-7">
+          <label class="form-label required fw-bold">Pengirim</label>
+          <input type="text" class="form-control" :value="transaksi.pengguna?.user?.name" disabled />
         </div>
+
+        <!-- Hidden field supaya id pengguna tetap dikirim -->
+        <Field name="pengguna_id" type="hidden" :value="transaksi.pengguna?.pengguna_id" />
+        <ErrorMessage name="pengguna_id" class="text-danger small" />
+
 
         <div class="col-md-6 mb-7">
           <label class="form-label required fw-bold">Penerima</label>
@@ -211,9 +224,9 @@ watch(
 
         <div class="col-md-3 mb-7">
           <label class="form-label fw-bold">jarak (km)</label>
-          <Field type="number" class="form-control" name="berat_barang" v-model="transaksi.berat_barang"
+          <Field type="number" class="form-control" name="jarak" v-model="transaksi.jarak"
             placeholder="0" />
-          <ErrorMessage name="berat_barang" class="text-danger small" />
+          <ErrorMessage name="jarak" class="text-danger small" />
         </div>
 
         <div class="col-md-3 mb-7">

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Kurir;
 use App\Models\Transaksi;
 use App\Models\Pengguna;
 // use App\Models\User;
@@ -20,21 +21,12 @@ class TransaksiController extends Controller
         $page = $request->page ? $request->page - 1 : 0;
     
         DB::statement('set @no=0+' . $page * $per);
-        // $pengguna = Auth::guard('pengguna')->user();
-        // $pengguna_id = Auth::id(); // Ambil ID pengguna yang sedang login
 
-        
-        // $pengguna = Auth::user(); 
-        
-        // Log::info(auth()->user()->role);
-        
-        // $data = Transaksi::where('pengguna_id', $pengguna_id)->get();
-        // // $data = Transaksi::where('pengguna_id', $pengguna->pengguna_id)->get();
         // $data = Transaksi::with('pengguna.user');// pastikan ada relasi ke kurir di model
         $data = Transaksi::with('kurir.user')->with('pengguna.user') // pastikan ada relasi ke kurir di model
             ->when($request->search, function ($query, $search) {
                 $query->where('nama_barang', 'like', "%$search%")
-                    ->orWhere('berat_barang', 'like', "%$search%")
+                    ->orWhere('jarak', 'like', "%$search%")
                     // ->orWhere('pengirim', 'like', "%$search%")
                     ->orWhere('penerima', 'like', "%$search%")
                     ->orWhere('alamat_asal', 'like', "%$search%")
@@ -70,12 +62,6 @@ class TransaksiController extends Controller
                 
             })
                      
-            // ->when($request->kurir_id, function ($query, $kurirId) {
-            //     $query->where('kurir_id', $kurirId);
-            // })
-            // ->when(auth()->user()->role === 'kurir', function ($query) {
-            //     $query->where('kurir_id', auth()->user()->kurir->kurir_id);
-            // })
             ->latest()
             ->paginate($per);
 
@@ -114,7 +100,7 @@ class TransaksiController extends Controller
     public function updateStatus(Request $request, $id)
 {
     $request->validate([
-        'status' => 'required|in:penjemputan barang,sedang dikirim,terkirim,batal',
+        'status' => 'required|in:penjemputan barang,sedang dikirim,terkirim',
     ]);
 
     $transaksi = Transaksi::findOrFail($id);
@@ -145,7 +131,7 @@ class TransaksiController extends Controller
     public function show(Transaksi $transaksi)
     {
 
-        $transaksi->load('pengguna', 'kurir');
+        $transaksi->load('pengguna.user', 'kurir');
         // $transaksi->load('kurir');
         // $transaksi->load('pengguna');
 
@@ -157,10 +143,10 @@ class TransaksiController extends Controller
                 'alamat_asal' => $transaksi->alamat_asal,
                 'alamat_tujuan' => $transaksi->alamat_tujuan,
                 'penerima' => $transaksi->penerima,
-                'pengirim' => $transaksi->pengirim,
+                // 'pengirim' => $transaksi->pengirim,
                 'pengguna_id' => $transaksi->pengguna_id,
                 'no_hp_penerima' => $transaksi->no_hp_penerima,
-                'berat_barang' => $transaksi->berat_barang,
+                'jarak' => $transaksi->jarak,
                 'biaya' => $transaksi->biaya,
                 'status' => $transaksi->status,
                 'kurir' => $transaksi->kurir,
@@ -182,7 +168,7 @@ class TransaksiController extends Controller
             'alamat_tujuan' => 'required|string',
             'nama_barang' => 'required|string',
             'status' => 'required|string',
-            'berat_barang' => ' nullable|numeric|min:0',
+            'jarak' => ' nullable|numeric|min:0',
             'biaya' => 'nullable|numeric|min:0',
             // 'waktu' => 'nullable|date',
             'waktu' => 'nullable|date|before_or_equal:now',
@@ -196,6 +182,16 @@ class TransaksiController extends Controller
         ]);
 
         $pengguna = Pengguna::where('user_id', $request->id)->first();; // pastikan ini nama field-nya
+    if (!$pengguna) {
+        return response()->json(['message' => 'Pengguna tidak ditemukan'], 404);
+    }
+
+    $kurir = Kurir::where('status', 'aktif')->first();
+
+    if (!$kurir) {
+        return response()->json(['message' => 'Tidak ada kurir aktif yang tersedia'], 422);
+    }
+
         
         // $kurir = Kurir::where('status', 'aktif')->first();
 
@@ -224,7 +220,7 @@ class TransaksiController extends Controller
             'no_hp_penerima' => $request->no_hp_penerima,
             // 'status' => $request->status ?? 'Dalam Proses',
             'status' => $request->status,
-            'berat_barang' => $request->berat_barang,   
+            'jarak' => $request->jarak,   
             'biaya' => $request->biaya,
             'penilaian' => $request->penilaian,
             'komentar' => $request->komentar,
@@ -234,9 +230,9 @@ class TransaksiController extends Controller
             'pengguna_id' => $pengguna->pengguna_id
         ]);
 
-        // Ambil 1 kurir aktif yang belum menangani order aktif (selain "Terkirim")
-        //  $kurir = Kurir::where('status', 'aktif')
-        // return response()->json($transaksi, 201);
+        // Update status kurir jadi sedang menerima orderan
+    $kurir->status = 'sedang menerima orderan';
+    $kurir->save();
         return response()->json(['message' => 'Berhasil menambahkan transaksi', 'data' => $transaksi]);
     }
 
@@ -271,7 +267,7 @@ class TransaksiController extends Controller
     //         'alamat_asal' => 'required|string',
     //         'alamat_tujuan' => 'required|string',
     //         'nama_barang' => 'required|string',
-    //     //     'berat_barang' => 'required|numeric',
+    //     //     'jarak' => 'required|numeric',
     //     //     'biaya' => 'required|numeric',
     //     //     'waktu' => 'required|date',
     //         'status' => 'required|string',
@@ -283,7 +279,7 @@ class TransaksiController extends Controller
     //     // $transaksi->update($data);
     //     // $transaksi->update([
         //     //     'status' => $request->status,
-        //     //     'berat_barang' => $request->berat,
+        //     //     'jarak' => $request->berat,
     //     //     'biaya' => $request->biaya,
     //     //     'waktu' => now(),
     //     // ]);
@@ -297,7 +293,7 @@ public function update(Request $request, $id)
 {
     $request->validate([
         'status' => 'required|string',
-        'berat_barang' => 'required|numeric|min:1',
+        'jarak' => 'required|numeric|min:1',
         'biaya' => 'required|numeric|min:0',
     ]);
 
@@ -359,7 +355,7 @@ public function update(Request $request, $id)
     
     $transaksi->update([
         'status' => $request->status,
-        'berat_barang' => $request->berat_barang,
+        'jarak' => $request->jarak,
         'biaya' => $request->biaya,
         'kurir_id' => $request->kurir_id,
         // 'kurir_id' => $request->kurir->kurir_id,

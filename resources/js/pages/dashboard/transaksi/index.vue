@@ -176,7 +176,7 @@ watch(openForm, (val) => {
                             <p><strong>Status:</strong> {{ detailData.status }}</p>
                             <p><strong>Penerima:</strong> {{ detailData.penerima }}</p>
                             <p><strong>No HP Penerima:</strong> {{ detailData.no_hp_penerima }}</p>
-                            <p><strong>Jarak:</strong> {{ detailData.berat_barang || '-' }} km</p>
+                            <p><strong>Jarak:</strong> {{ detailData.jarak || '-' }} km</p>
                             <p><strong>Biaya:</strong> Rp.{{ detailData.biaya || '-' }}</p>
                         </div>
                     </div>

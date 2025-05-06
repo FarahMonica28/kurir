@@ -9,6 +9,10 @@ export interface Kurir {
     rating: number;
     // tambahkan properti lain kalau ada
 }
+export interface pengguna {
+    alamat: string;
+    // tambahkan properti lain kalau ada
+}
 
 export interface User {
     id: number;
@@ -24,6 +28,7 @@ export interface User {
         full_name: string;
     };
     kurir?: Kurir; // tambahkan ini!
+    pengguna?: pengguna; // tambahkan ini!
 }
 
 export const useAuthStore = defineStore("auth", () => {
@@ -35,6 +40,7 @@ export const useAuthStore = defineStore("auth", () => {
         isAuthenticated.value = true;
         user.value = 
             authUser, authUser.kurir,
+            authUser, authUser.pengguna,
             // kurir: authUser.kurir}; // ini penting!
         error.value = null;
 

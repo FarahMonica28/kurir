@@ -18,9 +18,9 @@ class Transaksi extends Model
         'alamat_asal',
         'alamat_tujuan',
         'penerima',
-        'pengirim',
+        // 'pengirim',
         'nama_barang',
-        'berat_barang',
+        'jarak',
         'biaya',
         'kurir_id', // kalau ini foreign key, ubah jadi 'kurir_id'
         'pengguna_id', // kalau ini foreign key, ubah jadi 'kurir_id'
