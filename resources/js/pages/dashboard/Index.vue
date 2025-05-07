@@ -1,28 +1,36 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import axios from 'axios'
+import { ref, onMounted } from 'vue';
+import axios from '@/libs/axios';
+import type { User } from "@/types";
+// Import store autentikasi untuk mengambil data user yang sedang login
+import { useAuthStore } from "@/stores/auth";
 
-const userName = ref<string | null>(null)
+// Inisialisasi store agar bisa akses data user yang login
+const store = useAuthStore();
+const User = ref({
+    name: "",
+});
+const getProfile = async () => {
+    console.log(store.user)
+    User.value = {
+        name: store.user.name
+    };
+};
 
-onMounted(async () => {
-  try {
-    const response = await axios.get('/login', {
-      withCredentials: true // jika pakai sanctum/cookie auth
-    })
-    userName.value = response.data.name
-  } catch (error) {
-    console.error('Gagal mengambil data user:', error)
-  }
-})
 
-// Setelah login berhasil
-const res = await axios.get('/api/master/me')
+onMounted(() => {
+    getProfile();
+});
 
 </script>
 
 <template>
   <main>
-    <h1 v-if="userName">Selamat datang, {{ userName }}!</h1>
-    <h1 v-else>Memuat data user...</h1>
+    <h1>Selamat datang, {{ User.name }}👋🏻</h1>
   </main>
 </template>
+
+<style>
+
+
+</style>

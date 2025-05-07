@@ -30,38 +30,43 @@ const columns = [
   column.accessor("nama_barang", {
     header: "Nama Barang",
   }),
-  column.accessor("alamat_asal", {
-    header: "Alamat Asal",
-  }),
+  // column.accessor("alamat_asal", {
+  //   header: "Alamat Asal",
+  // }),
   column.accessor("alamat_tujuan", {
     header: "Alamat Tujuan",
   }),
-  column.accessor("pengguna.user.name", {
-    header: "Pengirim",
-  }),
+  // column.accessor("pengguna.user.name", {
+  //   header: "Pengirim",
+  // }),
   column.accessor("penerima", {
     header: "Penerima",
   }),
-  column.accessor("no_hp_penerima", {
-    header: "No HP Penerima",
-  }),
+  // column.accessor("no_hp_penerima", {
+  //   header: "No HP Penerima",
+  // }),
   column.accessor("id", {
-    header: "Penilaian",
-    cell: (cell) => {
-      const transaksi = cell.row.original;
-      return h(
-        "button",
-        {
-          class: "btn btn-sm btn-outline-warning",
-          onClick: () => {
+  header: "Penilaian",
+  cell: (cell) => {
+    const transaksi = cell.row.original;
+    const isRated = !!transaksi.penilaian;
+
+    return h(
+      "button",
+      {
+        class: `btn btn-sm ${isRated ? "btn-success text-white" : "btn-warning"}`,
+        disabled: isRated,
+        onClick: () => {
+          if (!isRated) {
             selected.value = cell.getValue();
             openForm.value = true;
-          },
+          }
         },
-        transaksi.penilaian || "Beri Penilaian"
-      );
-    },
-  }),
+      },
+      transaksi.penilaian || "Beri Penilaian"
+    );
+  },
+}),
 
   column.display({
     id: "rincian",

@@ -97,24 +97,6 @@ const routes: Array<RouteRecordRaw> = [
                 },
             },
             {
-                path: "/dashboard/orderr",
-                name: "dashboard.orderr",
-                component: () => import("@/pages/dashboard/trans/Inde.vue"),
-                meta: {
-                    pageTitle: "Halaman Order",
-                    // breadcrumbs: ["Halaman", "Akun dan Profl"],
-                },
-            },
-            {
-                path: "/dashboard/riwayat",
-                name: "dashboard.riwayat",
-                component: () => import("@/pages/dashboard/riwayat/index.vue"),
-                meta: {
-                    pageTitle: "Riwayat",
-                    // breadcrumbs: ["Halaman", "Akun dan Profl"],
-                },
-            },
-            {
                 path: "/dashboard/profile",
                 name: "dashboard.profile",
                 component: () => import("@/pages/dashboard/profile/Index.vue"),
@@ -132,6 +114,39 @@ const routes: Array<RouteRecordRaw> = [
                     breadcrumbs: ["Website", "Setting"],
                 },
             },
+            
+            //admin
+            {
+                path: "/dashboard/orderan",
+                name: "dashboard.orderan",
+                component: () => import("@/pages/dashboard/Riwaya/inde.vue"),
+                meta: {
+                    pageTitle: "Order Kurir",
+                    // breadcrumbs: ["Halaman", "Akun dan Profl"],
+                },
+            },
+
+
+            //kurir
+            {
+                path: "/dashboard/orderr",
+                name: "dashboard.orderr",
+                component: () => import("@/pages/dashboard/trans/Inde.vue"),
+                meta: {
+                    pageTitle: "Halaman Order",
+                    // breadcrumbs: ["Halaman", "Akun dan Profl"],
+                },
+            },
+            {
+                path: "/dashboard/riwayat",
+                name: "dashboard.riwayat",
+                component: () => import("@/pages/dashboard/riwayat/index.vue"),
+                meta: {
+                    pageTitle: "Riwayat",
+                    // breadcrumbs: ["Halaman", "Akun dan Profl"],
+                },
+            },
+
             
             // MASTER
             {
@@ -157,10 +172,12 @@ const routes: Array<RouteRecordRaw> = [
         ],
     },
     
+
+    //pengguna
     {
         path: "/dashboardk",
         name: "dashboardk",
-        component: () => import("@/pages/dashboardk/beranda.vue"),
+        component: () => import("@/pages/dashboardk/index.vue"),
         meta: {
             pageTitle: "Dashboardk",
             breadcrumbs: ["Halaman Dashboardk"],

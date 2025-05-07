@@ -171,7 +171,6 @@ Route::middleware(['auth', 'verified', 'json'])->group(function () {
         // });
         Route::apiResource('transaksi', TransaksiController::class)
             ->except(['index', 'store']);
-        // Route::middleware(['auth', 'can:update,transaksi'])->put('/transaksi/{transaksi}', [TransaksiController::class, 'update']);
         // CRUD transaksi kecuali index dan store
     });
 

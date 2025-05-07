@@ -139,7 +139,6 @@ class TransaksiController extends Controller
 
     // Ubah status kurir sesuai dengan status transaksi
     $kurir = $transaksi->kurir;
-
     if ($kurir) {
         if (in_array($transaksi->status, ['penjemputan barang', 'sedang dikirim'])) {
             $kurir->status = 'sedang menerima orderan';
@@ -162,8 +161,6 @@ class TransaksiController extends Controller
     {
 
         $transaksi->load('pengguna.user', 'kurir');
-        // $transaksi->load('kurir');
-        // $transaksi->load('pengguna');
 
         // $transaksi = Transaksi::with('kurir.user')->findOrFail($id);
         return response()->json( [ 
@@ -212,33 +209,15 @@ class TransaksiController extends Controller
         ]);
 
         $pengguna = Pengguna::where('user_id', $request->id)->first();; // pastikan ini nama field-nya
-    if (!$pengguna) {
-        return response()->json(['message' => 'Pengguna tidak ditemukan'], 404);
-    }
+        if (!$pengguna) {
+            return response()->json(['message' => 'Pengguna tidak ditemukan'], 404);
+        }
 
-    $kurir = Kurir::where('status', 'aktif')->first();
+        $kurir = Kurir::where('status', 'aktif')->first();
 
-    if (!$kurir) {
-        return response()->json(['message' => 'Tidak ada kurir aktif yang tersedia'], 422);
-    }
-
-        
-        // $kurir = Kurir::where('status', 'aktif')->first();
-
-        // if (!$kurir) {
-        //     return response()->json(['message' => 'Tidak ada kurir aktif'], 422);
-        // }
-
-        // $transaksi = Transaksi::create([
-        //     'kurir_id' => $kurir->kurir_id,
-        //     'status' => 'menunggu penjemputan',
-        //     // data lainnya...
-        // ]);
-
-        // // Kurir langsung ubah status jadi "sedang menerima orderan"
-        // $kurir->status = 'sedang menerima orderan';
-        // $kurir->save();
-
+        if (!$kurir) {
+            return response()->json(['message' => 'Tidak ada kurir aktif yang tersedia'], 422);
+        }
 
         // $transaksi = Transaksi::create($data);
         Transaksi::create([
@@ -248,13 +227,11 @@ class TransaksiController extends Controller
             // 'pengirim' => $request->pengirim,
             'penerima' => $request->penerima,
             'no_hp_penerima' => $request->no_hp_penerima,
-            // 'status' => $request->status ?? 'Dalam Proses',
             'status' => $request->status,
             'jarak' => $request->jarak,   
             'biaya' => $request->biaya,
             'penilaian' => $request->penilaian,
             'komentar' => $request->komentar,
-            // 'waktu' => now()->format('d-m-Y H:i:s'),
             'waktu' => now()->format('Y-m-d H:i:s'),
             // 'kurir_id' => $request->kurir_id,
             'pengguna_id' => $pengguna->pengguna_id
@@ -264,22 +241,6 @@ class TransaksiController extends Controller
     $kurir->status = 'sedang menerima orderan';
     $kurir->save();
         return response()->json(['message' => 'Berhasil menambahkan transaksi', 'data' => $transaksi]);
-    }
-
-    
-    public function updatePenilaian(Request $request, $id)
-    {
-        $request->validate([
-            'penilaian' => 'nullable|numeric|min:1|max:5',
-            'komentar' => 'nullable|string',
-        ]);
-
-        $transaksi = Transaksi::findOrFail($id);
-        $transaksi->penilaian = $request->penilaian;
-        $transaksi->komentar = $request->komentar;
-        $transaksi->save();
-        
-        return response()->json(['message' => 'Penilaian disimpan.']);
     }
 
 
@@ -319,6 +280,8 @@ class TransaksiController extends Controller
     // }
 
     // TransaksiController.php
+
+
 public function update(Request $request, $id)
 {
     $request->validate([
@@ -340,13 +303,6 @@ public function update(Request $request, $id)
             return response()->json([
                 'message' => 'Pesanan sudah diambil oleh kurir lain.'
             ], 403);
-        }
-    }
-    if ($user->role === 'pengguna') {
-        if ($transaksi->pengguna_id && $transaksi->pengguna_id != $penggunaId) {
-            return response()->json([
-                // 'message' => 'Pesanan sudah diambil oleh kurir lain.'
-            ], 402);
         }
     }
 
@@ -423,6 +379,7 @@ public function storePenilaian(Request $request)
 
     return response()->json(['message' => 'Penilaian disimpan.']);
 }
+
 
     public function destroy($id)
     {

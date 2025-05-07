@@ -119,17 +119,18 @@ watch(
     <div class="card-body">
       <div class="row">
 
-        <div class="col-md-12 mb-7">
-          <label class="form-label fw-bold">Penilaian</label>
-          <Field type="number" class="form-control" name="penilaian" v-model="transaksi.penilaian" placeholder="Contoh: 1-100" />
+        <div class="col-md-3 mb-7">
+          <label class="form-label fw-bold">Rating</label>
+          <Field type="number" class="form-control" name="penilaian" v-model="transaksi.penilaian" placeholder="Contoh: 1/5" />
           <ErrorMessage name="penilaian" class="text-danger small" />
-        </div><br>
+        </div>
 
-        <div class="col-md-12 mb-7">
+        <div class="col-md-6 mb-7">
           <label class="form-label fw-bold">Komentar</label>
           <Field as="textarea" rows="2" class="form-control" name="komentar" v-model="transaksi.komentar" placeholder="Tulis komentar..." />
           <ErrorMessage name="komentar" class="text-danger small" />
         </div>
+        
       </div>
     </div>
 

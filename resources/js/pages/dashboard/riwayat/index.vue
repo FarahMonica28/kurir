@@ -61,21 +61,21 @@ const columns = [
   column.accessor("nama_barang", {
     header: "Nama Barang",
   }),
-  column.accessor("alamat_asal", {
-    header: "Alamat Asal",
-  }),
+  // column.accessor("alamat_asal", {
+  //   header: "Alamat Asal",
+  // }),
   column.accessor("alamat_tujuan", {
     header: "Alamat Tujuan",
   }),
-  column.accessor("pengguna.user.name", {
-    header: "Pengirim",
-  }),
+  // column.accessor("pengguna.user.name", {
+  //   header: "Pengirim",
+  // }),
   column.accessor("penerima", {
     header: "Penerima",
   }),
-  column.accessor("no_hp_penerima", {
-    header: "No HP Penerima",
-  }),
+  // column.accessor("no_hp_penerima", {
+  //   header: "No HP Penerima",
+  // }),
   column.accessor("penilaian", {
     header: "Penilaian",
     cell: (cell) => {

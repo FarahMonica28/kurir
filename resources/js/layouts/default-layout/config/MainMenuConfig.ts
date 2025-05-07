@@ -66,17 +66,34 @@ const MainMenuConfig: Array<MenuItem> = [
                 name: "setting",
                 keenthemesIcon: "setting-2",
             },
+            //admin
             {
-                heading: "Akun",
-                route: "/dashboard/akun",
-                name: "akun",
-                keenthemesIcon: "bi bi-person-circle",
+                heading: "Orderan",
+                route: "/dashboard/orderan",
+                name: "orderan",
+                keenthemesIcon: "bi bi-bookmark-plus",
             },
+            
+            //pengguna
             {
                 heading: "Order",
                 route: "/dashboard/order",
                 name: "transaksi",
                 keenthemesIcon: "bi bi-bookmark-plus",
+            },
+            {
+                heading: "Riwayatt",
+                route: "/dashboard/riwayatt",
+                name: "riwayatt",
+                keenthemesIcon: "bi bi-bookmark-check",
+            },
+            
+            //kurir
+            {
+                heading: "Akun",
+                route: "/dashboard/akun",
+                name: "akun",
+                keenthemesIcon: "bi bi-person-circle",
             },
             {
                 heading: "Orderr",
@@ -90,12 +107,9 @@ const MainMenuConfig: Array<MenuItem> = [
                 name: "riwayat",
                 keenthemesIcon: "bi bi-bookmark-check",
             },
-            {
-                heading: "Riwayatt",
-                route: "/dashboard/riwayatt",
-                name: "riwayatt",
-                keenthemesIcon: "bi bi-bookmark-check",
-            },
+
+
+
             {
                 heading: "Pengiriman",
                 route: "/dashboard/pengiriman",
