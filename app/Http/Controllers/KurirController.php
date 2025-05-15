@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Carbon\Carbon;
 use function Laravel\Prompts\select;
 
 class KurirController extends Controller
@@ -19,53 +20,218 @@ class KurirController extends Controller
      */
     public function index(Request $request)
     {
+        // Ambil parameter `per` dari request (jumlah data per halaman), default 10 jika tidak ada
         $per = $request->per ?? 10;
+
+        // Ambil parameter `page`, dan kurangi 1 (karena penomoran offset dimulai dari 0), default halaman 1 jika tidak ada
         $page = $request->page ? $request->page - 1 : 0;
 
+        // Membuat variabel SQL @no untuk penomoran otomatis di MySQL (untuk memberi nomor urut di hasil query)
         DB::statement('set @no=0+' . $page * $per);
-        // $data = Kurir::select('kurir_id', 'name', 'email', 'phone', 'status', 'rating', 'photo')
-        $data = Kurir::select('kurir_id', 'status', 'rating');
-        $data = Kurir::with('user')->select('kurir_id', 'user_id', 'status', 'rating') // Tambahkan relasi user
-            ->when($request->search, function ($query, $search) {
-                // $query->where('name', 'like', "%$search%")
-                    $query->where('kurir_id', 'like', "%$search%")
-                        ->orWhere('status', 'like', "%$search%")
-                        ->orWhere('rating', 'like', "%$search%");
-            })->latest()->paginate($per);
 
-        $no = ($data->currentPage()-1) * $per + 1;
+        // Query untuk mengambil data kurir:
+        $data = Kurir::with('user') // Ambil juga relasi ke tabel `user` (relasi user() harus sudah didefinisikan di model Kurir)
+            ->withCount('transaksi') // Hitung jumlah transaksi yang dimiliki tiap kurir, hasilnya jadi `transaksis_count`
+            ->select('kurir_id', 'user_id', 'status', 'rating') // Hanya ambil kolom tertentu dari tabel `kurirs`
+            
+            // Jika ada parameter `search`, filter data berdasarkan kurir_id, status, atau rating yang mirip dengan kata kunci pencarian
+            ->when($request->search, function ($query, $search) {
+                $query->where('kurir_id', 'like', "%$search%")
+                    ->orWhere('status', 'like', "%$search%")
+                    ->orWhere('rating', 'like', "%$search%");
+            })
+            ->latest() // Urutkan data dari yang terbaru (berdasarkan kolom created_at)
+            ->paginate($per); // Paginate hasilnya sesuai jumlah per halaman
+
+        // Hitung nomor awal berdasarkan halaman aktif
+        $no = ($data->currentPage() - 1) * $per + 1;
+
+        // Loop data untuk menambahkan properti no dan jumlah_transaksi ke tiap item
         foreach($data as $item){
-            $item->no = $no++;
+            $item->no = $no++; // Nomor urut global (misalnya 11, 12, 13 untuk halaman 2)
+            $item->jumlah_transaksi = $item->transaksis_count; // Salin nilai dari hasil withCount ke properti yang lebih mudah digunakan
         }
 
+        // Kembalikan hasil data dalam format JSON
         return response()->json($data);
     }
+
+
+
+    public function transaksiCount()
+    {
+        // Ambil user yang sedang login (dari auth)
+        $user = auth()->user();
+    
+        // Ambil data kurir yang terkait dengan user (relasi user->kurir)
+        $kurir = $user->kurir;
+    
+        // Jika user bukan kurir (tidak punya relasi kurir), kembalikan semua jumlah 0
+        if (!$kurir) {
+            return response()->json([
+                'today' => 0,
+                'yesterday' => 0,
+                'month' => 0,
+            ]);
+        }
+    
+        // Simpan kurir_id untuk digunakan di query berikutnya
+        $kurirId = $kurir->kurir_id;
+    
+        // Hitung jumlah transaksi yang berhasil dikirim hari ini oleh kurir ini
+        $todayCount = Transaksi::where('kurir_id', $kurirId)
+            ->where('status', 'terkirim') // Hanya hitung yang statusnya "terkirim"
+            ->whereDate('waktu_terkirim', Carbon::today()) // Dan waktu_terkirim adalah hari ini
+            ->count();
+    
+        // Hitung jumlah transaksi yang berhasil dikirim kemarin
+        $yesterdayCount = Transaksi::where('kurir_id', $kurirId)
+            ->where('status', 'terkirim')
+            ->whereDate('waktu_terkirim', Carbon::yesterday()) // Dan waktu_terkirim adalah kemarin
+            ->count();
+    
+        // Hitung jumlah transaksi yang berhasil dikirim dalam bulan ini
+        $monthCount = Transaksi::where('kurir_id', $kurirId)
+            ->where('status', 'terkirim')
+            ->whereMonth('waktu_terkirim', Carbon::now()->month) // Bulan sekarang
+            ->whereYear('waktu_terkirim', Carbon::now()->year)   // Tahun sekarang
+            ->count();
+    
+        // Kembalikan hasil hitungan dalam bentuk JSON
+        return response()->json([
+            'today' => $todayCount,
+            'yesterday' => $yesterdayCount,
+            'month' => $monthCount,
+        ]);
+    }
+    
+
+
+    public function transaksiList(Request $request)
+    {
+        // Ambil user yang sedang login
+        $user = auth()->user();
+
+        // Validasi bahwa user yang login harus punya role 'kurir'
+        if ($user->role->name !== 'kurir') {
+            // Jika bukan kurir, kembalikan error 403 (akses ditolak)
+            return response()->json([
+                'success' => true,
+            ], 403);
+        }
+
+        // Ambil data kurir yang terkait dengan user
+        $kurir = $user->kurir;
+
+        // Jika user tidak memiliki data kurir, kembalikan response kosong
+        if (!$kurir) {
+            return response()->json([
+                'success' => true, 
+                'data' => [],
+                'todayCount' => 0,
+                'yesterdayCount' => 0,
+                'monthCount' => 0,
+            ]);
+        }
+
+        // Ambil parameter filter dari frontend (opsional)
+        $filter = $request->get('filter'); // nilai: hari_ini, kemarin, bulan_ini
+
+        // Query awal: ambil transaksi milik kurir yang statusnya 'terkirim'
+        $query = Transaksi::where('kurir_id', $kurir->kurir_id)
+                    ->with('pengguna.user') // load relasi pengguna dan user-nya
+                    ->where('status', 'terkirim');
+
+        // Filter berdasarkan tanggal, jika ada filter dari request
+        if ($filter === 'kemarin') {
+            $query->whereDate('waktu_terkirim', Carbon::yesterday());
+        } elseif ($filter === 'hari_ini') {
+            $query->whereDate('waktu_terkirim', Carbon::today());
+        } elseif ($filter === 'bulan_ini') {
+            $query->whereMonth('waktu_terkirim', Carbon::now()->month)
+                ->whereYear('waktu_terkirim', Carbon::now()->year);
+        }
+
+        // Ambil hasil transaksi setelah difilter dan diurutkan dari yang terbaru
+        $transaksi = $query->orderBy('waktu_terkirim', 'desc')
+                        ->get([
+                            'id',
+                            'nama_barang',
+                            'alamat_tujuan',
+                            'pengguna_id',
+                            'penerima',
+                            'penilaian',
+                            'status',
+                            'waktu'
+                        ]);
+
+        // Hitung total transaksi yang dikirim hari ini oleh kurir
+        $todayCount = Transaksi::where('kurir_id', $kurir->kurir_id)
+                        ->where('status', 'terkirim')
+                        ->whereDate('waktu_terkirim', Carbon::today())
+                        ->count();
+
+        // Hitung total transaksi yang dikirim kemarin
+        $yesterdayCount = Transaksi::where('kurir_id', $kurir->kurir_id)
+                        ->where('status', 'terkirim')
+                        ->whereDate('waktu_terkirim', Carbon::yesterday())
+                        ->count();
+
+        // Hitung total transaksi yang dikirim bulan ini
+        $monthCount = Transaksi::where('kurir_id', $kurir->kurir_id)
+                        ->where('status', 'terkirim')
+                        ->whereMonth('waktu_terkirim', Carbon::now()->month)
+                        ->whereYear('waktu_terkirim', Carbon::now()->year)
+                        ->count();
+
+        // Kembalikan data transaksi dan total count dalam response JSON
+        return response()->json([
+            'success' => true,
+            'data' => $transaksi,
+            'todayCount' => $todayCount,
+            'yesterdayCount' => $yesterdayCount,
+            'monthCount' => $monthCount
+        ]);
+    }
+
+
+
 
     /**
      * Store a newly created kurir
      */
     public function store(StoreKurirRequest $request)
     {
+        // Validasi data dari request menggunakan Form Request khusus
         $validatedData = $request->validated();
-        // $validatedData['password'] = Hash::make($validatedData['password']);
-        // $validatedData['rating'] = $validatedData['rating'] ?? 5;
-
+    
+        // Jika ada file foto yang diunggah
         if ($request->hasFile('photo')) {
+            // Cek apakah sebelumnya ada foto lama (jika proses ini digunakan untuk update, baris ini bisa menyebabkan error karena $kurir belum dibuat)
             if ($kurir->user->photo) {
+                // Hapus file foto lama dari storage
                 Storage::disk('public')->delete($kurir->user->photo);
             }
-            $validatedData['photo'] = $request->file('photo')->store('photo', 'public');
+    
+            // Simpan foto baru ke folder 'photo' di storage/public
+            if ($request->hasFile('photo')) {
+                $validatedData['photo'] = $request->file('photo')->store('photo', 'public');
+            }
+            
         }
-
+    
+        // Simpan data kurir ke database
         $kurir = Kurir::create($validatedData);
-        $kurir->load('user'); // load relasi user
-
+    
+        // Muat relasi user agar bisa diakses tanpa query tambahan
+        $kurir->load('user');
+    
+        // Kembalikan response JSON dengan data kurir yang baru dibuat
         return response()->json([
             'success' => true,
             'kurir' => [
                 'kurir_id' => $kurir->kurir_id,
                 'status' => $kurir->status,
-                // 'rating' => $kurir->rating,
                 'user' => [
                     'name' => $kurir->user->name,
                     'email' => $kurir->user->email,
@@ -75,6 +241,7 @@ class KurirController extends Controller
             ],
         ]);
     }
+    
 
     /**
      * Show a specific kurir
@@ -82,6 +249,8 @@ class KurirController extends Controller
     public function show(Kurir $kurir)
     {
         $kurir->load('user');
+
+        $jumlahTransaksi = Transaksi::where('kurir_id', $kurir->kurir_id)->count();
     
         return response()->json([
             // 'kurir'=> ['status' => $kurir->status],
@@ -91,7 +260,7 @@ class KurirController extends Controller
                     'phone' => $kurir->user->phone,
                     'photo' => $kurir->user->photo,
                     'status' => $kurir->status,
-                    // 'password' => $kurir->user->password,
+                    // 'rating' => $kurir->rating,
                 ],
             ]);
     
@@ -102,85 +271,86 @@ class KurirController extends Controller
      */
     public function update(UpdateKurirRequest $request, Kurir $kurir)
     {
+        // Validasi semua data yang dikirim menggunakan Form Request (UpdateKurirRequest)
         $validatedData = $request->validated();
-        
-
-        // if (!$request->filled('kurir_id')) {
-        //     return response()->json(['message' => 'kurir_id wajib diisi'], 422);
-        // }
-        
+    
+        // Pastikan kurir_id tetap diambil dari request untuk update eksplisit (meski biasanya tidak diubah)
         $validatedData['kurir_id'] = $request->input('kurir_id'); 
-        
+    
+        // Jika password diisi, hash dan simpan
         if ($request->filled('password')) {
             $validatedData['password'] = Hash::make($validatedData['password']);
         } else {
+            // Jika tidak diisi, hapus dari data agar tidak ter-update
             unset($validatedData['password']);
         }
-
-        // if ($request->filled('rating')) {
-        //     $validatedData['rating'] = max(1, min(5, $validatedData['rating']));
-        // }
-
+    
+        // Tangani upload foto baru jika ada
         if ($request->hasFile('photo')) {
+            // Hapus foto lama dari storage jika ada
             if ($kurir->user->photo) {
                 Storage::disk('public')->delete($kurir->user->photo);
             }
+    
+            // Simpan foto baru ke folder 'photo' di storage/public
             $validatedData['photo'] = $request->file('photo')->store('photo', 'public');
         }
-
-        
+    
+        // Update data user terkait (relasi ke user)
         $kurir->user->update([
             'name' => $request->name,
             'email' => $request->email,
             'phone' => $request->phone,
-            // 'password' => $request->password,
+            // 'password' bisa dimasukkan jika ada fitur ubah password untuk user
             'photo' => $validatedData['photo'] ?? $kurir->user->photo,
-            // 'photo' => $request->photo,
         ]);
-        
+    
+        // Update data kurir itu sendiri
         $kurir->update($validatedData);
+    
+        // Kembalikan response JSON berisi data kurir yang sudah diperbarui
         return response()->json([
             'success' => true,
             'kurir' => [
                 'kurir_id' => $kurir->kurir_id,
-                // 'name' => $kurir->name,
-                // 'email' => $kurir->email,
-                // 'phone' => $kurir->phone,
                 'status' => $kurir->status,
-                // 'rating' => $kurir->rating,
-                // 'photo' => $kurir->photo
+                'rating' => $kurir->rating,
             ]
         ]);
     }
+    
 
-//     public function ringkasanKurir()
-// {
-//     $kurirId = auth()->user()->kurir->kurir_id;
 
-//     $averageRating = Transaksi::where('kurir_id', $kurirId)
-//         ->whereNotNull('penilaian')
-//         ->avg('penilaian'); // asumsi kolomnya 'penilaian' adalah angka (1–5)
-
-//     return response()->json([
-//         'avg_rating' => round($averageRating, 2),
-//     ]);
-// }
 
     public function toggleStatus($kurir_id)
     {
+        // Ambil data kurir berdasarkan ID, jika tidak ditemukan akan melempar 404
         $kurir = Kurir::findOrFail($kurir_id);
-
-        if($kurir->status != 'sedang menerima orderan'){
-            $kurir->status = $kurir->status === 'aktif' ? 'nonaktif' : 'aktif';
-            $kurir->save();
+    
+        // Cek apakah status saat ini adalah "aktif"
+        if ($kurir->status === 'aktif') {
+            $kurir->status = 'nonaktif'; // Ubah ke "nonaktif"
+        } 
+        // Jika status saat ini adalah "nonaktif"
+        elseif ($kurir->status === 'nonaktif') {
+            $kurir->status = 'aktif'; // Ubah ke "aktif"
+        } 
+        // Jika status "sedang menerima orderan", tidak diizinkan mengubah
+        else {
+            return response()->json([
+                'message' => 'Tidak dapat mengubah status saat sedang menerima orderan'
+            ], 400);
         }
-
+    
+        // Simpan perubahan ke database
+        $kurir->save();
+    
+        // Kembalikan response JSON dengan status terbaru
         return response()->json([
-            'message' => 'Status berhasil diperbarui.',
             'status' => $kurir->status
         ]);
     }
-
+    
 
     /**
      * Get all kurir
@@ -189,45 +359,31 @@ class KurirController extends Controller
     {
         return response()->json([
             'success' => true,
-            'data' => Kurir::select('kurir_id', 'status', 'rating')->get()
-            // 'data' => Kurir::select('kurir_id', 'name', 'email', 'phone', 'status', 'rating', 'photo')->get()
-        ]);
-    }
-
-    public function list()
-    {
-        $kurir = Kurir::with('user:id,name')->get()->map(function ($item) {
-            return [
-                'id' => $item->id,
-                'text' => $item->user->name,
-            ];
-        });
-
-        return response()->json([
-            'kurir' => $kurir,
+            'data' => Kurir::all(),
+            // 'data' => Kurir::select('kurir_id', 'status', 'rating')->get()
         ]);
     }
 
     public function destroy(Kurir $kurir)
-{
-    // Hapus foto dari storage jika user memiliki foto
-    if ($kurir->user && $kurir->user->photo) {
-        Storage::disk('public')->delete($kurir->user->photo);
+    {
+        // Hapus foto dari storage jika user memiliki foto
+        if ($kurir->user && $kurir->user->photo) {
+            Storage::disk('public')->delete($kurir->user->photo);
+        }
+
+        // Hapus data user yang terkait
+        if ($kurir->user) {
+            $kurir->user->delete();
+        }
+
+        // Hapus data kurir
+        $kurir->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Data kurir berhasil dihapus'
+        ]);
     }
-
-    // Hapus data user yang terkait
-    if ($kurir->user) {
-        $kurir->user->delete();
-    }
-
-    // Hapus data kurir
-    $kurir->delete();
-
-    return response()->json([
-        'success' => true,
-        'message' => 'Data kurir berhasil dihapus'
-    ]);
-}
 }
 
 

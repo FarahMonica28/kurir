@@ -50,6 +50,7 @@ Route::middleware(['auth', 'verified', 'json'])->group(function () {
             Route::post('users/store', [UserController::class, 'store']);
             // routes/api.php
             Route::get('/me', [UserController::class, 'me']);
+            Route::get('/admin/dashboard-summary', [UserController::class, 'dashboardSummary']);
             Route::apiResource('users', UserController::class)
                 ->except(['index', 'store'])->scoped(['user' => 'uuid']);
 
@@ -71,12 +72,13 @@ Route::middleware(['auth', 'verified', 'json'])->group(function () {
         Route::post('kurir', [KurirController::class, 'index']);
         // routes/api.php
         // Route::get('/kurir', [KurirController::class, 'profile'])->middleware('auth:sanctum');
-        // Route::get('/kurir/get', [KurirController::class, 'get']);
-        Route::get('/kurir/list', [KurirController::class, 'list']);
+        // Route::get('/kurir/list', [KurirController::class, 'list']);
         Route::middleware('auth:sanctum')->get('/kurir/ringkasan', [KurirController::class, 'ringkasanKurir']);
         Route::put('/kurir/{kurir_id}/toggle-status', [KurirController::class, 'toggleStatus']);
         Route::put('/kurir/{kurir_id}', [KurirController::class, 'updateKurir']);
         Route::put('/transaksi/{transaksi_id}/status', [KurirController::class, 'updateStatusTransaksi']);
+        Route::get('/kurir/transaksi-count', [KurirController::class, 'transaksiCount']);
+        Route::middleware('can:kurir')->get('/kurir/transaksi-list', [KurirController::class, 'transaksiList']);
         Route::apiResource('kurir', KurirController::class)
         ->except(['index', 'store']);
     });
@@ -153,6 +155,12 @@ Route::middleware(['auth', 'verified', 'json'])->group(function () {
     });
     
     //transaksi
+    Route::middleware('can:orderan')->group(function () {
+        // Menampilkan list transaksi (pada halaman index)
+        Route::get('transaksi', [TransaksiController::class, 'get'])->withoutMiddleware('can:orderan');
+        Route::post('orderan', [TransaksiController::class, 'index'])->withoutMiddleware('can:orderan'); // ini mengijinkan kurir mengambil data yang dimasukan pengguna
+
+    });
     Route::middleware('can:transaksi')->group(function () {
         // Menampilkan list transaksi (pada halaman index)
         Route::get('transaksi', [TransaksiController::class, 'get'])->withoutMiddleware('can:transaksi');
@@ -183,13 +191,11 @@ Route::middleware(['auth', 'verified', 'json'])->group(function () {
         // Halaman untuk membuat trans baru
         Route::get('trans/create', [TransController::class, 'create'])->name('trans.create');
         Route::post('trans/store', [TransController::class, 'store']);
-
         // Menampilkan list trans (misalnya untuk paginasi)
         // Route::get('/trans', [TransController::class, 'show']); 
         Route::get('/trans/{transaksi}', [TransaksiController::class, 'show']);
-        Route::put('/trans/update-status/{id}', [TransController::class, 'updateStatus']);
-        Route::put('/trans/${orderId}/ambil', [TransController::class, 'ambilOrder']);
-        // Route::post('/trans/storer', [TransController::class, 'storePenilaian']);
+        Route::put('/trans/update-status/{id}', [TransController::class, 'updateStatus']);        // Route::post('/trans/storer', [TransController::class, 'storePenilaian']);
+        Route::put('/transaksi/{id}/update-status', [TransController::class, 'updateStatus'])->withoutMiddleware('can:trans');
         // Route::middleware('auth')->group(function () {
         //     // Route::put('/trans/{trans}', [TransController::class, 'update']);
         // });

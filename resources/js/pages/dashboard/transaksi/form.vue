@@ -1,56 +1,66 @@
 <script setup lang="ts">
-import { block, unblock } from "@/libs/utils";
-import { onMounted, ref, watch, computed } from "vue";
-import * as Yup from "yup";
-import axios from "@/libs/axios";
-import { toast } from "vue3-toastify";
-import ApiService from "@/core/services/ApiService";
-// import { useStatusPengiriman } from "@/services/useStatusPengiriman";
-import type { transaksi } from "@/types";
-import { useAuthStore } from "@/stores/auth";
+import { block, unblock } from "@/libs/utils"; // Import utilitas block/unblock untuk memunculkan loading overlay saat proses async
+import { onMounted, ref, watch, computed } from "vue"; // Import fitur Vue yang digunakan
+import * as Yup from "yup"; // Yup digunakan untuk validasi form
+import axios from "@/libs/axios"; // Axios instance untuk melakukan HTTP request
+import { toast } from "vue3-toastify"; // Notifikasi toast
+import ApiService from "@/core/services/ApiService"; // ApiService custom untuk GET/POST/PUT/DELETE API
+import type { transaksi } from "@/types"; // Tipe TypeScript untuk objek transaksi
+import { useAuthStore } from "@/stores/auth";// Store autentikasi untuk mendapatkan data pengguna login
+import Swal from 'sweetalert2';
+
+// import komponen Google Maps Autocomplete jika dibutuhkan nanti
 // import { GMapAutocomplete } from '@fawmi/vue-google-maps'
 
+// Ambil data user login dari auth store
 const authStore = useAuthStore();
-const currentPengguna = computed(() => authStore.user);
+const currentPengguna = computed(() => authStore.user); // Pengguna yang sedang login
+
+// Props untuk menentukan apakah sedang dalam mode edit (selected != null)
 const props = defineProps({
   selected: { type: String, default: null },
 });
+// Emit untuk mengirim event keluar dari komponen
 const emit = defineEmits(["close", "refresh"]);
+
+// State utama untuk menyimpan data transaksi yang sedang diedit atau dibuat
 const transaksi = ref<transaksi>({} as transaksi);
+
+// Referensi ke form untuk validasi dan reset
 const formRef = ref();
 
+// Skema validasi form menggunakan Yup
 const formSchema = Yup.object().shape({
   nama_barang: Yup.string().required("Nama Barang harus diisi"),
-  // pengirim: Yup.string().required("Nama Pengirim harus diisi"),
   penerima: Yup.string().required("Nama Penerima harus diisi"),
   alamat_asal: Yup.string().required("Alamat Asal harus diisi"),
   alamat_tujuan: Yup.string().required("Alamat Tujuan harus diisi"),
   no_hp_penerima: Yup.string().required("No HP Penerima harus diisi"),
 });
+
+// Fungsi untuk mengatur alamat asal dari komponen Google Maps Autocomplete
 function setAlamatAsal(place: any) {
-  transaksi.value.alamat_asal = place.formatted_address
+  transaksi.value.alamat_asal = place.formatted_address;
 }
 
+// Fungsi untuk mengatur alamat tujuan dari komponen Google Maps Autocomplete
 function setAlamatTujuan(place: any) {
-  transaksi.value.alamat_tujuan = place.formatted_address
+  transaksi.value.alamat_tujuan = place.formatted_address;
 }
 
+// Jika dalam mode edit, ambil data transaksi berdasarkan ID (props.selected)
 function getEdit() {
   block(document.getElementById("form-transaksi"));
   ApiService.get("transaksi", props.selected)
     .then(({ data }) => {
-      // order.value = data.order;
-      console.log(data);
+      // Map data dari response ke dalam form transaksi
       transaksi.value = {
         nama_barang: data.nama_barang || "",
         penerima: data.penerima || "",
-        // pengirim: data.pengirim || "",
-        // pengguna_id: data.pengguna_id || "",
         alamat_asal: data.alamat_asal || "",
         alamat_tujuan: data.alamat_tujuan || "",
         no_hp_penerima: data.no_hp_penerima || "",
       };
-      console.log(transaksi);
     })
     .catch((err: any) => {
       toast.error(err.response.data.message);
@@ -60,26 +70,26 @@ function getEdit() {
     });
 }
 
+// Fungsi untuk submit data form, baik untuk create maupun update
 function submit() {
   const formData = new FormData();
 
-  console.log(currentPengguna.value.id);
+  // Set field untuk dikirim ke backend
   formData.append("id", currentPengguna.value.id);
   formData.append("nama_barang", transaksi.value.nama_barang);
   formData.append("penerima", transaksi.value.penerima);
-  // formData.append("pengirim", transaksi.value.pengirim);
-  // formData.append("pengguna_id", currentPengguna.value.pengguna.pengguna_id);
   formData.append("alamat_asal", transaksi.value.alamat_asal);
   formData.append("alamat_tujuan", transaksi.value.alamat_tujuan);
   formData.append("no_hp_penerima", transaksi.value.no_hp_penerima);
 
+  // Jika mode edit, tambahkan _method PUT
   if (props.selected) {
     formData.append("_method", "PUT");
   } else {
+    // Jika tambah baru, isi waktu & status default
     formData.append("waktu", new Date().toISOString());
     formData.append("status", "belum terkirim");
   }
-
 
   block(document.getElementById("form-transaksi"));
   axios({
@@ -91,34 +101,49 @@ function submit() {
     },
   })
     .then(() => {
-      emit("close");
-      emit("refresh");
+      emit("close");    // Tutup form/modal
+      emit("refresh");  // Refresh data list
       toast.success("Data berhasil disimpan");
-      formRef.value.resetForm();
+      formRef.value.resetForm(); // Reset form setelah submit
     })
     .catch((err: any) => {
-      formRef.value.setErrors(err.response.data.errors);
-      toast.error(err.response.data.message);
+      // Tampilkan error validasi ke form
+      if (err.response?.data?.errors) {
+        formRef.value.setErrors(err.response.data.errors);
+      }
+
+      const message = err.response?.data?.message || 'Terjadi kesalahan.';
+
+      // Cek apakah error 422 dan pesan khusus tentang kurir tidak tersedia
+      if (err.response?.status === 422) {
+        // Tampilkan SweetAlert jika tidak ada kurir tersedia
+        Swal.fire({
+          icon: 'warning',
+          title: 'Tidak Ada Kurir Aktif yang Tersedia',
+          // text: message,
+        });
+      } else {
+        // Jika error lain, gunakan toast biasa
+        // toast.error(message);
+      }
     })
     .finally(() => {
       unblock(document.getElementById("form-transaksi"));
     });
 }
 
+// Saat komponen pertama kali dimount, jika mode edit, panggil getEdit()
 onMounted(() => {
   if (props.selected) getEdit();
 });
 
-
+// Jika props.selected berubah (misalnya user pilih transaksi lain), ambil ulang data
 watch(
   () => props.selected,
   () => {
     if (props.selected) getEdit();
   }
 );
-// onMounted(() => { & watch
-//   if (props.selected) antar();
-// });
 
 </script>
 
@@ -195,7 +220,10 @@ watch(
     </div>
 
     <div class="card-footer d-flex">
-      <button type="submit" class="btn btn-primary ms-auto">Buat Order</button>
+      <button type="submit" class="btn btn-primary ms-auto">
+        <i class="bi bi-cloud-check-fill"></i> Buat Order
+      </button>
     </div>
+
   </VForm>
 </template>

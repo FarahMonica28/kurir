@@ -10,9 +10,9 @@ import RiwayatPage from "@/pages/dashboard/riwayatt/idex.vue";
 const currentTab = ref<'dashboard' | 'order' | 'riwayat'>('dashboard');
 
 // Fungsi Logout
-const handleLogout = () => {
-  alert('Logout berhasil') // Ganti dengan logika asli
-}
+// const handleLogout = () => {
+//   alert('Logout berhasil') // Ganti dengan logika asli
+// }
 </script>
 
 <template>
@@ -45,10 +45,10 @@ const handleLogout = () => {
           </button>
         </div>
 
-        <!-- Tombol Logout -->
+        <!-- Tombol Logout
         <button class="btn btn-light text-primary fw-semibold" @click="handleLogout">
           Logout
-        </button>
+        </button> -->
       </div>
     </nav>
 

@@ -28,10 +28,10 @@ const routes: Array<RouteRecordRaw> = [
                 path: "/dashboard",
                 name: "dashboard",
                 component: () => import("@/pages/dashboard/Index.vue"),
-                meta: {
-                    pageTitle: "Dashboard",
-                    breadcrumbs: ["Dashboard"],
-                },
+                // meta: {
+                //     pageTitle: "Dashboard",
+                //     breadcrumbs: ["Dashboard"],
+                // },
             },
             {
                 path: "/dashboardk/pengirimans",
@@ -114,12 +114,12 @@ const routes: Array<RouteRecordRaw> = [
                     breadcrumbs: ["Website", "Setting"],
                 },
             },
-            
+
             //admin
             {
                 path: "/dashboard/orderan",
                 name: "dashboard.orderan",
-                component: () => import("@/pages/dashboard/Riwaya/inde.vue"),
+                component: () => import("@/pages/dashboard/orderan/inde.vue"),
                 meta: {
                     pageTitle: "Order Kurir",
                     // breadcrumbs: ["Halaman", "Akun dan Profl"],

@@ -121,10 +121,10 @@ function submit() {
     });
 }
 
-onMounted(async () => {
-  const { data } = await axios.get('/kurir/ringkasan');
-  avgRating.value = data.avg_rating;
-});
+// onMounted(async () => {
+//   const { data } = await axios.get('/kurir/ringkasan');
+//   avgRating.value = data.avg_rating;
+// });
 onMounted(() => {
   if (props.selected) {
     getEdit();
@@ -177,14 +177,14 @@ watch(
             <ErrorMessage name="phone" class="text-danger" />
           </div>
         </div>
-        <div class="col-md-6">
+        <!-- <div class="col-md-6">
           <div class="fv-row mb-7">
             <label class="form-label fw-bold fs-6">Password</label>
             <Field class="form-control form-control-lg form-control-solid" type="password" name="password"
               v-model="kurir.user.password" placeholder="Masukkan Password (opsional saat edit)" />
             <ErrorMessage name="password" class="text-danger" />
           </div>
-        </div>
+        </div> -->
         <div class="col-md-6">
           <div class="fv-row mb-7">
             <label class="form-label fw-bold fs-6">Foto Profil</label>

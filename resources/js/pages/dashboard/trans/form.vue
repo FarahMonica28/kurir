@@ -1,167 +1,178 @@
 <script setup lang="ts">
-import { block, unblock } from "@/libs/utils";
-import { onMounted, ref, watch, computed } from "vue";
-import * as Yup from "yup";
-import axios from "@/libs/axios";
-import { toast } from "vue3-toastify";
-import ApiService from "@/core/services/ApiService";
-// import { useKurir } from "@/services/useKurir";
-// import { useStatusPengiriman } from "@/services/useStatusPengiriman";
-import type { transaksi } from "@/types";
+  // Import statement untuk menggunakan berbagai fitur dari Vue, axios, dan Toastify
+  import { block, unblock } from "@/libs/utils"; // Fungsi untuk menampilkan/menghilangkan loading block
+  import { onMounted, ref, watch, computed } from "vue"; // Vue lifecycle hooks dan reactivity API
+  import * as Yup from "yup"; // Untuk validasi schema
+  import axios from "@/libs/axios"; // Axios instance untuk request HTTP
+  import { toast } from "vue3-toastify"; // Untuk menampilkan pesan toast
+  import ApiService from "@/core/services/ApiService"; // Untuk request API umum
+  import type { transaksi } from "@/types"; // Tipe data untuk transaksi
+  import Swal from "sweetalert2";
 
-import { useAuthStore } from "@/stores/auth";
+  import { useAuthStore } from "@/stores/auth"; // Mengambil data dari store auth (pengguna yang sedang login)
 
-const authStore = useAuthStore();
-const currentKurir = computed(() => authStore.user); // misalnya di sini tersimpan data kurir yang login
-// Cek jika kurir sudah memiliki orderan yang sedang diproses
-const kurirOrder = ref(null);
+  // Mengambil store auth untuk mendapatkan data kurir yang sedang login
+  const authStore = useAuthStore();
+  const currentKurir = computed(() => authStore.user); // Mengambil data pengguna yang sedang login
 
+  // Cek jika kurir sudah memiliki orderan yang sedang diproses
+  const kurirOrder = ref(null);
 
-const props = defineProps({
-  selected: { type: String, default: null },
-});
-const emit = defineEmits(["close", "refresh"]);
-const transaksi = ref<transaksi>({} as transaksi);
-const formRef = ref();
+  // Mendefinisikan props untuk menerima data dari komponen induk, khususnya 'selected'
+  const props = defineProps({
+    selected: { type: String, default: null },
+  });
+
+  // Emit untuk mengirimkan event ke komponen induk
+  const emit = defineEmits(["close", "refresh"]);
+
+  // Variabel ref untuk menyimpan data transaksi yang sedang diproses
+  const transaksi = ref<transaksi>({} as transaksi);
+
+  // Ref untuk form (untuk reset form)
+  const formRef = ref();
+
+  // Menghitung biaya secara otomatis berdasarkan jarak
+  // const biayaOtomatis = computed(() => {
+  //   const jarak = parseFloat(transaksi.value?.jarak || '0');
+  //   return isNaN(jarak) ? 0 : jarak * 10000; // Jika jarak tidak valid, biaya = 0
+  // });
+
 const biayaOtomatis = computed(() => {
-  const berat = parseFloat(transaksi.value.jarak);
-  return isNaN(berat) ? 0 : berat * 10000;
-});
-const statuses = [
-  { label: "Penjemputan Barang", value: "Penjemputan Barang" },
-  { label: "Sedang Dikirim", value: "Sedang Dikirim" },
-  { label: "Terkirim", value: "Terkirim" },
-];
+  const jarak = parseFloat(transaksi.value?.jarak || '0');
 
-
-
-const formSchema = Yup.object().shape({
-  // no_transaksi: Yup.string().required("Nomor Transaksi harus diisi"),
-  nama_barang: Yup.string().required("Nama Barang harus diisi"),
-  // pengirim: Yup.string().required("Nama Pengirim harus diisi"),
-  penerima: Yup.string().required("Nama Penerima harus diisi"),
-  // pengirim: Yup.string().required("Nama Pengirim harus diisi"),
-  alamat_asal: Yup.string().required("Alamat Asal harus diisi"),
-  alamat_tujuan: Yup.string().required("Alamat Tujuan harus diisi"),
-  no_hp_penerima: Yup.string().required("No HP Penerima harus diisi"),
-  // jarak: Yup.number().required("Berat Barang harus diisi"),
-  // biaya: Yup.number().required("Biaya harus diisi"),
-  // waktu: Yup.string().required("Waktu harus diisi"),
-  // kurir_id: Yup.string().required("Kurir harus dipilih"),
-  // status: Yup.string().required("Status harus dipilih"),
-});
-
-function getEdit() {
-  block(document.getElementById("form-transaksi"));
-  ApiService.get("trans", props.selected)
-    .then(({ data }) => {
-      // order.value = data.order;
-      console.log(data);
-      transaksi.value = {
-        nama_barang: data.nama_barang || "",
-        penerima: data.penerima || "",
-        pengirim: data.pengguna?.id || "",
-        // pengguna_id: data.pengguna_id || "",
-        // pengguna_id: data.pengguna?.pengguna_id || '',
-        pengguna: data.pengguna,
-        alamat_asal: data.alamat_asal || "",
-        alamat_tujuan: data.alamat_tujuan || "",
-        no_hp_penerima: data.no_hp_penerima || "",
-        jarak: data.jarak || "",
-        biaya: data.biaya || "",
-        status: data.status || "belum_dikirim",
-        // kurir_id: data.kurir.user.kurir_id || "",        // status: data.status || "belum dikirim" || "Sedang Dikirim" || "Terkirim",
-        // status: data.status || "belum_dikirim",
-      };
-      console.log(transaksi);
-    })
-    .catch((err: any) => {
-      toast.error(err.response.data.message);
-    })
-    .finally(() => {
-      unblock(document.getElementById("form-transaksi"));
-    });
-}
-
-function submit() {
-  const formData = new FormData();
-
-  console.log("id", transaksi.value.id);
-  formData.append("nama_barang", transaksi.value.nama_barang);
-  formData.append("penerima", transaksi.value.penerima);
-  formData.append("pengirim", transaksi.value.pengirim);
-  formData.append("alamat_asal", transaksi.value.alamat_asal);
-  formData.append("alamat_tujuan", transaksi.value.alamat_tujuan);
-  formData.append("no_hp_penerima", transaksi.value.no_hp_penerima);
-  formData.append("jarak", transaksi.value.jarak);
-  formData.append("biaya", biayaOtomatis.value.toString());
-  formData.append("status", transaksi.value.status);
-  formData.append("kurir_id", currentKurir.value.kurir.kurir_id);
-
-  if (props.selected) {
-    formData.append("_method", "PUT");
-  } else {
-    //   formData.append("waktu", new Date().toISOString());
-    formData.append("status", transaksi.value.status || "belum_dikirim");
-
+  if (isNaN(jarak) || jarak <= 0) {
+    return 0; // Jika jarak tidak valid atau nol
   }
 
+  if (jarak <= 3) {
+    return 10000; // Biaya minimum untuk jarak 1–3 km
+  }
 
-  block(document.getElementById("form-transaksi"));
-  axios({
-    method: "post",
-    url: props.selected ? `/trans/${props.selected}` : "/trans/store",
-    data: formData,
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-  })
-    .then(() => {
-      emit("close");
-      emit("refresh");
-      toast.success("Data berhasil disimpan");
-      formRef.value.resetForm();
-    })
-    .catch((err: any) => {
-      formRef.value.setErrors(err.response.data.errors);
-      toast.error(err.response.data.message);
-    })
-    .finally(() => {
-      unblock(document.getElementById("form-transaksi"));
-    });
-}
+  const tambahanKm = Math.ceil(jarak - 3); // Bulatkan ke atas
+  return 10000 + (tambahanKm * 4000);
+});
 
-watch(
-  () => transaksi.value.jarak,
-  (newBerat) => {
-    const berat = parseFloat(newBerat);
-    if (!isNaN(berat)) {
-      transaksi.value.biaya = (berat * 10000).toString(); // harga per kg: 10.000
+
+  // Fungsi untuk mengambil data transaksi yang akan diedit
+  function getEdit() {
+    block(document.getElementById("form-transaksi")); // Menampilkan loading indicator
+    ApiService.get("trans", props.selected) // Mengambil data transaksi berdasarkan ID (props.selected)
+      .then(({ data }) => {
+        console.log(data);
+        transaksi.value = {
+          // Menyimpan data transaksi yang diterima dari API ke ref transaksi
+          nama_barang: data.nama_barang || "",
+          penerima: data.penerima || "",
+          pengirim: data.pengguna?.id || "",
+          pengguna: data.pengguna,
+          alamat_asal: data.alamat_asal || "",
+          alamat_tujuan: data.alamat_tujuan || "",
+          no_hp_penerima: data.no_hp_penerima || "",
+          jarak: data.jarak || "",
+          biaya: data.biaya || "",
+          // status: data.status || "belum_dikirim", // Status default jika tidak ada
+        };
+        console.log(transaksi);
+      })
+      .catch((err: any) => {
+        toast.error(err.response.data.message); // Menampilkan pesan error jika gagal
+      })
+      .finally(() => {
+        unblock(document.getElementById("form-transaksi")); // Menghilangkan loading indicator
+      });
+  }
+
+  // Fungsi untuk submit form (tambah/ubah data transaksi)
+  function submit() {
+    const formData = new FormData();
+
+    console.log("id", transaksi.value.id); // Menampilkan ID transaksi yang akan diupdate
+    formData.append("jarak", transaksi.value.jarak); // Menambahkan data jarak ke form
+    formData.append("biaya", biayaOtomatis.value.toString()); // Menambahkan biaya yang dihitung secara otomatis
+    // formData.append("status", transaksi.value.status); // Menambahkan status
+    formData.append("kurir_id", currentKurir.value.kurir.kurir_id); // Menambahkan ID kurir yang login
+
+    // Mengecek apakah form untuk edit atau create
+    if (props.selected) {
+      formData.append("_method", "PUT"); // Jika edit, menambahkan _method untuk PUT
     } else {
-      transaksi.value.biaya = "0";
+      // formData.append("waktu", new Date().toISOString()); // Bisa ditambahkan jika perlu waktu transaksi
+      formData.append("status", transaksi.value.status || "belum_dikirim"); // Status default
+    }
+
+    block(document.getElementById("form-transaksi")); // Menampilkan loading indicator
+    axios({
+      method: "post", // Mengirim request POST atau PUT tergantung kondisi
+      url: props.selected ? `/trans/${props.selected}` : "/trans/store", // URL yang digunakan untuk request
+      data: formData,
+      headers: {
+        "Content-Type": "multipart/form-data", // Mengirim data dalam format form-data
+      },
+    })
+      .then(() => {
+        emit("close"); // Emit event untuk menutup modal
+        emit("refresh"); // Emit event untuk menyegarkan data di komponen induk
+        toast.success("Data berhasil disimpan"); // Menampilkan pesan sukses
+        formRef.value.resetForm(); // Mereset form setelah submit
+      })
+      .catch((err: any) => {
+        formRef.value.setErrors(err.response.data.errors); // Menampilkan error jika ada
+        toast.error(err.response.data.message); // Menampilkan pesan error
+      })
+      .finally(() => {
+        unblock(document.getElementById("form-transaksi")); // Menghilangkan loading indicator
+      });
+  }
+
+  // Watcher untuk mendeteksi perubahan pada 'jarak' dan menghitung biaya otomatis
+  // watch(
+  //   () => transaksi.value.jarak,
+  //   (newJarak) => {
+  //     const jarak = parseFloat(newJarak);
+  //     if (!isNaN(jarak)) {
+  //       transaksi.value.biaya = (jarak * 5000).toString(); // Menghitung biaya berdasarkan jarak
+  //     } else {
+  //       transaksi.value.biaya = "0"; // Jika jarak tidak valid, biaya = 0
+  //     }
+  //   }
+  // );
+  watch(
+  () => transaksi.value.jarak,
+  (newJarak) => {
+    const jarak = parseFloat(newJarak);
+    if (!isNaN(jarak)) {
+      if (jarak <= 3) {
+        transaksi.value.biaya = "10000";
+      } else {
+        const tambahanKm = Math.ceil(jarak - 3); // Bulatkan ke atas
+        const biaya = 10000 + (tambahanKm * 4000);
+        transaksi.value.biaya = biaya.toString();
+      }
+    } else {
+      transaksi.value.biaya = "0"; // Jika jarak tidak valid
     }
   }
 );
 
 
-onMounted(() => {
+  // Lifecycle hook onMounted untuk inisialisasi data saat komponen dipasang
+  onMounted(() => {
+    // Jika form baru (bukan edit), otomatis mengisi data kurir yang login
+    transaksi.value.kurir_id = currentKurir.value?.kurir.kurir_id || "";
+    console.log(transaksi.value.kurir_id);
+    if (props.selected) getEdit(); // Jika ada selected, ambil data transaksi untuk diedit
+  });
 
-  // jika form baru (bukan edit), isi otomatis kurir dari yang login
-  transaksi.value.kurir_id = currentKurir.value?.kurir.kurir_id || "";
-  console.log(transaksi.value.kurir_id)
-  if (props.selected) getEdit();
-});
-// onMounted(() => {
-//   if (props.selected) getEdit();
-// });
-
-watch(
-  () => props.selected,
-  () => {
-    if (props.selected) getEdit();
-  }
-);
+  // Watcher untuk mendeteksi perubahan pada props.selected
+  watch(
+    () => props.selected,
+    () => {
+      if (props.selected) getEdit(); // Jika props.selected berubah, ambil data untuk edit
+    }
+  );
 </script>
+
 
 <template>
   <VForm class="form card mb-10" @submit="submit" :validation-schema="formSchema" id="form-transaksi" ref="formRef">
@@ -236,7 +247,7 @@ watch(
           <ErrorMessage name="biaya" class="text-danger small" />
         </div>
 
-        <div class="col-md-3 mb-7">
+        <!-- <div class="col-md-3 mb-7">
           <label class="form-label fw-bold">Status </label>
           <Field as="select" name="status" class="form-select" v-model="transaksi.status">
             <option value="" disabled>Pilih Status</option>
@@ -252,11 +263,10 @@ watch(
             </option>
           </Field>
           <ErrorMessage name="status" class="text-danger small" />
-        </div>
+        </div> -->
 
         <div class="col-md-3 mb-7">
           <label class="form-label required fw-bold" for="kurir">Kurir</label>
-          <!-- <Field type="text" name="kurir_id" class="form-control" v-model="transaksi.kurir_id"> -->
           <Field type="text" name="kurir_id" class="form-control" :value="`${currentKurir.name}`" readonly>
           </Field>
           <ErrorMessage name="kurir_id" class="text-danger small" />

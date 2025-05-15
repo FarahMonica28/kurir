@@ -4,7 +4,6 @@ import { useDelete } from "@/libs/hooks";
 // import Form from "./Form.vue";
 import { createColumnHelper } from "@tanstack/vue-table";
 import type { transaksi } from "@/types";
-import Swal from "sweetalert2";
 
 const column = createColumnHelper<transaksi>();
 const paginateRef = ref<any>(null);
@@ -41,8 +40,8 @@ const { delete: deleteOrder } = useDelete({
     onSuccess: () => paginateRef.value.refetch(),
 });
 
-const columns = [
-    // column.accessor("no", { header: "#" }),
+    const columns = [
+        // column.accessor("no", { header: "#" }),
     column.accessor("id", {
         header: "No Order",
     }),
@@ -120,7 +119,7 @@ watch(openForm, (val) => {
         </div>
         <div class="card-body">
             <!-- <paginate ref="paginateRef" id="table-transaksi" url="/transaksi" :columns="columns"></paginate> -->
-            <paginate ref="paginateRef" id="table-transaksi" url="/transaksi?exclude_status=Terkirim"
+            <paginate ref="paginateRef" id="table-transaksi" url="/orderan?exclude_status=Terkirim"
                 :columns="columns" />
 
 

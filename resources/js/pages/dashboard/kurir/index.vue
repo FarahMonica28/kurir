@@ -4,6 +4,7 @@ import { useDelete } from "@/libs/hooks";
 import Form from "./form.vue";
 import { createColumnHelper } from "@tanstack/vue-table";
 import type { kurir } from "@/types"; // Pastikan tipe data sesuai API
+import axios from "@/libs/axios";
 
 const column = createColumnHelper<kurir>();
 const paginateRef = ref<any>(null);
@@ -78,15 +79,15 @@ const columns = [
         })
         : "Tidak ada foto",
   }),
-  column.accessor("rating", {
-    header: "Rating",
-    cell: (cell) => {
-      const rating = cell.getValue();
-      return rating
-        ? h("span", { class: "fw-bold text-warning" }, "⭐".repeat(rating)) // Menampilkan bintang
-        : "Belum ada rating";
-    },
-  }),
+  // column.accessor("rating", {
+  //   header: "Rating",
+  //   cell: (cell) => {
+  //     const rating = cell.getValue();
+  //     return rating
+  //       ? h("span", { class: "fw-bold text-warning" }, "⭐".repeat(rating)) // Menampilkan bintang
+  //       : "Belum ada rating";
+  //   },
+  // }),
   column.accessor("status", {
     header: "Status",
     cell: (cell) => {
