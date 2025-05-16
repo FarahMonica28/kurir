@@ -71,7 +71,7 @@ const biayaOtomatis = computed(() => {
           no_hp_penerima: data.no_hp_penerima || "",
           jarak: data.jarak || "",
           biaya: data.biaya || "",
-          // status: data.status || "belum_dikirim", // Status default jika tidak ada
+          status: data.status || "belum_dikirim", // Status default jika tidak ada
         };
         console.log(transaksi);
       })
@@ -90,7 +90,7 @@ const biayaOtomatis = computed(() => {
     console.log("id", transaksi.value.id); // Menampilkan ID transaksi yang akan diupdate
     formData.append("jarak", transaksi.value.jarak); // Menambahkan data jarak ke form
     formData.append("biaya", biayaOtomatis.value.toString()); // Menambahkan biaya yang dihitung secara otomatis
-    // formData.append("status", transaksi.value.status); // Menambahkan status
+    formData.append("status", transaksi.value.status); // Menambahkan status
     formData.append("kurir_id", currentKurir.value.kurir.kurir_id); // Menambahkan ID kurir yang login
 
     // Mengecek apakah form untuk edit atau create
@@ -247,7 +247,7 @@ const biayaOtomatis = computed(() => {
           <ErrorMessage name="biaya" class="text-danger small" />
         </div>
 
-        <!-- <div class="col-md-3 mb-7">
+        <div class="col-md-3 mb-7">
           <label class="form-label fw-bold">Status </label>
           <Field as="select" name="status" class="form-select" v-model="transaksi.status">
             <option value="" disabled>Pilih Status</option>
@@ -263,7 +263,7 @@ const biayaOtomatis = computed(() => {
             </option>
           </Field>
           <ErrorMessage name="status" class="text-danger small" />
-        </div> -->
+        </div>
 
         <div class="col-md-3 mb-7">
           <label class="form-label required fw-bold" for="kurir">Kurir</label>

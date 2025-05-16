@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\KurirController;
 use App\Http\Controllers\PengirimanController;
 use App\Http\Controllers\TrackingController;
+use App\Http\Controllers\RajaOngkirController;
 
 /*
 |--------------------------------------------------------------------------
@@ -204,6 +205,13 @@ Route::middleware(['auth', 'verified', 'json'])->group(function () {
         // Route::middleware(['auth', 'can:update,trans'])->put('/trans/{trans}', [TransaksiController::class, 'update']);
         // CRUD trans kecuali index dan store
     });
+
+    Route::get('/rajaongkir/provinces', [RajaOngkirController::class, 'getProvinces']);
+    Route::get('/rajaongkir/cities', [RajaOngkirController::class, 'getCities']);
+    // routes/api.php
+    // Route::get('/rajaongkir/cities', [RajaOngkirController::class, 'getCities']);
+
+
     
 });
 

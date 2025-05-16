@@ -38,15 +38,27 @@ const formSchema = Yup.object().shape({
   no_hp_penerima: Yup.string().required("No HP Penerima harus diisi"),
 });
 
-// Fungsi untuk mengatur alamat asal dari komponen Google Maps Autocomplete
-function setAlamatAsal(place: any) {
-  transaksi.value.alamat_asal = place.formatted_address;
-}
+// const kotaOptions = ref<string[]>([]);      // Kota di Jawa Timur
+// const searchKotaAsal = ref("");
+// const searchKotaTujuan = ref("");
 
-// Fungsi untuk mengatur alamat tujuan dari komponen Google Maps Autocomplete
-function setAlamatTujuan(place: any) {
-  transaksi.value.alamat_tujuan = place.formatted_address;
-}
+// const filteredKotaAsal = computed(() => {
+//   return kotaOptions.value.filter(k => k.toLowerCase().startsWith(searchKotaAsal.value.toLowerCase()));
+// });
+// const filteredKotaTujuan = computed(() => {
+//   return kotaOptions.value.filter(k => k.toLowerCase().startsWith(searchKotaTujuan.value.toLowerCase()));
+// });
+
+// async function getKotaJatim() {
+//   try {
+//     const { data } = await axios.get("/rajaongkir/cities?province=11"); // 11 = ID Jawa Timur
+//     kotaOptions.value = data.rajaongkir.results.map((item: any) => item.city_name);
+//   } catch (error) {
+//     console.error("Gagal ambil data kota dari RajaOngkir", error);
+//   }
+// }
+
+
 
 // Jika dalam mode edit, ambil data transaksi berdasarkan ID (props.selected)
 function getEdit() {
@@ -135,7 +147,9 @@ function submit() {
 // Saat komponen pertama kali dimount, jika mode edit, panggil getEdit()
 onMounted(() => {
   if (props.selected) getEdit();
+  getKotaJatim(); // Panggil data kota Jawa Timur saat mount
 });
+
 
 // Jika props.selected berubah (misalnya user pilih transaksi lain), ambil ulang data
 watch(
@@ -173,11 +187,18 @@ watch(
           <ErrorMessage name="alamat_asal" class="text-danger small" />
         </div>
         <!-- <div class="col-md-6 mb-7">
-          <label class="form-label required fw-bold">Alamat Asal</label>
-          <GMapAutocomplete class="form-control" placeholder="Cari alamat asal" @place_changed="setAlamatAsal" />
+          <label class="form-label required fw-bold">Alamat Asal (Kota)</label>
+          <input type="text" class="form-control mb-2" placeholder="Cari kota asal..." v-model="searchKotaAsal" />
+          <select class="form-select" v-model="transaksi.alamat_asal">
+            <option value="" disabled selected>Pilih Kota Asal</option>
+            <option v-for="kota in filteredKotaAsal" :key="kota" :value="kota">
+              {{ kota }}
+            </option>
+          </select>
           <ErrorMessage name="alamat_asal" class="text-danger small" />
         </div> -->
-
+        
+        
         <div class="col-md-6 mb-7">
           <label class="form-label required fw-bold">Alamat Tujuan</label>
           <Field class="form-control" name="alamat_tujuan" v-model="transaksi.alamat_tujuan"
@@ -185,10 +206,17 @@ watch(
           <ErrorMessage name="alamat_tujuan" class="text-danger small" />
         </div>
         <!-- <div class="col-md-6 mb-7">
-          <label class="form-label required fw-bold">Alamat Tujuan</label>
-          <GMapAutocomplete class="form-control" placeholder="Cari alamat tujuan" @place_changed="setAlamatTujuan" />
+          <label class="form-label required fw-bold">Alamat Tujuan (Kota)</label>
+          <input type="text" class="form-control mb-2" placeholder="Cari kota tujuan..." v-model="searchKotaTujuan" />
+          <select class="form-select" v-model="transaksi.alamat_tujuan">
+            <option value="" disabled selected>Pilih Kota Tujuan</option>
+            <option v-for="kota in filteredKotaTujuan" :key="kota" :value="kota">
+              {{ kota }}
+            </option>
+          </select>
           <ErrorMessage name="alamat_tujuan" class="text-danger small" />
         </div> -->
+
 
         <!-- <div class="col-md-6 mb-7">
           <label class="form-label required fw-bold">Pengirim</label>
