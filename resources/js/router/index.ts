@@ -174,33 +174,92 @@ const routes: Array<RouteRecordRaw> = [
     
 
     //pengguna
+    
     {
         path: "/dashboardk",
         name: "dashboardk",
-        component: () => import("@/pages/dashboardk/index.vue"),
+        component: () => import("@/pages/dashboardk/beranda.vue"),
         meta: {
             pageTitle: "Dashboardk",
             breadcrumbs: ["Halaman Dashboardk"],
         },
     },
     {
-        path: "/dashboard/order",
-        name: "dashboard.order",
-        component: () => import("@/pages/dashboard/transaksi/index.vue"),
-        meta: {
-            pageTitle: "Halaman Order Kurir",
-            // breadcrumbs: ["Halaman", "Akun dan Profl"],
-        },
+                path: "/dashboard/transaksii/ongkir",
+                name: "dashboard.transaksii.ongkir",
+                component: () =>
+                    import("@/pages/dashboard/transaksii/ongkir/ongkir.vue"),
+                meta: {
+                    pageTitle: "Ongkir",
+                    breadcrumbs: ["Transaksii", "Ongkir"],
+                },
     },
     {
-        path: "/dashboard/riwayatt",
-        name: "dashboard.riwayatt",
-        component: () => import("@/pages/dashboard/riwayatt/idex.vue"),
-        meta: {
-            pageTitle: "Riwayat",
-            // breadcrumbs: ["Halaman", "Akun dan Profl"],
-        },
+                path: "/dashboard/transaksii/order",
+                name: "dashboard.transaksii.order",
+                component: () =>
+                    import("@/pages/dashboard/transaksii/order/index.vue"),
+                meta: {
+                    pageTitle: "Order",
+                    breadcrumbs: ["Transaksii", "Order"],
+                },
     },
+    {
+                path: "/dashboard/transaksi/order",
+                name: "dashboard.transaksi.order",
+                component: () =>
+                    import("@/pages/dashboard/transaksi/order/index.vue"),
+                meta: {
+                    pageTitle: "Order",
+                    breadcrumbs: ["Transaksi", "Order"],
+                },
+    },
+    {
+                path: "/dashboard/transaksi/riwayat",
+                name: "dashboard.transaksi.riwayat",
+                component: () =>
+                    import("@/pages/dashboard/transaksi/riwayatt/idex.vue"),
+                meta: {
+                    pageTitle: "Riwayat",
+                    breadcrumbs: ["Transaksi", "Riwayat"],
+                },
+    },
+    // {
+    //     path: "/dashboard/ongkir",
+    //     name: "dashboard.ongkir",
+    //     component: () => import("@/pages/dashboard/transaksii/ongkir/ongkir.vue"),
+    //     meta: {
+    //         pageTitle: "Halaman Ongkir",
+    //         // breadcrumbs: ["Halaman", "Akun dan Profl"],
+    //     },
+    // },
+    // {
+    //     path: "/dashboard/order",
+    //     name: "dashboard.order",
+    //     component: () => import("@/pages/dashboard/transaksi/idex.vue"),
+    //     meta: {
+    //         pageTitle: "Halaman Order Kurir",
+    //         // breadcrumbs: ["Halaman", "Akun dan Profl"],
+    //     },
+    // },
+    // {
+    //     path: "/dashboard/orderProv",
+    //     name: "dashboard.orderProv",
+    //     component: () => import("@/pages/dashboard/transaksii/order/index.vue"),
+    //     meta: {
+    //         pageTitle: "Halaman Order Kurir",
+    //         // breadcrumbs: ["Halaman", "Akun dan Profl"],
+    //     },
+    // },
+    // {
+    //     path: "/dashboard/riwayatt",
+    //     name: "dashboard.riwayatt",
+    //     component: () => import("@/pages/dashboard/riwayatt/idex.vue"),
+    //     meta: {
+    //         pageTitle: "Riwayat",
+    //         // breadcrumbs: ["Halaman", "Akun dan Profl"],
+    //     },
+    // },
     {
         path: "/",
         component: () => import("@/layouts/AuthLayout.vue"),

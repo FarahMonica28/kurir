@@ -1,9 +1,11 @@
 import "./bootstrap";
-
 import { createApp } from "vue";
 import { createPinia } from "pinia";
 import { Tooltip } from "bootstrap";
 import App from "./App.vue";
+import 'leaflet/dist/leaflet.css';
+import VueGoogleMaps from '@fawmi/vue-google-maps';
+
 
 /*
 TIP: To get started with clean router change path to @/router/clean.ts.
@@ -32,6 +34,12 @@ const app = createApp(App);
 app.use(createPinia());
 app.use(router);
 app.use(ElementPlus);
+app.use(VueGoogleMaps, {
+  load: {
+    key: 'AIzaSyBeC3BReLa_fqoQgPxlv3PynV639h5Ow0U', // Ganti dengan API Key-mu
+    libraries: "places",
+  },
+});
 
 app.directive("debounce", vue3Debounce({ lock: true }));
 app.directive("mask", (el, binding) => {

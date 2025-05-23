@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script setup lang="ts"ref>
 import { block, unblock } from "@/libs/utils"; // Import utilitas block/unblock untuk memunculkan loading overlay saat proses async
 import { onMounted, ref, watch, computed } from "vue"; // Import fitur Vue yang digunakan
 import * as Yup from "yup"; // Yup digunakan untuk validasi form
@@ -147,7 +147,6 @@ function submit() {
 // Saat komponen pertama kali dimount, jika mode edit, panggil getEdit()
 onMounted(() => {
   if (props.selected) getEdit();
-  getKotaJatim(); // Panggil data kota Jawa Timur saat mount
 });
 
 

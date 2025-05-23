@@ -41,5 +41,9 @@ class Pengguna extends Model
     {
         return $this->hasMany(Transaksi::class, 'pengguna_id', 'pengguna_id');
     }
+    public function transaksii()
+    {
+        return $this->hasMany(Transaksi::class, 'pengguna_id', 'pengguna_id');
+    }
 
 }

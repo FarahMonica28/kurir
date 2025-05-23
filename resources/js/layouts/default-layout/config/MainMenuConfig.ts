@@ -76,17 +76,67 @@ const MainMenuConfig: Array<MenuItem> = [
             
             //pengguna
             {
-                heading: "Order",
-                route: "/dashboard/order",
-                name: "transaksi",
-                keenthemesIcon: "bi bi-bookmark-plus",
+                sectionTitle: "Order Antar Provinsi",
+                route: "/transaksii",
+                keenthemesIcon: "cube-3",
+                name: "transaksii",
+                sub: [
+                            {
+                                heading: "Cek Ongkir",
+                                name: "transaksii-ongkir",
+                                route: "/dashboard/transaksii/ongkir",
+                            },
+                            {
+                                heading: "order",
+                                name: "transaksii-order",
+                                route: "/dashboard/transaksii/order",
+                            },
+                    
+                ],
             },
             {
-                heading: "Riwayatt",
-                route: "/dashboard/riwayatt",
-                name: "riwayatt",
-                keenthemesIcon: "bi bi-bookmark-check",
+                sectionTitle: "Order Antar Surabaya",
+                route: "/transaksi",
+                keenthemesIcon: "cube-3",
+                name: "transaksi",
+                sub: [
+                            {
+                                heading: "order",
+                                name: "transaksi-order",
+                                route: "/dashboard/transaksi/order",
+                            },
+                            {
+                                heading: "Riwayatt",
+                                name: "transaksi-riwayat",
+                                route: "/dashboard/transaksi/riwayatt",
+                            },
+                    
+                ],
             },
+            // {
+            //     heading: "Ongkir",
+            //     route: "/dashboard/ongkir",
+            //     name: "ongkir",
+            //     keenthemesIcon: "bi bi-bookmark-plus",
+            // },
+            // {
+            //     heading: "Order",
+            //     route: "/dashboard/order",
+            //     name: "transaksi",
+            //     keenthemesIcon: "bi bi-bookmark-plus",
+            // },
+            // {
+            //     heading: "Order Antar Provinsi",
+            //     route: "/dashboard/orderProv",
+            //     name: "transaksii",
+            //     keenthemesIcon: "bi bi-bookmark-plus",
+            // },
+            // {
+            //     heading: "Riwayatt",
+            //     route: "/dashboard/riwayatt",
+            //     name: "riwayatt",
+            //     keenthemesIcon: "bi bi-bookmark-check",
+            // },
             
             //kurir
             {

@@ -27,7 +27,7 @@ class TransaksiController extends Controller
         DB::statement('set @no=0+' . $page * $per);
     
         // Ambil data transaksi beserta relasi ke kurir.user dan pengguna.user
-        $data = Transaksi::with('kurir.user')->with('pengguna.user')
+        $data = Transaksi::with(relations: 'kurir.user')->with('pengguna.user')
     
             // Jika ada parameter `search`, filter berdasarkan beberapa kolom
             ->when($request->search, function ($query, $search) {

@@ -4,6 +4,7 @@ import { useDelete } from "@/libs/hooks";
 import Form from "./Form.vue";
 import { createColumnHelper } from "@tanstack/vue-table";
 import type { transaksi } from "@/types";
+import Swal from "sweetalert2";
 
 const column = createColumnHelper<transaksi>();
 const paginateRef = ref<any>(null);
@@ -82,33 +83,6 @@ const columns = [
     column.accessor("waktu", {
         header: "Waktu Order",
     }),
-    // column.accessor("id", {
-    //     header: "Aksi",
-    //     cell: (cell) =>
-    //         h("div", { class: "d-flex gap-2" }, [
-    //             // h(
-    //             //     "button",
-    //             //     {
-    //             //         class: "btn btn-sm btn-icon btn-info",
-    //             //         onClick: () => {
-    //             //             selected.value = cell.getValue();
-    //             //             openForm.value = true;
-    //             //         },
-    //             //     },
-    //             //     h("i", { class: "la la-pencil fs-2" })
-    //             // ),
-    //             h(
-    //                 "button",
-    //                 {
-    //                     class: "btn btn-sm btn-icon btn-danger",
-    //                     onClick: () =>
-    //                         deleteOrder(`/transaksi/${cell.getValue()}`),
-    //                 },
-    //                 // h("i", { class: "la la-trash fs-2" })
-    //                 h("i", { class: "bi bi-x-circle fs-2" })
-    //             ),
-    //         ]),
-    // }),
     column.display({
         id: "rincian",
         header: "Aksi",
@@ -152,7 +126,6 @@ watch(openForm, (val) => {
             <!-- <paginate ref="paginateRef" id="table-transaksi" url="/transaksi" :columns="columns"></paginate> -->
             <paginate ref="paginateRef" id="table-transaksi" url="/transaksi?exclude_status=Terkirim"
                 :columns="columns" />
-
 
             <!-- DETAIL -->
             <div v-if="detailData" class="card mt-5">
@@ -208,6 +181,7 @@ watch(openForm, (val) => {
                 </div>
 
             </div>
+
         </div>
     </div>
 </template>

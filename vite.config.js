@@ -38,6 +38,9 @@ export default defineConfig(({ mode }) => {
                 target: ["es2020", "safari14"],
             },
         },
+        optimizeDeps: {
+            include: ['fast-deep-equal'],
+        },
         build: {
             chunkSizeWarningLimit: 3000,
             target: ["es2020", "safari14"],

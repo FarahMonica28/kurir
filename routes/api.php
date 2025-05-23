@@ -3,8 +3,10 @@
 // use App\Http\Controllers\TrackingController;
 use App\Http\Controllers\Api\PengirimansController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CheckOngkirController;
 use App\Http\Controllers\PenggunaController;
 use App\Http\Controllers\TransaksiController;
+use App\Http\Controllers\TransaksiiController;
 use App\Http\Controllers\TransController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\RoleController;
@@ -210,6 +212,31 @@ Route::middleware(['auth', 'verified', 'json'])->group(function () {
     Route::get('/rajaongkir/cities', [RajaOngkirController::class, 'getCities']);
     // routes/api.php
     // Route::get('/rajaongkir/cities', [RajaOngkirController::class, 'getCities']);
+    
+    // Route::get('/ongkir', [CheckOngkirController::class, 'index']);
+    // Route::post('/ongkir', [CheckOngkirController::class, 'check_ongkir']);
+    // Route::get('/cities/{province_id}', [CheckOngkirController::class, 'getCities']);
+    // routes/api.php
+    // Route::post('/cost', [RajaOngkirController::class, 'getCost']);
+    // Route::post('/cost', [RajaOngkirController::class, 'cost']);
+    
+    Route::get('/province', [CheckOngkirController::class, 'getProvinces']);
+    Route::get('/cities/{province_id}', [CheckOngkirController::class, 'getCities']);
+    Route::post('/ongkir', [CheckOngkirController::class, 'checkOngkir']);
+    
+    Route::post('/transaksii', [TransaksiiController::class, 'index']);
+    Route::get('/transaksii/{id}', [TransaksiiController::class, 'get']);
+    // Route::post('/transaksii', [TransaksiiController::class, 'store']);
+    // Route::put('/transaksii/{id}', [TransaksiiController::class, 'store']);
+    Route::get('/provinces', [TransaksiiController::class, 'getProvinces']);
+    Route::get('/cities/{provinceId}', [TransaksiiController::class, 'getCities']);
+    Route::post('/transaksii/store', [TransaksiiController::class, 'store']);
+    // Route::post('/transaksii/{id}', [TransaksiiController::class, 'store']); // Untuk 
+    Route::post('/cost', [TransaksiiController::class, 'hitungOngkir']);
+
+    // Route::get('/ongkir', 'CheckOngkirController@index');
+    // Route::post('/ongkir', 'CheckOngkirController@check_ongkir');
+    // Route::get('/cities/{province_id}', 'CheckOngkirController@getCities');
 
 
     

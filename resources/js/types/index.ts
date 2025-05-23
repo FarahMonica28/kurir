@@ -6,4 +6,5 @@ export type { Setting } from "./setting";
 export type { kurir } from "./kurir";
 export type { Pesanan } from "./pesanan";
 export type { transaksi } from "./transaksi";
+export type { transaksii } from "./transaksii";
 export type { pengguna } from "./pengguna";
