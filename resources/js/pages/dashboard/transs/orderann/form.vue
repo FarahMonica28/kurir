@@ -262,7 +262,7 @@ onMounted(() => {
         <!-- nama penerima -->
         <div class="col-md-4 mb-7 mt-4">
           <label class="form-label required fw-bold">Nama Penerima</label>
-          <Field class="form-control" name="penerima" v-model="penerima" placeholder="Masukan nama penerima" />
+          <Field class="form-control" name="penerima" v-model="penerima" placeholder="Masukan nama penerima" disabled/>
           <ErrorMessage name="penerima" class="text-danger small" />
         </div>
 
@@ -270,15 +270,15 @@ onMounted(() => {
         <div class="col-md-4 mb-7 mt-4">
           <label class="form-label required fw-bold">No Hp Penerima</label>
           <Field class="form-control" name="no_hp_penerima" v-model="no_hp_penerima"
-            placeholder="Masukan no hp penerima" />
-          <ErrorMessage name="no_hp_penerima" class="text-danger small" />
+            placeholder="Masukan no hp penerima" disabled/>
+          <ErrorMessage name="no_hp_penerima" class="text-danger small"/>
         </div>
 
         <!-- Provinsi Tujuan -->
         <div class="col-md-4 mb-7 mt-4">
           <label class="form-label required fw-bold">Provinsi Tujuan</label>
           <Field as="select" name="provinceDestination" v-model="provinceDestination" class="form-control"
-            @change="fetchCities('destination')">
+            @change="fetchCities('destination')" disabled>
             <option value="0">-- Pilih Provinsi Tujuan --</option>
             <option v-for="(name, id) in provinces" :key="id" :value="id">{{ name }}</option>
           </Field as="select">
@@ -289,7 +289,7 @@ onMounted(() => {
         <!-- Kota Tujuan -->
         <div class="col-md-4 mb-7">
           <label class="form-label required fw-bold">Kota Tujuan</label>
-          <Field as="select" name="cityDestination" v-model="cityDestination" class="form-control">
+          <Field as="select" name="cityDestination" v-model="cityDestination" class="form-control" disabled>
             <option value="">-- Pilih Kota Tujuan --</option>
             <option v-for="(name, id) in citiesDestination" :key="id" :value="id">{{ name }}</option>
           </Field as="select">
@@ -301,7 +301,7 @@ onMounted(() => {
         <div class="col-md-4 mb-7">
           <label class="form-label required fw-bold">Alamat Lengkap Penerima</label>
           <Field type="text" name="alamat_tujuan" v-model="alamat_tujuan" class="form-control"
-            placeholder="Masukan Alamat Lengkap" />
+            placeholder="Masukan Alamat Lengkap" disabled/>
           <ErrorMessage name="alamat_tujuan" class="text-danger small" />
         </div>
 
@@ -311,7 +311,7 @@ onMounted(() => {
         <!-- Pengirim -->
         <div class="col-md-4 mb-7 mt-4">
           <label class="form-label required fw-bold" for="pengguna">Nama Pengirim</label>
-          <Field type="text" name="pengguna_id" class="form-control" :value="`${currentPengguna.name}`" readonly>
+          <Field type="text" name="pengguna_id" class="form-control" :value="`${currentPengguna.name}`" readonly disabled>
           </Field>
           <ErrorMessage name="pengguna_id" class="text-danger small" />
         </div>
@@ -319,7 +319,7 @@ onMounted(() => {
         <!-- Nama Barang -->
         <div class="col-md-4 mb-7 mt-4">
           <label class="form-label required fw-bold">Nama Barang</label>
-          <Field class="form-control" name="nama_barang" placeholder="Masukan nama barang" v-model="nama_barang" />
+          <Field class="form-control" name="nama_barang" placeholder="Masukan nama barang" v-model="nama_barang" disabled/>
           <ErrorMessage name="nama_barang" class="text-danger small" />
         </div>
 
@@ -327,7 +327,7 @@ onMounted(() => {
         <div class="col-md-4 mb-7 mt-4">
           <label class="form-label required fw-bold">Berat Barang (Kg)</label>
           <Field type="number" v-model="berat_barang" class="form-control" placeholder="Contoh: 0.5" min="0.1"
-            step="0.1" name="berat_barang" />
+            step="0.1" name="berat_barang" disabled/>
           <ErrorMessage name="berat_barang" class="text-danger small" />
           <!-- <div v-if="errors.berat_barang" class="text-danger">{{ errors.berat_barang }}</div> -->
         </div>
@@ -336,7 +336,7 @@ onMounted(() => {
         <div class="col-md-4 mb-7 ">
           <label class="form-label required fw-bold">Provinsi Asal</label>
           <Field as="select" name="provinceOrigin" v-model="provinceOrigin" class="form-control"
-            @change="fetchCities('origin')">
+            @change="fetchCities('origin')" disabled>
             <option value="0">-- Pilih Provinsi Asal --</option>
             <option v-for="(name, id) in provinces" :key="id" :value="id">{{ name }}</option>
           </Field as="select">
@@ -346,7 +346,7 @@ onMounted(() => {
         <!-- Kota Asal -->
         <div class="col-md-4 mb-7">
           <label class="form-label required fw-bold">Kota Asal</label>
-          <Field as="select" name="cityOrigin" v-model="cityOrigin" class="form-control">
+          <Field as="select" name="cityOrigin" v-model="cityOrigin" class="form-control" disabled>
             <option value="">-- Pilih Kota Asal --</option>
             <option v-for="(name, id) in citiesOrigin" :key="id" :value="id">{{ name }}</option>
           </Field as="select">
@@ -358,14 +358,14 @@ onMounted(() => {
         <div class="col-md-4 mb-7">
           <label class="form-label required fw-bold">Alamat Pengambilan Barang</label>
           <Field type="text" name="alamat_asal" v-model="transaksi.alamat_asal" class="form-control"
-            placeholder="Masukan Alamat Lengkap" />
+            placeholder="Masukan Alamat Lengkap" disabled />
           <ErrorMessage name="alamat_asal" class="text-danger small" />
         </div>
 
         <!-- Ekspedisi -->
         <div class="col-md-4 mb-7">
           <label class="form-label required fw-bold">Ekspedisi</label>
-          <Field as="select" v-model="selectedCourier" class="form-control" name="kurir">
+          <Field as="select" v-model="selectedCourier" class="form-control" name="kurir" disabled>
             <option value="">-- Pilih Ekspedisi --</option>
             <option v-for="c in couriers" :key="c.code" :value="c.code">{{ c.name }}</option>
           </Field as="select">
@@ -377,7 +377,7 @@ onMounted(() => {
         <div class="col-md-4 mb-7" v-if="services.length > 0">
           <label for="layanan" class="form-label required fw-bold">Layanan</label>
           <Field as="select" id="layanan" name="layanan" class="form-select" v-model="selectedService"
-            @change="getSelectedCost">
+            @change="getSelectedCost" disabled>
             <option value="">Pilih layanan</option>
             <option v-for="service in services" :key="service.service" :value="service.service">
               {{ service.service }} - Rp{{ Number(service.cost).toLocaleString() }} { {{ service.etd }} Hari }
@@ -391,7 +391,7 @@ onMounted(() => {
         <div class="col-md-4 mb-7" v-if="services.length > 0">
           <label class="form-label fw-bold">Biaya (Rp)</label>
           <input type="text" name="biaya" class="form-control" :value="biaya ? biaya.toLocaleString('id-ID') : '-'"
-            readonly />
+            readonly disabled/>
         </div>
 
       </div>

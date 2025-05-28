@@ -10,16 +10,29 @@ export interface transaksii {
     layanan: string;          // Jenis layanan (YES, REG, dll.)
     biaya: number;            // Biaya pengiriman
     waktu: string;            // Waktu transaksi (format datetime)
-    status: "menunggu" | "diproses" | "dikirim" | "selesai";  // Status internal sistem
+    status: "menunggu"|"diambil kurir"| "digudang"| "diproses" | "dikirim" | "selesai";  // Status internal sistem
     penilaian?: number | null;  // Penilaian opsional
     komentar?: string | null;   // Komentar opsional
 
-    asal_provinsi_id: number;
-    asal_kota_id: number;
-    tujuan_provinsi_id: number;
-    tujuan_kota_id: number;
+    asal_provinsi_id: {
+        id: number;
+        name: string;
+    }
+    asal_kota_id: {
+        id: number;
+        name: string;
+    }
+    tujuan_provinsi_id: {
+        id: number;
+        name: string;
+    }
+    tujuan_kota_id: {
+        id: number;
+        name: string;v
+    }
 
     pengguna: {
+        name: string;
         name: string;
     };
 

@@ -44,12 +44,19 @@ const columns = [
                     : status === "dikirim"
                         ? "badge bg-warning text-dark fw-bold"
                         : status === "diproses"
-                            ? "badge bg-primary text-dark fw-bold"
-                            : "badge bg-danger fw-bold";
+                            ? "badge bg-primary text-light fw-bold"
+                            : status === "digudang"
+                                ? "badge bg-secondary fw-bold"
+                                : status === "diambil kurir"
+                                    ? "badge bg-info text-dark fw-bold"
+                                    : status === "menunggu"
+                                        ? "badge bg-light text-dark border fw-bold"
+                                        : "badge bg-dark fw-bold";
 
             return h("span", { class: statusClass }, status);
         },
     }),
+
     column.accessor("waktu", {
         header: "Waktu Order",
     }),
@@ -122,7 +129,7 @@ watch(openForm, (val) => {
                                 <p><strong>Kota Asal:</strong> {{ detailData.asal_kota.name || '-' }}</p>
                                 <p><strong>Alamat Asal:</strong> {{ detailData.alamat_asal }}</p>
                             </div>
-                            
+
                             <div class="col-md-6">
                                 <!-- <h2>Informasi Penerima</h2> -->
                                 <p><strong>Penerima:</strong> {{ detailData.penerima || '-' }}</p>
@@ -134,16 +141,16 @@ watch(openForm, (val) => {
                         </div>
                     </div>
                     <hr />
-                        <div class="row">
-                            <div class="col-md-6">
-                               <p><strong>Status:</strong> {{ detailData.status }}</p>
-                                <p><strong>Layanan:</strong> {{ detailData.layanan || '-' }}</p>
-                            </div>
-                            <div class="col-md-6">
-                                <p><strong>Estimasi:</strong> {{ detailData.estimasi || '-' }}</p>
-                                <p><strong>Biaya:</strong> Rp. {{ detailData.biaya || '-' }}</p>
-                            </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Status:</strong> {{ detailData.status }}</p>
+                            <p><strong>Layanan:</strong> {{ detailData.layanan || '-' }}</p>
                         </div>
+                        <div class="col-md-6">
+                            <p><strong>Estimasi:</strong> {{ detailData.estimasi || '-' }}</p>
+                            <p><strong>Biaya:</strong> Rp. {{ detailData.biaya || '-' }}</p>
+                        </div>
+                    </div>
                     <hr />
 
                     <div class="row">

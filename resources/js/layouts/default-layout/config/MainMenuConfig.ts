@@ -73,10 +73,16 @@ const MainMenuConfig: Array<MenuItem> = [
                 name: "orderan",
                 keenthemesIcon: "bi bi-bookmark-plus",
             },
+            {
+                heading: "Gudang",
+                route: "/dashboard/gudang",
+                name: "gudang",
+                keenthemesIcon: "bi bi-bookmark-plus",
+            },
             
             //pengguna
             {
-                sectionTitle: "Order Antar Provinsi",
+                sectionTitle: "Order Kurir",
                 route: "/transaksii",
                 keenthemesIcon: "cube-3",
                 name: "transaksii",
@@ -113,6 +119,7 @@ const MainMenuConfig: Array<MenuItem> = [
                     
                 ],
             },
+
             // {
             //     heading: "Ongkir",
             //     route: "/dashboard/ongkir",
@@ -145,19 +152,62 @@ const MainMenuConfig: Array<MenuItem> = [
                 name: "akun",
                 keenthemesIcon: "bi bi-person-circle",
             },
+            // {
+            //     heading: "Orderr",
+            //     route: "/dashboard/orderr",
+            //     name: "trans",
+            //     keenthemesIcon: "bi bi-bookmark-plus",
+            // },
+            // {
+            //     heading: "Riwayat",
+            //     route: "/dashboard/riwayat",
+            //     name: "riwayat",
+            //     keenthemesIcon: "bi bi-bookmark-check",
+            // },
             {
-                heading: "Orderr",
-                route: "/dashboard/orderr",
+                sectionTitle: "Orderan",
+                route: "/transs",
+                keenthemesIcon: "cube-3",
+                name: "transs",
+                sub: [
+                    {
+                        heading: "Ambil Orderan",
+                        name: "transs-orderan",
+                        route: "/dashboard/transs/orderan",
+                    },
+                    {
+                        heading: "Antar Orderan",
+                        name: "transs-orderann",
+                        route: "/dashboard/transs/orderann",
+                    },
+                    {
+                        heading: "riwayat",
+                        name: "transs-riwayat",
+                        route: "/dashboard/transs/riwayat",
+                    },
+                    
+                ],
+            },
+            {
+            sectionTitle: "Orderan Surabaya",
+                route: "/trans",
+                keenthemesIcon: "cube-3",
                 name: "trans",
-                keenthemesIcon: "bi bi-bookmark-plus",
+                sub: [
+                            {
+                                heading: "Orderan",
+                                name: "trans-orderan",
+                                route: "/dashboard/trans/orderan",
+                            },
+                            {
+                                heading: "order",
+                                name: "trans-riwayat",
+                                route: "/dashboard/trans/riwayat",
+                            },
+                    
+                ],
             },
-            {
-                heading: "Riwayat",
-                route: "/dashboard/riwayat",
-                name: "riwayat",
-                keenthemesIcon: "bi bi-bookmark-check",
-            },
-
+            
 
 
             {

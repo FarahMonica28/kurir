@@ -48,6 +48,10 @@ class Transaksii extends Model
     public function pengguna() {
         return $this->belongsTo(User::class, 'pengguna_id');
     }
+
+    public function kurir() {
+        return $this->belongsTo(User::class, 'kurir_id');
+    }
 }
 
 

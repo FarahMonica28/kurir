@@ -4,6 +4,7 @@
 use App\Http\Controllers\Api\PengirimansController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CheckOngkirController;
+use App\Http\Controllers\GudangController;
 use App\Http\Controllers\PenggunaController;
 use App\Http\Controllers\TransaksiController;
 use App\Http\Controllers\TransaksiiController;
@@ -189,7 +190,7 @@ Route::middleware(['auth', 'verified', 'json'])->group(function () {
     Route::middleware('can:trans')->group(function () {
         // Menampilkan list transaksi (pada halaman index)
         Route::get('trans', [TransController::class, 'get'])->withoutMiddleware('can:trans');
-        Route::post('trans', [TransaksiController::class, 'index'])->withoutMiddleware('can:trans'); // ini mengijinkan kurir mengambil data yang dimasukan pengguna
+        Route::post( 'trans', [TransaksiController::class, 'index'])->withoutMiddleware('can:trans'); // ini mengijinkan kurir mengambil data yang dimasukan pengguna
         // Route::post('trans', [TransController::class, 'index']); // ini salah mangkanya role kurir tidak memunculkan data        Route::get('pengirimans{id}', [PengirimansController::class, 'get'])->withoutMiddleware('can:pengirimans');
         // Halaman untuk membuat trans baru
         Route::get('trans/create', [TransController::class, 'create'])->name('trans.create');
@@ -228,11 +229,20 @@ Route::middleware(['auth', 'verified', 'json'])->group(function () {
     Route::get('/transaksii/{id}', [TransaksiiController::class, 'get']);
     // Route::post('/transaksii', [TransaksiiController::class, 'store']);
     // Route::put('/transaksii/{id}', [TransaksiiController::class, 'store']);
+    Route::post('/transaksii/store', [TransaksiiController::class, 'store']);
     Route::get('/provinces', [TransaksiiController::class, 'getProvinces']);
     Route::get('/cities/{provinceId}', [TransaksiiController::class, 'getCities']);
-    Route::post('/transaksii/store', [TransaksiiController::class, 'store']);
     // Route::post('/transaksii/{id}', [TransaksiiController::class, 'store']); // Untuk 
     Route::post('/cost', [TransaksiiController::class, 'hitungOngkir']);
+    // routes/api.php
+    Route::put('/transaksii/{id}/antar', [TransaksiiController::class, 'antar']);
+    Route::put('/transaksii/{id}/ubah-status', [TransaksiiController::class, 'ubahStatus']);
+
+
+
+    Route::get('/tracking/{no_resi}', [TrackingController::class, 'track']);
+
+    Route::post( '/gudang', [GudangController::class, 'index'])->withoutMiddleware('can:gudang'); // ini mengijinkan kurir mengambil data yang dimasukan pengguna
 
     // Route::get('/ongkir', 'CheckOngkirController@index');
     // Route::post('/ongkir', 'CheckOngkirController@check_ongkir');

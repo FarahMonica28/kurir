@@ -125,24 +125,60 @@ const routes: Array<RouteRecordRaw> = [
                     // breadcrumbs: ["Halaman", "Akun dan Profl"],
                 },
             },
+            {
+                path: "/dashboard/gudang",
+                name: "dashboard.gudang",
+                component: () => import("@/pages/dashboard/gudang/index.vue"),
+                meta: {
+                    // pageTitle: "",
+                    // breadcrumbs: ["Halaman", "Akun dan Profl"],
+                },
+            },
 
 
             //kurir
             {
-                path: "/dashboard/orderr",
-                name: "dashboard.orderr",
-                component: () => import("@/pages/dashboard/trans/Inde.vue"),
+                path: "/dashboard/trans/orderan",
+                name: "dashboard.trans.orderan",
+                component: () => import("@/pages/dashboard/trans/orderan/Inde.vue"),
                 meta: {
-                    pageTitle: "Halaman Order",
+                    // pageTitle: "Halaman Order",
                     // breadcrumbs: ["Halaman", "Akun dan Profl"],
                 },
             },
             {
-                path: "/dashboard/riwayat",
-                name: "dashboard.riwayat",
-                component: () => import("@/pages/dashboard/riwayat/index.vue"),
+                path: "/dashboard/trans/riwayat",
+                name: "dashboard.trans.riwayat",
+                component: () => import("@/pages/dashboard/trans/riwayat/index.vue"),
                 meta: {
                     pageTitle: "Riwayat",
+                    // breadcrumbs: ["Halaman", "Akun dan Profl"],
+                },
+            },
+            {
+                path: "/dashboard/transs/riwayat",
+                name: "dashboard.transs.riwayat",
+                component: () => import("@/pages/dashboard/transs/riwayat/index.vue"),
+                meta: {
+                    // pageTitle: "Riwayat",
+                    // breadcrumbs: ["Halaman", "Akun dan Profl"],
+                },
+            },
+            {
+                path: "/dashboard/transs/orderan",
+                name: "dashboard.transs.orderan",
+                component: () => import("@/pages/dashboard/transs/orderan/index.vue"),
+                meta: {
+                    // pageTitle: "Riwayat",
+                    // breadcrumbs: ["Halaman", "Akun dan Profl"],
+                },
+            },
+            {
+                path: "/dashboard/transs/orderann",
+                name: "dashboard.transs.orderann",
+                component: () => import("@/pages/dashboard/transs/orderann/index.vue"),
+                meta: {
+                    // pageTitle: "Riwayat",
                     // breadcrumbs: ["Halaman", "Akun dan Profl"],
                 },
             },
@@ -178,7 +214,7 @@ const routes: Array<RouteRecordRaw> = [
     {
         path: "/dashboardk",
         name: "dashboardk",
-        component: () => import("@/pages/dashboardk/beranda.vue"),
+        component: () => import("@/pages/dashboardk/index.vue"),
         meta: {
             pageTitle: "Dashboardk",
             breadcrumbs: ["Halaman Dashboardk"],

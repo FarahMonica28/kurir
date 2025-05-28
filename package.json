@@ -41,6 +41,7 @@
         "filepond-plugin-image-resize": "^2.0.10",
         "filepond-plugin-image-transform": "^3.8.7",
         "filepond-plugin-pdf-preview": "^1.0.4",
+        "html2pdf.js": "^0.10.3",
         "inputmask": "^5.0.8",
         "jquery": "^3.7.1",
         "leaflet": "^1.9.4",
