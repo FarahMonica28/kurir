@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { h, ref, watch } from "vue";
 import { useDelete } from "@/libs/hooks";
-import Form from "./Form.vue";
+// import Form from "./Form.vue";
 import { createColumnHelper } from "@tanstack/vue-table";
 import type { transaksii } from "@/types";
 import Swal from "sweetalert2";
@@ -42,7 +42,7 @@ const columns = [
     column.accessor("no", {
         header: "#",
     }),
-    column.accessor("pengirim", {
+    column.accessor("pengguna.name", {
         header: "Pengirim",
     }),
     column.accessor("nama_barang", {
@@ -69,9 +69,8 @@ const columns = [
                                     : status === "diambil kurir"
                                         ? "badge bg-info text-dark fw-bold"
                                         : status === "menunggu"
-                                            ? "badge bg-secondary text-light fw-bold"
-                                            : "badge bg-secondary fw-bold";
-
+                                            ? "badge bg-light text-dark border fw-bold"
+                                            : "badge bg-dark fw-bold";
 
 
             return h("span", { class: statusClass }, status);
@@ -114,16 +113,11 @@ watch(openForm, (val) => {
 
     <div class="card">
         <div class="card-header align-items-center">
-            <h2 class="mb-0">List Order</h2>
-            <button type="button" class="btn btn-sm btn-primary ms-auto" v-if="!openForm" @click="openForm = true">
-                Tambah
-                <i class="la la-plus"></i>
-            </button>
+            <h2 class="mb-0">Riwayat Pemesanan</h2>
         </div>
         <div class="card-body">
             <!-- <paginate ref="paginateRef" id="table-transaksi" url="/transaksi" :columns="columns"></paginate> -->
-            <paginate ref="paginateRef" id="table-transaksii" url="/transaksii?exclude_status=selesai"
-                :columns="columns" />
+            <paginate ref="paginateRef" id="table-transaksii" url="/transaksii?status=selesai" :columns="columns" />
 
 
             <!-- DETAIL -->
@@ -144,8 +138,8 @@ watch(openForm, (val) => {
                         <div class="row">
                             <div class="col-md-6">
                                 <!-- <h2>Informasi Pengirim</h2> -->
-                                <p><strong>Pengirim:</strong> {{ detailData.pengirim || '-' }}</p>
                                 <!-- <p><strong>Pengirim:</strong> {{ detailData.pengguna?.name || '-' }}</p> -->
+                                <p><strong>Pengirim:</strong> {{ detailData.pengirim || '-' }}</p>
                                 <p><strong>Nama Barang:</strong> {{ detailData.nama_barang }}</p>
                                 <p><strong>Berat Barang:</strong> {{ detailData.berat_barang }} kg</p>
                                 <p><strong>Provinsi Asal:</strong> {{ detailData.asal_provinsi.name || '-' }}</p>
@@ -172,7 +166,7 @@ watch(openForm, (val) => {
                         <div class="col-md-6">
                             <!-- <p><strong>Estimasi:</strong> {{ detailData.estimasi || '-' }}</p> -->
                             <p><strong>Biaya:</strong> Rp. {{ detailData.biaya || '-' }}</p>
-                            <p><strong>Kurir : </strong>
+                            <p><strong>Kurir:</strong>
                                 <span @click="showKurirDetail(detailData.kurir)"
                                     style="cursor: pointer; color: blue; text-decoration: underline;">
                                     {{ detailData.kurir?.user.name || 'Tidak ada kurir' }}

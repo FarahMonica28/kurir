@@ -66,9 +66,10 @@ class TransaksiiController extends Controller
 
         // DB::statement('set @no=0+' . ($page - 1) * $per);
         DB::statement('set @no=0+' . $page * $per);
+        
 
 
-        $data = Transaksii::with(['asalProvinsi', 'asalKota', 'tujuanProvinsi', 'tujuanKota',])->with('pengguna')->with('kurir.user')
+        $data = Transaksii::with(['asalProvinsi', 'asalKota', 'tujuanProvinsi', 'tujuanKota',])->with('kurir.user')
             ->when($request->search, function ($query, $search) {
                 $query->where( 'no_resi', 'like', "%$search%")
                     // ->orwhere('no_resi', 'like', "%$search%")
@@ -81,6 +82,15 @@ class TransaksiiController extends Controller
             ->when($request->status, function ($query, $status) {
                 $query->where('status', $status);
             })
+            // Tambahkan ini ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
+            // ->when($request->has('pernah_digudang'), function ($query) {
+            //     $query->where('pernah_digudang', true);
+            // })
+            ->when($request->has('pernah_digudang'), function ($q) {
+                $q->where('pernah_digudang', true)
+                ->orWhere('status', 'digudang');
+            })
+
             // ->when($request->has('exclude_status'), function ($query) use ($request) {
             //     $query->where('status', '!=', $request->exclude_status);
             //     Log::info('a'); // log debug
@@ -95,21 +105,21 @@ class TransaksiiController extends Controller
             })
 
             // Role: pengguna — hanya tampilkan transaksii milik pengguna yang sedang login
-            ->when(auth()->user()->role->name === 'pengguna', function ($query) {
-                Log::info('pengguna'); // log debug
-                $penggunaId = auth()->user()->id;
-                Log::info("Pengguna ID : ", ["user" => $penggunaId]);
-                $query->where('pengguna_id', $penggunaId);
-            })
-            ->when(auth()->user()->role->name === 'kurir', function ($query) {
-                Log::info('b'); // log debug
-                $query->where(function ($q) {
-                    Log::info('e'); // log debug
-                    $kurirId = auth()->user()->kurir->kurir_id;
-                    $q->whereNull('kurir_id')
-                      ->orWhere('kurir_id', $kurirId);
-                });
-            })
+            // ->when(auth()->user()->role->name === 'pengguna', function ($query) {
+            //     Log::info('pengguna'); // log debug
+            //     $penggunaId = auth()->user()->id;
+            //     Log::info("Pengguna ID : ", ["user" => $penggunaId]);
+            //     $query->where('pengguna_id', $penggunaId);
+            // })
+            // ->when(auth()->user()->role->name === 'kurir', function ($query) {
+            //     Log::info('b'); // log debug
+            //     $query->where(function ($q) {
+            //         Log::info('e'); // log debug
+            //         $kurirId = auth()->user()->kurir->kurir_id;
+            //         $q->whereNull('kurir_id')
+            //           ->orWhere('kurir_id', $kurirId);
+            //     });
+            // })
             ->latest()
             
             // Paginate hasil query
@@ -126,7 +136,8 @@ class TransaksiiController extends Controller
     // Ambil data transaksiii berdasarkan id
     public function get($id)
     {
-        $transaksiii = Transaksii::with(['asalProvinsi', 'asalKota', 'tujuanProvinsi', 'tujuanKota', 'pengguna'])
+        $transaksiii = Transaksii::with(['asalProvinsi', 'asalKota', 'tujuanProvinsi', 'tujuanKota'])
+        // $transaksiii = Transaksii::with(['asalProvinsi', 'asalKota', 'tujuanProvinsi', 'tujuanKota', 'pengguna'])
             ->findOrFail($id);
 
         return response()->json($transaksiii);
@@ -137,12 +148,13 @@ class TransaksiiController extends Controller
     {
         $transaksiii = $request->validate([
             'penerima' => 'required|string',
+            'pengirim' => 'required|string',
             'no_hp_penerima' => 'required|string',
             'tujuan_provinsi_id' => 'required|exists:provinces,id',
             'tujuan_kota_id' => 'required|exists:cities,id',
             'alamat_tujuan' => 'required|string',
 
-            'pengguna_id' => 'nullable|exists:pengguna,pengguna_id',
+            // 'pengguna_id' => 'nullable|exists:pengguna,pengguna_id',
             'nama_barang' => 'required|string',
             'berat_barang' => 'required|numeric|min:0.01',
             'ekspedisi' => 'required|string',
@@ -157,17 +169,17 @@ class TransaksiiController extends Controller
             'status' => 'nullable|string',
             // 'status' => 'nullable|in:menunggu,diproses,dikirim,selesai', 
             'komentar' => 'nullable|string',
-            'kurir_id' => 'nullable|exists:kurir,kurir_id'
+            // 'kurir_id' => 'nullable|exists:kurir,kurir_id'
         ]);
         
         // Optional: cari pengguna untuk validasi tambahan (jika perlu)
-        $pengguna = Pengguna::where('user_id', $request->id)->first();
-        if (!$pengguna) {
-            // Jika pengguna tidak ditemukan, kembalikan response error
-            return response()->json(['message' => 'Pengguna tidak ditemukan'], 404);
-        }
+        // $pengguna = Pengguna::where('user_id', $request->id)->first();
+        // if (!$pengguna) {
+        //     // Jika pengguna tidak ditemukan, kembalikan response error
+        //     return response()->json(['message' => 'Pengguna tidak ditemukan'], 404);
+        // }
 
-        $kurir = auth()->user()->kurir;
+        // $kurir = auth()->user()->kurir;
         // Simpan transaksii baru
         Transaksii::create([
             'no_resi' => 'TRX-' . strtoupper(uniqid()),
@@ -176,6 +188,7 @@ class TransaksiiController extends Controller
             'alamat_asal' => $request->alamat_asal,
             'alamat_tujuan' => $request->alamat_tujuan,
             'penerima' => $request->penerima,
+            'pengirim' => $request->pengirim,
             'no_hp_penerima' => $request->no_hp_penerima,
             'status' => $request->status,
             'ekspedisi' => $request->ekspedisi,
@@ -185,12 +198,12 @@ class TransaksiiController extends Controller
             'komentar' => $request->komentar,
             'waktu' => now()->format('Y-m-d H:i:s'),
             // 'pengguna_id' => $pengguna->pengguna_id,
-            'pengguna_id' => auth()->id(), // atau $request->pengguna_id YANG VALID
+            // 'pengguna_id' => auth()->id(), // atau $request->pengguna_id YANG VALID
             'asal_provinsi_id' => $request->asal_provinsi_id,
             'asal_kota_id' => $request->asal_kota_id,
             'tujuan_provinsi_id' => $request->tujuan_provinsi_id,
             'tujuan_kota_id' => $request->tujuan_kota_id,
-            'kurir_id' => $kurir->kurir_id,
+            // 'kurir_id' => $kurir->kurir_id,
         ]);
 
         return response()->json([
@@ -212,22 +225,28 @@ class TransaksiiController extends Controller
         $transaksii = Transaksii::where('id', $id)->firstOrFail();
         
         // Mendapatkan data pengguna yang sedang login
-        $user = auth()->user();
+        // $user = auth()->user();
 
         // Mendapatkan ID pengguna dari data user, jika ada
-        $penggunaId = $user->pengguna->pengguna_id ?? null;
+        // $penggunaId = $user->pengguna->pengguna_id ?? null;
     
         // Mengatur waktu berdasarkan status transaksii yang baru
         // Tergantung pada status yang diterima, waktu yang sesuai akan diset
         switch ($request->status) {
-            case 'diproses':
-                $transaksii->waktu_proses = now(); // Set waktu penjemputan barang
-                break;
             case 'diambil kurir':
                 $transaksii->waktu_diambil = now(); // Set waktu penjemputan barang
                 break;
+            case 'dikurir':
+                $transaksii->waktu_dikurir = now(); // Set waktu penjemputan barang
+                break;
             case 'digudang':
                 $transaksii->waktu_digudang = now(); // Set waktu penjemputan barang
+                break;
+            case 'diproses':
+                $transaksii->waktu_proses = now(); // Set waktu penjemputan barang
+                break;
+            case 'tiba digudang':
+                $transaksii->waktu_tiba = now(); // Set waktu penjemputan barang
                 break;
             case 'dikirim':
                 $transaksii->waktu_kirim = now(); // Set waktu proses pengiriman
@@ -264,27 +283,95 @@ class TransaksiiController extends Controller
     
     
     // TransaksiController.php
-    public function antar(Request $request, $id)
+public function antar(Request $request, $id)
     {
         $transaksii = Transaksii::findOrFail($id);
+        
 
-        // Simpan kurir_id & status baru
-        $transaksii->update([
-            'status' => $request->status,
-            'kurir_id' => $request->kurir_id, // pastikan ini dikirim dari frontend
-        ]); 
+        if (!$transaksii->kurir_id) {
+        $transaksii->kurir_id = $request->kurir_id;
+        }
+
+        // Tambahkan pencatatan waktu sesuai status
+        switch ($request->status) {
+            case 'diambil kurir':
+                $transaksii->waktu_diambil = now();
+                break;
+            case 'dikurir':
+                $transaksii->waktu_dikurir = now();
+                break;
+            case 'digudang':
+                $transaksii->waktu_digudang = now();
+                break;
+            case 'diproses':
+                $transaksii->waktu_proses = now();
+                break;
+            case 'tiba digudang':
+                $transaksii->waktu_tiba = now();
+                break;
+            case 'dikirim':
+                $transaksii->waktu_kirim = now();
+                break;
+            case 'selesai':
+                $transaksii->waktu_selesai = now();
+                break;
+        }
+
+        // Update status dan kurir
+        $transaksii->status = $request->status;
+        $transaksii->kurir_id = $request->kurir_id;
+        $transaksii->save();
 
         return response()->json(['message' => 'Status berhasil diperbarui']);
     }
 
     public function ubahStatus(Request $request, $id)
-    {
-        $transaksi = Transaksii::findOrFail($id);
-        $transaksi->status = $request->status;
-        $transaksi->save();
+{
+    $request->validate([
+        'status' => 'required|string',
+    ]);
+    
 
-        return response()->json(['message' => 'Status berhasil diubah']);
+    $transaksii = Transaksii::findOrFail($id);//
+    
+    $user = auth()->user();
+
+    switch ($request->status) {
+        case 'diambil kurir':
+            $transaksii->waktu_diambil = now();
+            break;
+        case 'dikurir':
+            $transaksii->waktu_dikurir = now();
+            break;
+        case 'digudang':
+            $transaksii->waktu_digudang = now();
+            break;
+        case 'diproses':
+            $transaksii->waktu_proses = now();
+            break;
+        case 'tiba digudang':
+            $transaksii->waktu_tiba = now();
+            break;
+        case 'dikirim':
+            $transaksii->waktu_kirim = now();
+            break;
+        case 'selesai':
+            $transaksii->waktu_selesai = now();
+            break;
     }
+    
+    if ($transaksii->status !== 'digudang' && $request->status === 'digudang') {
+        $transaksii->pernah_digudang = true;
+    }
+    $transaksii->status = $request->status;//
+    $transaksii->save();//
+
+    return response()->json([
+        'message' => 'Status berhasil diubah',
+        'status' => $transaksii->status,
+    ]);
+}
+
 
 
 

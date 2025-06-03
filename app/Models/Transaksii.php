@@ -14,7 +14,7 @@ class Transaksii extends Model
     public $timestamps = true;
 
     protected $fillable = [
-        'no_resi', 'penerima', 'no_hp_penerima', 'status', 'alamat_asal', 'alamat_tujuan', 'nama_barang',
+        'no_resi', 'penerima', 'pengirim', 'no_hp_penerima', 'status', 'alamat_asal', 'alamat_tujuan', 'nama_barang',
         'berat_barang', 'ekspedisi', 'layanan', 'biaya', 'waktu',
         'status', 'penilaian', 'komentar',
         'asal_provinsi_id', 'asal_kota_id', 'tujuan_provinsi_id', 'tujuan_kota_id',
@@ -45,12 +45,12 @@ class Transaksii extends Model
         return $this->belongsTo(City::class, 'tujuan_kota_id');
     }
 
-    public function pengguna() {
-        return $this->belongsTo(User::class, 'pengguna_id');
-    }
+    // public function pengguna() {
+    //     return $this->belongsTo(User::class, 'pengguna_id');
+    // }
 
     public function kurir() {
-        return $this->belongsTo(User::class, 'kurir_id');
+        return $this->belongsTo(Kurir::class, 'kurir_id');
     }
 }
 

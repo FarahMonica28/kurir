@@ -9,12 +9,12 @@ const MainMenuConfig: Array<MenuItem> = [
                 route: "/dashboard",
                 keenthemesIcon: "element-11",
             },
-            {
-                heading: "Dashboardk", // ditampilan
-                name: "dashboardk", // di role
-                route: "/dashboardk",
-                keenthemesIcon: "element-11",
-            },
+            // {
+            //     heading: "Dashboardk", // ditampilan
+            //     name: "dashboardk", // di role
+            //     route: "/dashboardk",
+            //     keenthemesIcon: "element-11",
+            // },
         ],
     },
 
@@ -97,6 +97,11 @@ const MainMenuConfig: Array<MenuItem> = [
                                 name: "transaksii-order",
                                 route: "/dashboard/transaksii/order",
                             },
+                            {
+                                heading: "Riwayat",
+                                name: "transaksii-riwayat",
+                                route: "/dashboard/transaksii/riwayat",
+                            },
                     
                 ],
             },
@@ -176,12 +181,17 @@ const MainMenuConfig: Array<MenuItem> = [
                         route: "/dashboard/transs/orderan",
                     },
                     {
+                        heading: "Riwayatt Ambil",
+                        name: "transs-riwayatt",
+                        route: "/dashboard/transs/riwayatt",
+                    },
+                    {
                         heading: "Antar Orderan",
                         name: "transs-orderann",
                         route: "/dashboard/transs/orderann",
                     },
                     {
-                        heading: "riwayat",
+                        heading: "Riwayat Antar",
                         name: "transs-riwayat",
                         route: "/dashboard/transs/riwayat",
                     },

@@ -2,15 +2,16 @@ export interface transaksii {
     id: number;                // ID transaksi
     no_resi: string;
     nama: string;             // Nama pengirim
-    penerima: string;         // Nama penerima
     alamat_asal: string;      // Alamat asal
     alamat_tujuan: string;    // Alamat tujuan
+    penerima: string;         // Nama penerima
+    pengirim: string;         // Nama penerima
     berat_barang: number;     // Berat barang
     ekspedisi: string;        // Nama ekspedisi (JNE, J&T, dll.)
     layanan: string;          // Jenis layanan (YES, REG, dll.)
     biaya: number;            // Biaya pengiriman
     waktu: string;            // Waktu transaksi (format datetime)
-    status: "menunggu"|"diambil kurir"| "digudang"| "diproses" | "dikirim" | "selesai";  // Status internal sistem
+    status: "menunggu"|"diambil kurir"| "dikurir" |"digudang"| "diproses" | "tiba digudang" | "dikirim" | "selesai";  // Status internal sistem
     penilaian?: number | null;  // Penilaian opsional
     komentar?: string | null;   // Komentar opsional
 
@@ -33,7 +34,7 @@ export interface transaksii {
 
     pengguna: {
         name: string;
-        name: string;
+        // name: string;
     };
 
     created_at?: string;

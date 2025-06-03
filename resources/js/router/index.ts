@@ -16,6 +16,75 @@ declare module "vue-router" {
 }
 
 const routes: Array<RouteRecordRaw> = [
+    //pengguna
+    {
+    path: "/dashboardk",
+    name: "dashboardk",
+    component: () => import("@/pages/dashboardk/index.vue"),
+    meta: {
+        pageTitle: "Dashboardk",
+        breadcrumbs: ["Halaman Dashboardk"],
+    },
+    },
+    {
+                path: "/dashboard/transaksii/ongkir",
+                name: "dashboard.transaksii.ongkir",
+                component: () =>
+                    import("@/pages/dashboard/transaksii/ongkir/ongkir.vue"),
+                meta: {
+                    pageTitle: "Ongkir",
+                    breadcrumbs: ["Transaksii", "Ongkir"],
+                },
+    },
+    {
+                path: "/dashboard/transaksii/order",
+                name: "dashboard.transaksii.order",
+                component: () =>
+                    import("@/pages/dashboard/transaksii/order/index.vue"),
+                meta: {
+                    pageTitle: "Order",
+                    breadcrumbs: ["Transaksii", "Order"],
+                },
+    },
+    {
+                path: "/dashboard/transaksii/riwayat",
+                name: "dashboard.transaksii.riwayat",
+                component: () =>
+                    import("@/pages/dashboard/transaksii/riwayat/index.vue"),
+                meta: {
+                    pageTitle: "Riwayat",
+                    breadcrumbs: ["Transaksii", "Riwayat"],
+                },
+    },
+    {
+                path: "/dashboard/transaksi/order",
+                name: "dashboard.transaksi.order",
+                component: () =>
+                    import("@/pages/dashboard/transaksi/order/index.vue"),
+                meta: {
+                    pageTitle: "Order",
+                    breadcrumbs: ["Transaksi", "Order"],
+                },
+    },
+    {
+                path: "/dashboard/transaksi/riwayat",
+                name: "dashboard.transaksi.riwayat",
+                component: () =>
+                    import("@/pages/dashboard/transaksi/riwayatt/idex.vue"),
+                meta: {
+                    pageTitle: "Riwayat",
+                    breadcrumbs: ["Transaksi", "Riwayat"],
+                },
+    },
+    {
+                path: "/dashboard/tracking",
+                name: "dashboard.tracking",
+                component: () => import("@/pages/dashboard/tracking/index.vue"),
+                meta: {
+                    pageTitle: "Tracking",
+                    // breadcrumbs: ["Halaman", "Akun dan Profl"],
+                },
+    },
     {
         path: "/",
         redirect: "/dashboard",
@@ -78,24 +147,16 @@ const routes: Array<RouteRecordRaw> = [
                     breadcrumbs: ["Halaman", "Akun dan Profl"],
                 },
             },
-            {
-                path: "/dashboard/pengiriman",
-                name: "dashboard.pengiriman",
-                component: () => import("@/pages/dashboard/pengiriman/index.vue"),
-                meta: {
-                    pageTitle: "Pengiriman",
-                    // breadcrumbs: ["Halaman", "Akun dan Profl"],
-                },
-            },
-            {
-                path: "/dashboard/tracking",
-                name: "dashboard.tracking",
-                component: () => import("@/pages/dashboard/tracking/index.vue"),
-                meta: {
-                    pageTitle: "Tracking",
-                    // breadcrumbs: ["Halaman", "Akun dan Profl"],
-                },
-            },
+            // {
+            //     path: "/dashboard/pengiriman",
+            //     name: "dashboard.pengiriman",
+            //     component: () => import("@/pages/dashboard/pengiriman/index.vue"),
+            //     meta: {
+            //         pageTitle: "Pengiriman",
+            //         // breadcrumbs: ["Halaman", "Akun dan Profl"],
+            //     },
+            // },
+           
             {
                 path: "/dashboard/profile",
                 name: "dashboard.profile",
@@ -165,6 +226,15 @@ const routes: Array<RouteRecordRaw> = [
                 },
             },
             {
+                path: "/dashboard/transs/riwayatt",
+                name: "dashboard.transs.riwayatt",
+                component: () => import("@/pages/dashboard/transs/riwayatt/index.vue"),
+                meta: {
+                    // pageTitle: "Riwayat",
+                    // breadcrumbs: ["Halaman", "Akun dan Profl"],
+                },
+            },
+            {
                 path: "/dashboard/transs/orderan",
                 name: "dashboard.transs.orderan",
                 component: () => import("@/pages/dashboard/transs/orderan/index.vue"),
@@ -209,57 +279,7 @@ const routes: Array<RouteRecordRaw> = [
     },
     
 
-    //pengguna
-    
-    {
-        path: "/dashboardk",
-        name: "dashboardk",
-        component: () => import("@/pages/dashboardk/index.vue"),
-        meta: {
-            pageTitle: "Dashboardk",
-            breadcrumbs: ["Halaman Dashboardk"],
-        },
-    },
-    {
-                path: "/dashboard/transaksii/ongkir",
-                name: "dashboard.transaksii.ongkir",
-                component: () =>
-                    import("@/pages/dashboard/transaksii/ongkir/ongkir.vue"),
-                meta: {
-                    pageTitle: "Ongkir",
-                    breadcrumbs: ["Transaksii", "Ongkir"],
-                },
-    },
-    {
-                path: "/dashboard/transaksii/order",
-                name: "dashboard.transaksii.order",
-                component: () =>
-                    import("@/pages/dashboard/transaksii/order/index.vue"),
-                meta: {
-                    pageTitle: "Order",
-                    breadcrumbs: ["Transaksii", "Order"],
-                },
-    },
-    {
-                path: "/dashboard/transaksi/order",
-                name: "dashboard.transaksi.order",
-                component: () =>
-                    import("@/pages/dashboard/transaksi/order/index.vue"),
-                meta: {
-                    pageTitle: "Order",
-                    breadcrumbs: ["Transaksi", "Order"],
-                },
-    },
-    {
-                path: "/dashboard/transaksi/riwayat",
-                name: "dashboard.transaksi.riwayat",
-                component: () =>
-                    import("@/pages/dashboard/transaksi/riwayatt/idex.vue"),
-                meta: {
-                    pageTitle: "Riwayat",
-                    breadcrumbs: ["Transaksi", "Riwayat"],
-                },
-    },
+
     // {
     //     path: "/dashboard/ongkir",
     //     name: "dashboard.ongkir",

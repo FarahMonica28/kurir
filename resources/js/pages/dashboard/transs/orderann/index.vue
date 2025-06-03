@@ -2,10 +2,10 @@
 import { h, ref, watch, computed } from "vue";
 import { createColumnHelper } from "@tanstack/vue-table";
 import type { transaksii } from "@/types";
-import { useAuthStore } from "@/stores/auth";
 import axios from "axios";
 import Swal from "sweetalert2";
 
+import { useAuthStore } from "@/stores/auth";
 const authStore = useAuthStore();
 const currentKurir = computed(() => authStore.user);
 
@@ -16,15 +16,15 @@ const openForm = ref<boolean>(false);
 
 
 const handleUpdateStatus = async (id: string, currentStatus: string) => {
-    const nextStatus = currentStatus === "diproses" ? "dikirim" : "selesai";
-    const label = nextStatus === "dikirim" ? "Mengantar paket?" : "Konfirmasi selesai pengiriman?";
+    const nextStatus = currentStatus === "tiba digudang" ? "dikirim" : "selesai";
+    const label = nextStatus === "dikirim" ? "Apakah Anda Akan Mengantar Paket ini?" : "Konfirmasi selesai mengantar paket?";
 
     const result = await Swal.fire({
         title: label,
         // text: `Apakah kamu yakin ingin mengubah status menjadi "${nextStatus}"?`,
         icon: "question",
         showCancelButton: true,
-        confirmButtonText: "Ya, lanjutkan",
+        confirmButtonText: "Ya ",
         cancelButtonText: "Batal",
     });
 
@@ -60,7 +60,7 @@ const columns = [
     column.accessor("penerima", { header: "Nama Penerima" }),
     column.accessor("no_hp_penerima", { header: "No Hp Penerima" }),
     column.accessor("alamat_tujuan", { header: "Alamat Tujuan" }),
-    column.accessor("kurir.User.name", { header: "Nama Kurir" }),
+    column.accessor("kurir.user.name", { header: "Nama Kurir" }),
     column.accessor("status", {
         header: "Status",
         cell: (cell) => {
@@ -74,11 +74,14 @@ const columns = [
                             ? "badge bg-primary text-light fw-bold"
                             : status === "digudang"
                                 ? "badge bg-secondary fw-bold"
-                                : status === "diambil kurir"
-                                    ? "badge bg-info text-dark fw-bold"
-                                    : status === "menunggu"
-                                        ? "badge bg-light text-dark border fw-bold"
-                                        : "badge bg-dark fw-bold";
+                                : status === "dikurir"
+                                    ? "badge bg-info text-light fw-bold"
+                                    : status === "diambil kurir"
+                                        ? "badge bg-info text-dark fw-bold"
+                                        : status === "menunggu"
+                                            ? "badge bg-secondary text-light fw-bold"
+                                            : "badge bg-secondary fw-bold";
+
 
             return h("span", { class: statusClass }, status);
         },
@@ -89,10 +92,10 @@ const columns = [
             const row = cell.row.original;
             const status = row.status;
 
-            if (status !== "diproses" && status !== "dikirim") return null;
+            if (status !== "tiba digudang" && status !== "dikirim") return null;
 
-            const buttonLabel = status === "diproses" ? "Antar" : "Selesai";
-            const buttonColor = status === "diproses" ? "btn-info" : "btn-success";
+            const buttonLabel = status === "tiba digudang" ? "Antar" : "Selesai";
+            const buttonColor = status === "tiba digudang" ? "btn-info" : "btn-success";
 
             return h(
                 "button",
@@ -100,10 +103,14 @@ const columns = [
                     class: `btn btn-sm ${buttonColor} d-flex align-items-center gap-1`,
                     onClick: () => handleUpdateStatus(row.id, status),
                 },
-                buttonLabel
+                [
+                    h("i", { class: "bi bi-check2-circle" }),
+                    buttonLabel
+                ]
             );
         },
     }),
+
 ];
 
 const refresh = () => paginateRef.value?.refetch();
@@ -124,12 +131,7 @@ watch(openForm, (val) => {
             <h2 class="mb-0">List Orderan</h2>
         </div>
         <div class="card-body">
-            <paginate
-                ref="paginateRef"
-                id="table-transaksii"
-                :url="url"
-                :columns="columns"
-            />
+            <paginate ref="paginateRef" id="table-transaksii" :url="url" :columns="columns" />
             <!-- <paginate
                 ref="paginateRef"
                 id="table-transaksii"

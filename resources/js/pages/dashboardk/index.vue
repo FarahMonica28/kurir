@@ -4,12 +4,14 @@ import { ref } from 'vue';
 // Komponen halaman
 import DashboardHome from '@/pages/dashboardk/beranda.vue' // ← Tambahkan file ini
 import Check from "@/pages/dashboard/transaksii/ongkir/ongkir.vue";
-import OrderPage from "@/pages/dashboard/transaksi/order/index.vue";
+// import OrderPage from "@/pages/dashboard/transaksi/order/index.vue";
+import RiwayatPage from "@/pages/dashboard/transaksii/riwayat/index.vue";
 import OrdePage from "@/pages/dashboard/transaksii/order/index.vue";
-import RiwayatPage from "@/pages/dashboard/transaksi/riwayatt/idex.vue";
+import TrackPage from "@/pages/dashboard/tracking/index.vue";
+// import RiwayatPage from "@/pages/dashboard/transaksi/riwayatt/idex.vue";
 
 // Tab aktif
-const currentTab = ref<'dashboard' | 'ongkir' |'order' | 'orde' |'riwayat'>('dashboard');
+const currentTab = ref<'dashboard' | 'ongkir' | 'order' | 'orde' | 'riwayat' | 'riwayatt' | 'tracking'>('dashboard');
 
 // Fungsi Logout
 // const handleLogout = () => {
@@ -24,40 +26,39 @@ const currentTab = ref<'dashboard' | 'ongkir' |'order' | 'orde' |'riwayat'>('das
       <div class="d-flex align-items-center w-100 justify-content-between">
         <!-- Tab-tombol sejajar -->
         <div class="d-flex align-items-center gap-2">
-          <button
-            class="btn btn-outline-light"
-            :class="{ 'fw-bold': currentTab === 'dashboard' }"
-            @click="currentTab = 'dashboard'"
-          >
-          Dashboard Pengguna
-        </button>
-        <button
+          <button class="btn btn-outline-light" :class="{ 'fw-bold': currentTab === 'dashboard' }"
+            @click="currentTab = 'dashboard'">
+            Dashboard Pengguna
+          </button>
+          <!-- <button
         class="btn btn-outline-light"
         :class="{ 'fw-bold': currentTab === 'order' }"
         @click="currentTab = 'order'"
         >
         Order Khusus Surabaya
-      </button>
-      <button
+      </button> -->
+          <!-- <button
         class="btn btn-outline-light"
         :class="{ 'fw-bold': currentTab === 'riwayat' }"
         @click="currentTab = 'riwayat'"
       >
         Riwayat
-      </button>
-          <button
-            class="btn btn-outline-light"
-            :class="{ 'fw-bold': currentTab === 'ongkir' }"
-            @click="currentTab = 'ongkir'"
-          >
+      </button> -->
+          <button class="btn btn-outline-light" :class="{ 'fw-bold': currentTab === 'ongkir' }"
+            @click="currentTab = 'ongkir'">
             Check Ongkir
           </button>
-          <button
-            class="btn btn-outline-light"
-            :class="{ 'fw-bold': currentTab === 'orde' }"
-            @click="currentTab = 'orde'"
-          >
-            Order Antar Provinsi
+          <button class="btn btn-outline-light" :class="{ 'fw-bold': currentTab === 'orde' }"
+            @click="currentTab = 'orde'">
+            Order Kurir
+          </button>
+          <button class="btn btn-outline-light" :class="{ 'fw-bold': currentTab === 'riwayatt' }"
+            @click="currentTab = 'riwayatt'">
+            Riwayat
+          </button>
+          <button class="btn btn-outline-light" :class="{ 'fw-bold': currentTab === 'tracking' }"
+            @click="currentTab = 'tracking'">
+            Lacak Barang
           </button>
         </div>
 
@@ -69,14 +70,16 @@ const currentTab = ref<'dashboard' | 'ongkir' |'order' | 'orde' |'riwayat'>('das
     </nav>
 
 
-    
+
     <!-- Konten -->
     <div class="container py-4">
       <DashboardHome v-if="currentTab === 'dashboard'" />
       <Check v-if="currentTab === 'ongkir'" />
-      <OrderPage v-if="currentTab === 'order'" />
+      <!-- <OrderPage v-if="currentTab === 'order'" /> -->
       <OrdePage v-if="currentTab === 'orde'" />
-      <RiwayatPage v-if="currentTab === 'riwayat'" />
+      <!-- <RiwayatPage v-if="currentTab === 'riwayat'" /> -->
+      <RiwayatPage v-if="currentTab === 'riwayatt'" />
+      <TrackPage v-if="currentTab === 'tracking'" />
     </div>
   </div>
 </template>
@@ -84,5 +87,8 @@ const currentTab = ref<'dashboard' | 'ongkir' |'order' | 'orde' |'riwayat'>('das
 <style scoped>
 .btn-outline-light.fw-bold {
   border: 2px solid white;
+}
+body{
+  background-color: white;
 }
 </style>

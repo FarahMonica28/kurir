@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { h, ref, watch } from "vue";
 import { useDelete } from "@/libs/hooks";
-import Form from "./Form.vue";
+// import Form from "./Form.vue";
 import { createColumnHelper } from "@tanstack/vue-table";
 import type { transaksii } from "@/types";
 import axios from "axios";
@@ -161,8 +161,7 @@ watch(openForm, (val) => {
         </div>
         <div class="card-body">
             <!-- <paginate ref="paginateRef" id="table-transaksi" url="/transaksi" :columns="columns"></paginate> -->
-            <paginate ref="paginateRef" id="table-transaksii" url="/transaksii?exclude_status=selesai"
-                :columns="columns" />
+            <paginate ref="paginateRef" id="table-transaksii" url="/transaksii?status=digudang" :columns="columns" />
 
         </div>
     </div>

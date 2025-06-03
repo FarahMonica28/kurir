@@ -18,11 +18,11 @@ const printData = ref<transaksii | null>(null);
 // Cetak PDF
 const printResi = async (data: transaksii) => {
     const result = await Swal.fire({
-        title: "Cetak Resi PDF?",
-        text: "Apakah Anda ingin mengunduh resi pengiriman sebagai PDF? Status akan menjadi 'diproses'.",
+        title: "Cetak Resi?",
+        text: "Apakah Anda ingin mengunduh no resi dan status akan berubah menjadi 'diproses'.",
         icon: "question",
         showCancelButton: true,
-        confirmButtonText: "Download PDF",
+        confirmButtonText: "Download",
         cancelButtonText: "Batal",
         reverseButtons: true,
     });
@@ -72,8 +72,8 @@ const printResi = async (data: transaksii) => {
 
 const markAsArrived = async (data: transaksii) => {
     const result = await Swal.fire({
-        title: "Barang sudah sampai di gudang?",
-        text: "Status akan diperbarui menjadi 'tiba digudang'.",
+        title: "Barang sudah sampai di gudang tujuan?",
+        text: "Status akan diperbarui menjadi tiba digudang.",
         icon: "question",
         showCancelButton: true,
         confirmButtonText: "Ya, sudah sampai",
@@ -129,22 +129,22 @@ const columns = [
         header: "Status",
         cell: (cell) => {
             const status = cell.getValue();
-           const statusClass =
-            status === "selesai"
-                ? "badge bg-success fw-bold"
-                : status === "dikirim"
-                    ? "badge bg-warning text-dark fw-bold"
-                    : status === "diproses"
-                        ? "badge bg-primary text-light fw-bold"
-                        : status === "digudang"
-                            ? "badge bg-secondary fw-bold"
-                            : status === "diambil kurir"
-                                ? "badge bg-info text-dark fw-bold"
-                                : status === "menunggu"
-                                    ? "badge bg-light text-dark border fw-bold"
-                                    : status === "tiba digudang"
-                                        ? "badge bg-purple text-white fw-bold"
-                                        : "badge bg-dark fw-bold";
+            const statusClass =
+                status === "selesai"
+                    ? "badge bg-success fw-bold"
+                    : status === "dikirim"
+                        ? "badge bg-warning text-dark fw-bold"
+                        : status === "diproses"
+                            ? "badge bg-primary text-light fw-bold"
+                            : status === "digudang"
+                                ? "badge bg-secondary fw-bold"
+                                : status === "diambil kurir"
+                                    ? "badge bg-info text-dark fw-bold"
+                                    : status === "menunggu"
+                                        ? "badge bg-light text-dark border fw-bold"
+                                        : status === "tiba digudang"
+                                            ? "badge bg-purple text-white fw-bold"
+                                            : "badge bg-dark fw-bold";
             return h("span", { class: statusClass }, status);
         },
     }),
@@ -153,22 +153,29 @@ const columns = [
         header: "Aksi",
         cell: (cell) => {
             const data = cell.row.original;
+
+            const showTibaDigudang = data.status === "diproses" || data.status === "dikirim";
+
             return h("div", { class: "d-flex gap-2" }, [
                 h("button", {
                     class: "btn btn-sm btn-info d-flex align-items-center gap-1",
                     onClick: () => showRincian(data),
                 }, [h("i", { class: "bi bi-eye" }), "Detail"]),
 
+                showTibaDigudang &&
                 h("button", {
                     class: "btn btn-sm btn-success d-flex align-items-center gap-1",
                     onClick: () => markAsArrived(data),
                 }, [h("i", { class: "bi bi-check2-circle" }), "Tiba Digudang"]),
+
+                data.status !== "tiba digudang" &&
                 h("button", {
                     class: "btn btn-sm btn-secondary d-flex align-items-center gap-1",
                     onClick: () => printResi(data),
                 }, [h("i", { class: "bi bi-printer" })]),
             ]);
-        },
+        }
+
     }),
 ];
 
@@ -193,7 +200,7 @@ watch(openForm, (val) => {
 
 
             <!-- Area Resi untuk PDF -->
-            <div id="print-resi" v-if="printData" class="mt-4">
+            <div id="print-resi" v-if="printData" class="print-preview">
                 <div class="resi-container">
                     <div class="resi-header">
                         No Resi: {{ printData.no_resi }}
@@ -205,7 +212,9 @@ watch(openForm, (val) => {
                                 <strong>Ekspedisi:</strong><br />
                                 <h1><strong>{{ printData.ekspedisi || 'JNE / J&T' }}</strong></h1>
                             </div>
-                            <strong><hr /></strong>
+                            <strong>
+                                <hr />
+                            </strong>
                             <div class="mt-4">
                                 <strong>Informasi Pengirim:</strong>
                                 <p class="mt-4">Nama Pengirim : {{ printData.pengguna?.name || '-' }}</p>
@@ -275,6 +284,12 @@ watch(openForm, (val) => {
 </template>
 
 <style>
+.print-preview {
+    color: #000;
+    background-color: #fff;
+    margin-top: 4%;
+}
+
 .resi-container {
     width: 600px;
     border: 3px solid #000;
@@ -311,6 +326,7 @@ watch(openForm, (val) => {
 p {
     margin: 4px 0;
 }
+
 /* hr{
     border: 1px solid #000;
 } */

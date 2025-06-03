@@ -24,15 +24,16 @@ const cityOrigin = ref("");
 const provinceDestination = ref("0");
 const cityDestination = ref("");
 const penerima = ref("");
+const pengirim = ref("");
 const alamat_tujuan = ref("");
 const no_hp_penerima = ref("");
 const nama_barang = ref("");
 
 // Kurir / ekspedisi dan layanan
 const couriers = ref([
-  { code: "JNE", name: "JNE" },
-  { code: "TIKI", name: "TIKI" },
-  { code: "POS", name: "POS Indonesia" },
+  { code: "jne", name: "JNE" },
+  { code: "tiki", name: "TIKI" },
+  { code: "pos", name: "POS Indonesia" },
 ]);
 
 const selectedCourier = ref("");  // ekspedisi/kurir dipilih
@@ -59,6 +60,7 @@ const formSchema = Yup.object({
   alamat_asal: Yup.string().required("Alamat Tujuan harus diisi"),
   alamat_tujuan: Yup.string().required("Alamat Tujuan harus diisi"),
   no_hp_penerima: Yup.string().required("No HP Penerima harus diisi"),
+  pengirim: Yup.string().required("pengirim harus diisi"),
   provinceOrigin: Yup.string().required("Provinsi asal harus dipilih").notOneOf(["0"], "Provinsi asal harus dipilih"),
   cityOrigin: Yup.string().required("Kota asal harus dipilih"),
   provinceDestination: Yup.string().required("Provinsi tujuan harus dipilih").notOneOf(["0"], "Provinsi tujuan harus dipilih"),
@@ -83,6 +85,7 @@ const { handleSubmit, errors, resetForm, } = useForm({
     kurir: "",
     layanan: "",
     berat_barang: 0,
+    pengirim: "",
   }
 });
 
@@ -195,7 +198,8 @@ function onSubmit() {
   formData.append("no_hp_penerima", no_hp_penerima.value);
 
 
-  formData.append("id", currentPengguna.value.id);
+  formData.append("pengirim", pengirim.value);
+  // formData.append("id", currentPengguna.value.id);
   formData.append("nama_barang", nama_barang.value);
   formData.append("asal_provinsi_id", provinceOrigin.value);
   formData.append("asal_kota_id", cityOrigin.value);
@@ -226,7 +230,7 @@ function onSubmit() {
       toast.success("Data berhasil disimpan");
       formRef.value.resetForm(); // Reset form setelah submit
     })
-    .catch((err: any) => { 
+    .catch((err: any) => {
       const message = err.response?.data?.message || "Terjadi kesalahan.";
       toast.error(message);
     })
@@ -309,11 +313,17 @@ onMounted(() => {
         <!-- Infromasi Pengguna -->
         <h2 class="mt-7 text-purple">Informasi Pengirim</h2>
         <!-- Pengirim -->
-        <div class="col-md-4 mb-7 mt-4">
+        <!-- <div class="col-md-4 mb-7 mt-4">
           <label class="form-label required fw-bold" for="pengguna">Nama Pengirim</label>
           <Field type="text" name="pengguna_id" class="form-control" :value="`${currentPengguna.name}`" readonly>
           </Field>
           <ErrorMessage name="pengguna_id" class="text-danger small" />
+        </div> -->
+        <div class="col-md-4 mb-7 mt-4">
+          <label class="form-label required fw-bold" for="pengirim">Nama Pengirim</label>
+          <Field type="text" name="pengirim" class="form-control" v-model="pengirim" placeholder="Masukan nama pengirim">
+          </Field>
+          <ErrorMessage name="pengirim" class="text-danger small" />
         </div>
 
         <!-- Nama Barang -->

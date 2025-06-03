@@ -1,16 +1,28 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
-import axios from "@/libs/axios";
 import { toast } from "vue3-toastify";
-import type { kurir } from "@/types";
 import Swal from "sweetalert2";
+import { h, ref, watch, onMounted } from "vue";
+import { useDelete } from "@/libs/hooks";
+import Form from "./form.vue";
+import { createColumnHelper } from "@tanstack/vue-table";
+import type { kurir } from "@/types"; // Pastikan tipe data sesuai API
+import axios from "@/libs/axios";
 
+const column = createColumnHelper<kurir>();
 // Import store autentikasi untuk mengambil data user yang sedang login
 import { useAuthStore } from "@/stores/auth";
 const paginateRef = ref<any>(null);
+const selected = ref<string>(""); // ID kurir yang dipilih
+const openForm = ref<boolean>(false); // Form tambah/edit
+// form.vue
+const emit = defineEmits(["close", "refresh"]);
 
 // Inisialisasi store agar bisa akses data user yang login
 const store = useAuthStore();
+const showForm = ref(true); // untuk toggle form
+const openEditForm = () => {
+    showForm.value = true;
+};
 
 const kurir = ref({
     name: "",
@@ -57,15 +69,41 @@ const getProfile = async () => {
         // rating: store.user.rating,
     };
 };
-// Fungsi untuk refresh data tabel
-const refresh = () => paginateRef.value?.refetch();
+
+const columns = [
+    column.accessor("kurir_id", {
+        header: "Aksi",
+        cell: (cell) =>
+            h("div", { class: "d-flex gap-2" }, [
+                h(
+                    "button",
+                    {
+                        class: "btn btn-sm btn-info",
+                        onClick: () => {
+                            selected.value = cell.getValue();
+                            openForm.value = true;
+                        },
+                    },
+                    h("i", { class: "la la-pencil fs-2" }) // Ikon Edit
+                ),
+            ]),
+    }),
+];
 
 onMounted(() => {
     getProfile();
 });
+// Fungsi untuk refresh data tabel
+const refresh = () => paginateRef.value?.refetch();
+
+watch(openForm, (val) => {
+    if (!val) selected.value = "";
+    window.scrollTo(0, 0);
+});
 </script>
 
 <template>
+
     <div class="card">
         <div class="card-header text-center">
             <h3 class="card-title">Profil</h3>
@@ -105,15 +143,36 @@ onMounted(() => {
                             {{ kurir.status === 'sedang menerima orderan' ? 'Sedang Menerima Orderan' : kurir.status }}
                         </span>
                     </p>
+                    <!-- Tombol Edit -->
+                    <!-- <div class="text-end mt-3">
+                        <button class="btn btn-warning btn-sm" @click="openForm.value">
+                            Edit Profil
+                        </button>
+                    </div> -->
 
+                    
+                    <!-- Tombol Edit -->
+                    <!-- <div class="text-end mt-3">
+                        <button class="btn btn-warning btn-sm" @click="openEditForm">
+                            Edit Profil
+                        </button>
+                    </div>
 
-<!-- 
-                    <p>
-                        <strong>Rating:</strong>
-                        <span class="fw-bold">{{ kurir.rating }} / 5</span>
-                    </p> -->
+                    <!-- Form Kurir ditampilkan jika showForm = true
+                    <KurirForm v-if="showForm" :selected="kurir.kurir_id" @close="showForm = false"
+                        @refresh="refresh" /> -->
+
                 </div>
             </div>
+            <!-- Tombol Edit -->
+            <div class="text-end mt-3">
+                <button class="btn btn-warning btn-sm" @click="openEditForm">
+                    Edit Profil
+                </button>
+            </div>
+            
+            <!-- Form Kurir ditampilkan jika showForm = true -->
+            <Form v-if="showForm" :selected="kurir.kurir_id" @close="showForm = false" @refresh="refresh" class="mt-10" />
         </div>
     </div>
 </template>

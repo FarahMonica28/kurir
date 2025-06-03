@@ -12,7 +12,8 @@ class TrackingController extends Controller
      */
     public function track($no_resi)
     {
-        $transaksii = Transaksii::where('no_resi', $no_resi)->with(['pengguna', 'kurir'])->with(['asalKota','tujuanKota','tujuanProvinsi','asalProvinsi'])->first();
+        // $transaksii = Transaksii::where('no_resi', $no_resi)->with(['pengguna', 'kurir'])->with(['asalKota','tujuanKota','tujuanProvinsi','asalProvinsi'])->first();
+        $transaksii = Transaksii::where('no_resi', $no_resi)->with(['asalKota','tujuanKota','tujuanProvinsi','asalProvinsi'])->first();
 
         if (!$transaksii) {
             return response()->json([

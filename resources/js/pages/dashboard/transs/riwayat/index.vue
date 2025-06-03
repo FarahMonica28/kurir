@@ -21,7 +21,8 @@ const columns = [
     column.accessor("penerima", { header: "Nama Penerima" }),
     column.accessor("no_hp_penerima", { header: "No Hp Penerima" }),
     column.accessor("alamat_tujuan", { header: "Alamat Tujuan" }),
-    column.accessor("kurir.User.name", { header: "Nama Kurir" }),
+    column.accessor("kurir.user.name", { header: "Nama Kurir" }),
+    column.accessor("penilaian", { header: "penilaian" }),
     column.accessor("status", {
         header: "Status",
         cell: (cell) => {
@@ -35,15 +36,20 @@ const columns = [
                             ? "badge bg-primary text-light fw-bold"
                             : status === "digudang"
                                 ? "badge bg-secondary fw-bold"
-                                : status === "diambil kurir"
-                                    ? "badge bg-info text-dark fw-bold"
-                                    : status === "menunggu"
-                                        ? "badge bg-light text-dark border fw-bold"
-                                        : "badge bg-dark fw-bold";
+                                : status === "dikurir"
+                                    ? "badge bg-info text-light fw-bold"
+                                    : status === "diambil kurir"
+                                        ? "badge bg-info text-dark fw-bold"
+                                        : status === "menunggu"
+                                            ? "badge bg-secondary text-light fw-bold"
+                                            : "badge bg-secondary fw-bold";
+
+
 
             return h("span", { class: statusClass }, status);
         },
     }),
+
 
 ];
 
@@ -71,12 +77,7 @@ watch(openForm, (val) => {
                 :url="url"
                 :columns="columns"
             /> -->
-            <paginate
-                ref="paginateRef"
-                id="table-transaksii"
-                url="/transaksii?status=selesai"
-                :columns="columns"
-            />
+            <paginate ref="paginateRef" id="table-transaksii" url="/transaksii?status=selesai" :columns="columns" />
         </div>
     </div>
 </template>

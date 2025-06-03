@@ -39,6 +39,27 @@ Route::middleware(['auth', 'json'])->prefix('auth')->group(function () {
 Route::prefix('setting')->group(function () {
     Route::get('', [SettingController::class, 'index']);
 });
+Route::get('/rajaongkir/provinces', [RajaOngkirController::class, 'getProvinces']);
+Route::get('/rajaongkir/cities', [RajaOngkirController::class, 'getCities']);
+Route::get('/province', [CheckOngkirController::class, 'getProvinces']);
+Route::get('/cities/{province_id}', [CheckOngkirController::class, 'getCities']);
+Route::post('/ongkir', [CheckOngkirController::class, 'checkOngkir']);
+    
+Route::post('/transaksii', [TransaksiiController::class, 'index']);
+Route::get('/transaksii/{id}', [TransaksiiController::class, 'get']);
+    // Route::post('/transaksii', [TransaksiiController::class, 'store']);
+    // Route::put('/transaksii/{id}', [TransaksiiController::class, 'store']);
+Route::post('/transaksii/store', [TransaksiiController::class, 'store']);
+Route::get('/provinces', [TransaksiiController::class, 'getProvinces']);
+Route::get('/cities/{provinceId}', [TransaksiiController::class, 'getCities']);
+    // Route::post('/transaksii/{id}', [TransaksiiController::class, 'store']); // Untuk 
+Route::post('/cost', [TransaksiiController::class, 'hitungOngkir']);
+    // routes/api.php
+Route::put('/transaksii/{id}/antar', [TransaksiiController::class, 'antar']);
+Route::put('/transaksii/{id}/ubah-status', [TransaksiiController::class, 'ubahStatus']);
+Route::get('/tracking/{no_resi}', [TrackingController::class, 'track']);
+// Route::get('/tracking/{no_resi}', [TrackingController::class, 'track'])->withoutMiddleware(['auth']);
+// Route::get('/tracking/{no_resi}', [TrackingController::class, 'show']);
 
 //semua masuk ke sini
 Route::middleware(['auth', 'verified', 'json'])->group(function () {
@@ -125,7 +146,7 @@ Route::middleware(['auth', 'verified', 'json'])->group(function () {
         // HANYA satu GET untuk tracking dengan query resi
         Route::get('/tracking', [TrackingController::class, 'track']);   
         // Jika kamu juga butuh lihat detail berdasarkan resi via path parameter
-        Route::get('/tracking/{no_resi}', [TrackingController::class, 'show']);   
+           
         // Tambah data
         Route::post('/tracking/store', [TrackingController::class, 'store']);   
         // Resource, kecuali yang sudah di-override
@@ -201,16 +222,15 @@ Route::middleware(['auth', 'verified', 'json'])->group(function () {
         Route::put('/trans/update-status/{id}', [TransController::class, 'updateStatus']);        // Route::post('/trans/storer', [TransController::class, 'storePenilaian']);
         Route::put('/transaksi/{id}/update-status', [TransController::class, 'updateStatus'])->withoutMiddleware('can:trans');
         // Route::middleware('auth')->group(function () {
-        //     // Route::put('/trans/{trans}', [TransController::class, 'update']);
-        // });
-        Route::apiResource('trans', TransController::class)
+            //     // Route::put('/trans/{trans}', [TransController::class, 'update']);
+            // });
+            Route::apiResource('trans', TransController::class)
             ->except(['index', 'store']);
-        // Route::middleware(['auth', 'can:update,trans'])->put('/trans/{trans}', [TransaksiController::class, 'update']);
+            // Route::middleware(['auth', 'can:update,trans'])->put('/trans/{trans}', [TransaksiController::class, 'update']);
         // CRUD trans kecuali index dan store
     });
 
-    Route::get('/rajaongkir/provinces', [RajaOngkirController::class, 'getProvinces']);
-    Route::get('/rajaongkir/cities', [RajaOngkirController::class, 'getCities']);
+   
     // routes/api.php
     // Route::get('/rajaongkir/cities', [RajaOngkirController::class, 'getCities']);
     
@@ -221,28 +241,10 @@ Route::middleware(['auth', 'verified', 'json'])->group(function () {
     // Route::post('/cost', [RajaOngkirController::class, 'getCost']);
     // Route::post('/cost', [RajaOngkirController::class, 'cost']);
     
-    Route::get('/province', [CheckOngkirController::class, 'getProvinces']);
-    Route::get('/cities/{province_id}', [CheckOngkirController::class, 'getCities']);
-    Route::post('/ongkir', [CheckOngkirController::class, 'checkOngkir']);
-    
-    Route::post('/transaksii', [TransaksiiController::class, 'index']);
-    Route::get('/transaksii/{id}', [TransaksiiController::class, 'get']);
-    // Route::post('/transaksii', [TransaksiiController::class, 'store']);
-    // Route::put('/transaksii/{id}', [TransaksiiController::class, 'store']);
-    Route::post('/transaksii/store', [TransaksiiController::class, 'store']);
-    Route::get('/provinces', [TransaksiiController::class, 'getProvinces']);
-    Route::get('/cities/{provinceId}', [TransaksiiController::class, 'getCities']);
-    // Route::post('/transaksii/{id}', [TransaksiiController::class, 'store']); // Untuk 
-    Route::post('/cost', [TransaksiiController::class, 'hitungOngkir']);
-    // routes/api.php
-    Route::put('/transaksii/{id}/antar', [TransaksiiController::class, 'antar']);
-    Route::put('/transaksii/{id}/ubah-status', [TransaksiiController::class, 'ubahStatus']);
-
-
-
-    Route::get('/tracking/{no_resi}', [TrackingController::class, 'track']);
-
     Route::post( '/gudang', [GudangController::class, 'index'])->withoutMiddleware('can:gudang'); // ini mengijinkan kurir mengambil data yang dimasukan pengguna
+
+
+
 
     // Route::get('/ongkir', 'CheckOngkirController@index');
     // Route::post('/ongkir', 'CheckOngkirController@check_ongkir');
