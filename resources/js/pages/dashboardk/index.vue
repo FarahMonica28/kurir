@@ -91,4 +91,10 @@ const currentTab = ref<'dashboard' | 'ongkir' | 'order' | 'orde' | 'riwayat' | '
 body{
   background-color: white;
 }
+.btn.fw-bold {
+  font-weight: bold;
+}
+/* button{
+   background-color: blue; 
+} */
 </style>

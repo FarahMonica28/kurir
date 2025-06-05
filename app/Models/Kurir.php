@@ -47,7 +47,7 @@ class Kurir extends Model
     }
     public function transaksii()
     {
-        return $this->hasMany(Transaksi::class, 'kurir_id', 'kurir_id');
+        return $this->hasMany(Transaksii::class, 'kurir_id', 'kurir_id');
     }
 
 

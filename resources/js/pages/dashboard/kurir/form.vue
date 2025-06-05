@@ -49,7 +49,7 @@ const formSchema = Yup.object().shape({
 
 function getEdit() {
   block(document.getElementById("form-kurir"));
-  ApiService.get("kurir", props.selected)
+  ApiService.get("/get-kurir", props.selected)
     .then(({ data }) => {
       console.log(data);
       // Pastikan struktur sesuai response dar i backend
@@ -99,8 +99,8 @@ function submit() {
 
   block(document.getElementById("form-kurir"));
   axios({
-    method: "post",
-    url: props.selected ? `/kurir/${props.selected}` : "/kurir/store",
+    method: "put",
+    url: props.selected ? `/kurir/${props.selected}` : "/kurir/update   ~",
     data: formData,
     headers: {
       "Content-Type": "multipart/form-data",

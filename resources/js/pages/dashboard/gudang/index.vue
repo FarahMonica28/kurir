@@ -13,13 +13,13 @@ const paginateRef = ref<any>(null);
 const selected = ref<string>("");
 const openForm = ref<boolean>(false);
 const detailData = ref<transaksii | null>(null);
-const printData = ref<transaksii | null>(null);
+const printData = ref<transaksii  | null>(null);
 
 // Cetak PDF
 const printResi = async (data: transaksii) => {
     const result = await Swal.fire({
         title: "Cetak Resi?",
-        text: "Apakah Anda ingin mengunduh no resi dan status akan berubah menjadi 'diproses'.",
+        text: "Apakah Anda ingin mengunduh no resi?",
         icon: "question",
         showCancelButton: true,
         confirmButtonText: "Download",
@@ -30,7 +30,7 @@ const printResi = async (data: transaksii) => {
     if (result.isConfirmed) {
         try {
             // Update status menjadi 'diproses'
-            await axios.put(`/transaksii/${data.id}/ubah-status`, { status: "diproses" });
+            await axios.put(`/transaksii/${data.id}/ambil`, { status: "diproses" });
 
             // Refresh table agar status langsung terlihat berubah
             refresh();
@@ -53,17 +53,18 @@ const printResi = async (data: transaksii) => {
 
             Swal.fire({
                 title: "Berhasil",
-                text: "Status diubah ke 'diproses' dan resi berhasil diunduh.",
+                // text: "Status diubah ke 'diproses' dan resi berhasil diunduh.",
+                text: "No resi berhasil diunduh.",
                 icon: "success",
                 timer: 1500,
                 showConfirmButton: false,
             });
 
         } catch (error) {
-            console.error("Gagal update status atau cetak:", error);
+            console.error("Gagal mencetak no resi:", error);
             Swal.fire({
                 title: "Gagal",
-                text: "Terjadi kesalahan saat mengubah status atau mencetak resi.",
+                text: "Terjadi kesalahan saat mencetak resi.",
                 icon: "error",
             });
         }
@@ -83,11 +84,11 @@ const markAsArrived = async (data: transaksii) => {
 
     if (result.isConfirmed) {
         try {
-            await axios.put(`/transaksii/${data.id}/ubah-status`, { status: "tiba digudang" });
+            await axios.put(`/transaksii/${data.id}/ambil`, { status: "tiba digudang" });
             refresh();
             Swal.fire({
                 title: "Berhasil",
-                text: "Status diubah menjadi 'tiba digudang'.",
+                text: "Barang telah tiba digudang.",
                 icon: "success",
                 timer: 1500,
                 showConfirmButton: false,
@@ -106,7 +107,7 @@ const markAsArrived = async (data: transaksii) => {
 
 const url = computed(() => {
     const params = new URLSearchParams();
-    ['menunggu', 'diambil kurir', 'dikirim', 'selesai'].forEach(status => {
+    ['menunggu','dikurir', 'diambil kurir', 'dikirim', 'selesai'].forEach(status => {
         params.append('exclude_status[]', status);
     });
     return `/transaksii?${params.toString()}`;
@@ -122,9 +123,11 @@ const closeDetail = () => {
 
 const columns = [
     column.accessor("no", { header: "#" }),
-    column.accessor("pengguna.name", { header: "Pengirim" }),
-    column.accessor("nama_barang", { header: "Nama Barang" }),
     column.accessor("no_resi", { header: "No Resi" }),
+    column.accessor("tujuan_provinsi.name", {header: "Provinsi Tujuan",}),
+    column.accessor("tujuan_kota.name", {header: "Kota Tujuan",}),
+    column.accessor("pengirim", { header: "Pengirim" }),
+    column.accessor("nama_barang", { header: "Nama Barang" }),
     column.accessor("status", {
         header: "Status",
         cell: (cell) => {
@@ -143,7 +146,7 @@ const columns = [
                                     : status === "menunggu"
                                         ? "badge bg-light text-dark border fw-bold"
                                         : status === "tiba digudang"
-                                            ? "badge bg-purple text-white fw-bold"
+                                            ? "badge bg-success text-white fw-bold"
                                             : "badge bg-dark fw-bold";
             return h("span", { class: statusClass }, status);
         },
@@ -217,7 +220,7 @@ watch(openForm, (val) => {
                             </strong>
                             <div class="mt-4">
                                 <strong>Informasi Pengirim:</strong>
-                                <p class="mt-4">Nama Pengirim : {{ printData.pengguna?.name || '-' }}</p>
+                                <p class="mt-4">Nama Pengirim : {{ printData.pengirim || '-' }}</p>
                                 <p>Asal Provinsi : {{ printData.asal_provinsi?.name }}</p>
                                 <p>Asal Kota : {{ printData.asal_kota?.name }}</p>
                                 <p>Alamat Asal : {{ printData.alamat_asal }} </p>
@@ -259,7 +262,7 @@ watch(openForm, (val) => {
                         <hr />
                         <div class="row">
                             <div class="col-md-6">
-                                <p><strong>Pengirim:</strong> {{ detailData.pengguna?.name || '-' }}</p>
+                                <p><strong>Pengirim:</strong> {{ detailData.pengirim || '-' }}</p>
                                 <p><strong>Nama Barang:</strong> {{ detailData.nama_barang }}</p>
                                 <p><strong>Berat Barang:</strong> {{ detailData.berat_barang }} kg</p>
                                 <p><strong>Provinsi Asal:</strong> {{ detailData.asal_provinsi?.name || '-' }}</p>

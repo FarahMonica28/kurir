@@ -16,7 +16,7 @@ class Transaksii extends Model
     protected $fillable = [
         'no_resi', 'penerima', 'pengirim', 'no_hp_penerima', 'status', 'alamat_asal', 'alamat_tujuan', 'nama_barang',
         'berat_barang', 'ekspedisi', 'layanan', 'biaya', 'waktu',
-        'status', 'penilaian', 'komentar',
+        'status', 'rating', 'komentar',
         'asal_provinsi_id', 'asal_kota_id', 'tujuan_provinsi_id', 'tujuan_kota_id',
         'pengguna_id',
     ];

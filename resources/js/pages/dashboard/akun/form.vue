@@ -19,6 +19,7 @@ const emit = defineEmits(["close", "refresh"]);
 const photo = ref<any[]>([]);
 const fileTypes = ref(["image/jpeg", "image/png", "image/jpg"]);
 const kurir = ref({
+  kurir_id: "",
   status: "",
   // rating: null,
   user: {
@@ -29,6 +30,8 @@ const kurir = ref({
   },
 } as any); // atau define tipe kurir baru
 const formRef = ref();
+const myRef = ref("");
+myRef.value = "test"; // ✅ benar
 const avgRating = ref(0);
 
 
@@ -54,7 +57,8 @@ function getEdit() {
       console.log(data);
       // Pastikan struktur sesuai response dar i backend
       kurir.value = {
-        status: data.user.status || "nonaktif", // Tambahkan status,
+        kurir_id: data.kurir_id || "",
+        status: data.user.status || "",
         // status: data.user?.status || "Nonaktif", // Tambahkan status,
         user: {
           name: data.user?.name || "",
@@ -77,10 +81,9 @@ function getEdit() {
       unblock(document.getElementById("form-kurir"));
     });
 }
-
 function submit() {
   const formData = new FormData();
-  // formData.append("kurir_id", kurir.value.kurir_id);
+  formData.append("kurir_id", kurir.value.kurir_id);
   formData.append("name", kurir.value.user.name);
   formData.append("email", kurir.value.user.email);
   formData.append("phone", kurir.value.user.phone);
@@ -99,8 +102,8 @@ function submit() {
 
   block(document.getElementById("form-kurir"));
   axios({
-    method: "post",
-    url: props.selected ? `/kurir/${props.selected}` : "/kurir/store",
+    method: "put",
+    url: props.selected ? `/kurir/${props.selected}` : "/kurir/update   ~",
     data: formData,
     headers: {
       "Content-Type": "multipart/form-data",
@@ -120,6 +123,7 @@ function submit() {
       unblock(document.getElementById("form-kurir"));
     });
 }
+
 
 // onMounted(async () => {
 //   const { data } = await axios.get('/kurir/ringkasan');
@@ -143,15 +147,15 @@ watch(
 
 
 <template>
-  <!-- <VForm class="form card mb-10" @submit="submit" :validation-schema="formSchema" id="form-kurir" ref="formRef"> -->
-    <VForm 
+  <VForm class="form card mb-10" @submit="submit" :validation-schema="formSchema" id="form-kurir" ref="formRef">
+    <!-- <VForm 
   class="form card mb-10" 
   :validation-schema="formSchema" 
   id="form-kurir" 
   ref="formRef" 
   v-slot="{ handleSubmit }"
->
-  <form @submit="handleSubmit(submit)">
+> -->
+  <!-- <form @submit="submit"> -->
     <div class="card-header align-items-center">
       <h2 class="mb-0">{{ selected ? "Edit" : "Tambah" }} Kurir</h2>
       <button type="button" class="btn btn-sm btn-light-danger ms-auto" @click="emit('close')">
@@ -206,6 +210,6 @@ watch(
     <div class="card-footer d-flex">
       <button type="submit" class="btn btn-primary btn-sm ms-auto">Simpan</button>
     </div>
-      </form>
+      <!-- </form> -->
   </VForm>
 </template>

@@ -5,6 +5,7 @@ import Form from "./form.vue";
 import { createColumnHelper } from "@tanstack/vue-table";
 import type { kurir } from "@/types"; // Pastikan tipe data sesuai API
 import axios from "@/libs/axios";
+import Swal from "sweetalert2";
 
 const column = createColumnHelper<kurir>();
 const paginateRef = ref<any>(null);
@@ -16,25 +17,7 @@ const { delete: deleteKurir } = useDelete({
   onSuccess: () => paginateRef.value?.refetch(),
   onError: (error) => alert(`Gagal menghapus kurir: ${error.message}`),
 });
-// const toggleStatus = async (kurir_id: string) => {
-//   // const confirm = await Swal.fire({ ... });
 
-//   if (!confirm.isConfirmed) return;
-
-//   try {
-//     const response = await axios.put(`/kurir/${kurir_id}/toggle-status`);
-//     toast.success(response.data.message);
-
-//     // 🔽 Update langsung data lokal
-//     const kurir = paginateRef.value.items.find((k: kurir) => k.kurir_id === kurir_id);
-//     if (kurir) {
-//       kurir.status = kurir.status === "aktif" ? "nonaktif" : "aktif";
-//     }
-
-//   } catch (error) {
-//     toast.error("Gagal mengubah status");
-//   }
-// };
 const toggleStatus = async (kurir_id: string) => {
   const confirm = await Swal.fire({
     title: "Ubah Status?",

@@ -6,6 +6,7 @@ use App\Models\Kurir;
 use App\Http\Requests\StoreKurirRequest;
 use App\Http\Requests\UpdateKurirRequest;
 use App\Models\Transaksi;
+use App\Models\Transaksii;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -31,7 +32,7 @@ class KurirController extends Controller
 
         // Query untuk mengambil data kurir:
         $data = Kurir::with('user') // Ambil juga relasi ke tabel `user` (relasi user() harus sudah didefinisikan di model Kurir)
-            ->withCount('transaksi') // Hitung jumlah transaksi yang dimiliki tiap kurir, hasilnya jadi `transaksis_count`
+            ->withCount('transaksii') // Hitung jumlah transaksi yang dimiliki tiap kurir, hasilnya jadi `transaksis_count`
             ->select('kurir_id', 'user_id', 'status', 'rating') // Hanya ambil kolom tertentu dari tabel `kurirs`
             
             // Jika ada parameter `search`, filter data berdasarkan kurir_id, status, atau rating yang mirip dengan kata kunci pencarian
@@ -49,7 +50,7 @@ class KurirController extends Controller
         // Loop data untuk menambahkan properti no dan jumlah_transaksi ke tiap item
         foreach($data as $item){
             $item->no = $no++; // Nomor urut global (misalnya 11, 12, 13 untuk halaman 2)
-            $item->jumlah_transaksi = $item->transaksis_count; // Salin nilai dari hasil withCount ke properti yang lebih mudah digunakan
+            $item->jumlah_transaksii = $item->transaksii_count; // Salin nilai dari hasil withCount ke properti yang lebih mudah digunakan
         }
 
         // Kembalikan hasil data dalam format JSON
@@ -58,7 +59,7 @@ class KurirController extends Controller
 
 
 
-    public function transaksiCount()
+    public function transaksiiCount()
     {
         // Ambil user yang sedang login (dari auth)
         $user = auth()->user();
@@ -79,22 +80,22 @@ class KurirController extends Controller
         $kurirId = $kurir->kurir_id;
     
         // Hitung jumlah transaksi yang berhasil dikirim hari ini oleh kurir ini
-        $todayCount = Transaksi::where('kurir_id', $kurirId)
-            ->where('status', 'terkirim') // Hanya hitung yang statusnya "terkirim"
-            ->whereDate('waktu_terkirim', Carbon::today()) // Dan waktu_terkirim adalah hari ini
+        $todayCount = Transaksii::where('kurir_id', $kurirId)
+            ->where('status', 'selesai') // Hanya hitung yang statusnya "terkirim"
+            ->whereDate('waktu_selesai', Carbon::today()) // Dan waktu_terkirim adalah hari ini
             ->count();
     
         // Hitung jumlah transaksi yang berhasil dikirim kemarin
-        $yesterdayCount = Transaksi::where('kurir_id', $kurirId)
-            ->where('status', 'terkirim')
-            ->whereDate('waktu_terkirim', Carbon::yesterday()) // Dan waktu_terkirim adalah kemarin
+        $yesterdayCount = Transaksii::where('kurir_id', $kurirId)
+            ->where('status', 'selesai')
+            ->whereDate('waktu_selesai', Carbon::yesterday()) // Dan waktu_selesai adalah kemarin
             ->count();
     
         // Hitung jumlah transaksi yang berhasil dikirim dalam bulan ini
-        $monthCount = Transaksi::where('kurir_id', $kurirId)
-            ->where('status', 'terkirim')
-            ->whereMonth('waktu_terkirim', Carbon::now()->month) // Bulan sekarang
-            ->whereYear('waktu_terkirim', Carbon::now()->year)   // Tahun sekarang
+        $monthCount = Transaksii::where('kurir_id', $kurirId)
+            ->where('status', 'selesai')
+            ->whereMonth('waktu_selesai', Carbon::now()->month) // Bulan sekarang
+            ->whereYear('waktu_selesai', Carbon::now()->year)   // Tahun sekarang
             ->count();
     
         // Kembalikan hasil hitungan dalam bentuk JSON
@@ -107,7 +108,7 @@ class KurirController extends Controller
     
 
 
-    public function transaksiList(Request $request)
+    public function transaksiiList(Request $request)
     {
         // Ambil user yang sedang login
         $user = auth()->user();
@@ -138,56 +139,58 @@ class KurirController extends Controller
         $filter = $request->get('filter'); // nilai: hari_ini, kemarin, bulan_ini
 
         // Query awal: ambil transaksi milik kurir yang statusnya 'terkirim'
-        $query = Transaksi::where('kurir_id', $kurir->kurir_id)
-                    ->with('pengguna.user') // load relasi pengguna dan user-nya
-                    ->where('status', 'terkirim');
+        $query = Transaksii::where('kurir_id', $kurir->kurir_id)
+                    // ->with('pengguna.user') // load relasi pengguna dan user-nya
+                    ->where('status', 'selesai');
 
         // Filter berdasarkan tanggal, jika ada filter dari request
         if ($filter === 'kemarin') {
-            $query->whereDate('waktu_terkirim', Carbon::yesterday());
+            $query->whereDate('waktu_selesai', Carbon::yesterday());
         } elseif ($filter === 'hari_ini') {
-            $query->whereDate('waktu_terkirim', Carbon::today());
+            $query->whereDate('waktu_selesai', Carbon::today());
         } elseif ($filter === 'bulan_ini') {
-            $query->whereMonth('waktu_terkirim', Carbon::now()->month)
-                ->whereYear('waktu_terkirim', Carbon::now()->year);
+            $query->whereMonth('waktu_selesai', Carbon::now()->month)
+                ->whereYear('waktu_selesai', Carbon::now()->year);
         }
 
         // Ambil hasil transaksi setelah difilter dan diurutkan dari yang terbaru
-        $transaksi = $query->orderBy('waktu_terkirim', 'desc')
+        $transaksii = $query->orderBy('waktu_selesai', 'desc')
                         ->get([
-                            'id',
+                            // 'id',
+                            'no_resi',
                             'nama_barang',
                             'alamat_tujuan',
-                            'pengguna_id',
+                            // 'pengguna_id',
+                            'pengirim',
                             'penerima',
-                            'penilaian',
+                            'rating',
                             'status',
                             'waktu'
                         ]);
 
         // Hitung total transaksi yang dikirim hari ini oleh kurir
-        $todayCount = Transaksi::where('kurir_id', $kurir->kurir_id)
-                        ->where('status', 'terkirim')
-                        ->whereDate('waktu_terkirim', Carbon::today())
+        $todayCount = Transaksii::where('kurir_id', $kurir->kurir_id)
+                        ->where('status', 'selesai')
+                        ->whereDate('waktu_selesai', Carbon::today())
                         ->count();
 
         // Hitung total transaksi yang dikirim kemarin
-        $yesterdayCount = Transaksi::where('kurir_id', $kurir->kurir_id)
-                        ->where('status', 'terkirim')
-                        ->whereDate('waktu_terkirim', Carbon::yesterday())
+        $yesterdayCount = Transaksii::where('kurir_id', $kurir->kurir_id)
+                        ->where('status', 'selesai')
+                        ->whereDate('waktu_selesai', Carbon::yesterday())
                         ->count();
 
         // Hitung total transaksi yang dikirim bulan ini
-        $monthCount = Transaksi::where('kurir_id', $kurir->kurir_id)
-                        ->where('status', 'terkirim')
-                        ->whereMonth('waktu_terkirim', Carbon::now()->month)
-                        ->whereYear('waktu_terkirim', Carbon::now()->year)
+        $monthCount = Transaksii::where('kurir_id', $kurir->kurir_id)
+                        ->where('status', 'selesai')
+                        ->whereMonth('waktu_selesai', Carbon::now()->month)
+                        ->whereYear('waktu_selesai', Carbon::now()->year)
                         ->count();
 
         // Kembalikan data transaksi dan total count dalam response JSON
         return response()->json([
             'success' => true,
-            'data' => $transaksi,
+            'data' => $transaksii,
             'todayCount' => $todayCount,
             'yesterdayCount' => $yesterdayCount,
             'monthCount' => $monthCount

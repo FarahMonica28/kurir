@@ -12,7 +12,7 @@ export interface transaksii {
     biaya: number;            // Biaya pengiriman
     waktu: string;            // Waktu transaksi (format datetime)
     status: "menunggu"|"diambil kurir"| "dikurir" |"digudang"| "diproses" | "tiba digudang" | "dikirim" | "selesai";  // Status internal sistem
-    penilaian?: number | null;  // Penilaian opsional
+    rating?: number | null;  // Penilaian opsional
     komentar?: string | null;   // Komentar opsional
 
     asal_provinsi_id: {

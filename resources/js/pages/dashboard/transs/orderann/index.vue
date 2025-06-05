@@ -38,7 +38,7 @@ const handleUpdateStatus = async (id: string, currentStatus: string) => {
                 kurir_id: kurirId,
             });
 
-            Swal.fire("Berhasil", `Status diubah menjadi "${nextStatus}"`, "success");
+            Swal.fire("Berhasil", "Anda selesai mengantar paket", "success");
             refresh();
         } catch (error: any) {
             Swal.fire("Error", error.message || "Gagal mengubah status", "error");
@@ -47,7 +47,7 @@ const handleUpdateStatus = async (id: string, currentStatus: string) => {
 };
 const url = computed(() => {
     const params = new URLSearchParams();
-    ['menunggu', 'diambil kurir', 'digudang', 'selesai'].forEach(status => {
+    ['menunggu', 'diambil kurir', 'digudang','diproses', 'selesai'].forEach(status => {
         params.append('exclude_status[]', status);
     });
     return `/transaksii?${params.toString()}`;

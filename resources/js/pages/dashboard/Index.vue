@@ -6,12 +6,12 @@ import { watch } from 'vue';
 import Swal from 'sweetalert2';
 
 const User = ref({ name: "", role: "kurir" });
-const showTransaksi = ref(false);
+const showTransaksii = ref(false);
 const transaksiList = ref([]);
 const todayCount = ref(0);
 const yesterdayCount = ref(0);
 const monthCount = ref(0);
-const transaksiCount = ref(0);
+const transaksiiCount = ref(0);
 // const transaksiCount = ref({
 //   todayCount: 0,
 //   yesterdayCount: 0,
@@ -40,11 +40,11 @@ const getProfile = async () => {
 
   if (User.value.role === 'kurir') {
     try {
-      const res = await axios.get("/kurir/transaksi-count");
-      transaksiCount.value.today = res.data.today;
-      transaksiCount.value.yesterday = res.data.yesterday;
-      transaksiCount.value.month = res.data.month;
-      transaksiCount.value.custom = res.data.custom; // opsional jika digunakan
+      const res = await axios.get("/kurir/transaksii-count");
+      transaksiiCount.value.today = res.data.today;
+      transaksiiCount.value.yesterday = res.data.yesterday;
+      transaksiiCount.value.month = res.data.month;
+      transaksiiCount.value.custom = res.data.custom; // opsional jika digunakan
     } catch (error) {
       console.error("Gagal mengambil jumlah transaksi", error);
     }
@@ -66,14 +66,14 @@ const getProfile = async () => {
 const getTransaksiList = async (filter = null) => {
   // if (User.value.role === 'kurir') {
     try {
-      const res = await axios.get('/kurir/transaksi-list', {
+      const res = await axios.get('/kurir/transaksii-list', {
         params: { filter }  // kirim filter ke backend
       });
       transaksiList.value = res.data.data;
       yesterdayCount.value = res.data.yesterdayCount;
       todayCount.value = res.data.todayCount;
       monthCount.value = res.data.monthCount;
-      showTransaksi.value = true;
+      showTransaksii.value = true;
     }  catch (error) {
       if (error.response && error.response.status === 403) {
         Swal.fire({
@@ -95,7 +95,7 @@ const getTransaksiList = async (filter = null) => {
 
 
 const closeTransaksiList = () => {
-  showTransaksi.value = false;
+  showTransaksii.value = false;
 };
 
 
@@ -163,7 +163,7 @@ watch(() => store.user, (newUser) => {
 
 
     <!-- Tabel Transaksi -->
-    <div v-if="showTransaksi" class="mt-5">
+    <div v-if="showTransaksii" class="mt-5">
       <div class="flex justify-between items-center mb-3">
         <!-- <h4>Riwayat Order</h4> -->
         <h4>Riwayat Order {{ filterTypeLabel }}</h4>
@@ -172,27 +172,44 @@ watch(() => store.user, (newUser) => {
         <thead>
           <tr>
             <th>#</th>
-            <th>No Order</th>
+            <th>No Resi</th>
             <th>Nama Barang</th>
             <th>Alamat Tujuan</th>
             <th>Pengirim</th>
             <th>Penerima</th>
-            <th>Penilaian</th>
+            <th>Rating</th>
             <th>Status</th>
             <th>Waktu</th>
-          </tr>
+          </tr> 
         </thead>
         <tbody>
-          <tr v-for="(item, index) in transaksiList" :key="item.id">
+          <tr v-for="(item, index) in transaksiList" :key="item.no_resi">
             <td>{{ index + 1. }}</td>
-            <td>{{ item.id }}</td>
+            <td>{{ item.no_resi }}</td>
             <td>{{ item.nama_barang }}</td>
             <td>{{ item.alamat_tujuan }}</td>
-            <td>{{ item.pengguna.user.name }}</td>
+            <td>{{ item.pengirim }}</td>
             <td>{{ item.penerima }}</td>
+            <!-- <td>
+              <span v-if="item.rating" class="badge green">{{ item.rating }}</span>
+              <span v-else class="badge yellow">belum ada rating</span>
+            </td> -->
             <td>
-              <span v-if="item.penilaian" class="badge green">{{ item.penilaian }}</span>
-              <span v-else class="badge yellow">belum ada penilaian</span>
+              <template v-if="item.rating">
+                <span class="rating-stars">
+                  <span
+                    v-for="i in 5"
+                    :key="i"
+                    :class="i <= item.rating ? 'text-warning' : 'text-muted'"
+                    class="star"
+                  >
+                    ★
+                  </span>
+                </span>
+              </template>
+              <template v-else>
+                <span class="badge yellow">Belum ada rating</span>
+              </template>
             </td>
             <td>{{ item.status }}</td>
             <td>{{ item.waktu }}</td>
@@ -281,4 +298,17 @@ h3:hover {
 .btn-tutup:hover {
   background-color: gray;
 }
+.rating-stars .star {
+  font-size: 18px;
+  margin-right: 2px;
+}
+
+.text-warning {
+  color: gold;
+}
+
+.text-muted {
+  color: #ccc;
+}
+
 </style>

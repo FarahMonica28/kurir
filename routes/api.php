@@ -56,7 +56,9 @@ Route::get('/cities/{provinceId}', [TransaksiiController::class, 'getCities']);
 Route::post('/cost', [TransaksiiController::class, 'hitungOngkir']);
     // routes/api.php
 Route::put('/transaksii/{id}/antar', [TransaksiiController::class, 'antar']);
-Route::put('/transaksii/{id}/ubah-status', [TransaksiiController::class, 'ubahStatus']);
+Route::put('/transaksii/{id}/ambil', [TransaksiiController::class, 'ambil']);
+Route::post('/rating', action: [TransaksiiController::class, 'storePenilaian']);
+
 Route::get('/tracking/{no_resi}', [TrackingController::class, 'track']);
 // Route::get('/tracking/{no_resi}', [TrackingController::class, 'track'])->withoutMiddleware(['auth']);
 // Route::get('/tracking/{no_resi}', [TrackingController::class, 'show']);
@@ -92,9 +94,11 @@ Route::middleware(['auth', 'verified', 'json'])->group(function () {
 
     //kurir
     Route::middleware('can:kurir')->group(function () {
-        Route::get('kurir', [KurirController::class, 'get'])->withoutMiddleware('can:kurir');
+        // Route::get('kurir', [KurirController::class, 'get'])->withoutMiddleware('can:kurir');
+        Route::get('/get-kurir', [KurirController::class, 'get'])->withoutMiddleware('can:kurir');
         Route::post('kurir/store', [KurirController::class, 'store']);
         Route::post('kurir', [KurirController::class, 'index']);
+        Route::put('/kurir-update', [KurirController::class, 'update']);
         // routes/api.php
         // Route::get('/kurir', [KurirController::class, 'profile'])->middleware('auth:sanctum');
         // Route::get('/kurir/list', [KurirController::class, 'list']);
@@ -102,8 +106,8 @@ Route::middleware(['auth', 'verified', 'json'])->group(function () {
         Route::put('/kurir/{kurir_id}/toggle-status', [KurirController::class, 'toggleStatus']);
         Route::put('/kurir/{kurir_id}', [KurirController::class, 'updateKurir']);
         Route::put('/transaksi/{transaksi_id}/status', [KurirController::class, 'updateStatusTransaksi']);
-        Route::get('/kurir/transaksi-count', [KurirController::class, 'transaksiCount']);
-        Route::middleware('can:kurir')->get('/kurir/transaksi-list', [KurirController::class, 'transaksiList']);
+        Route::get('/kurir/transaksii-count', [KurirController::class, 'transaksiiCount']);
+        Route::middleware('can:kurir')->get('/kurir/transaksii-list', [KurirController::class, 'transaksiiList']);
         Route::apiResource('kurir', KurirController::class)
         ->except(['index', 'store']);
     });
@@ -198,7 +202,7 @@ Route::middleware(['auth', 'verified', 'json'])->group(function () {
         Route::post('transaksi/store', [TransaksiController::class, 'store']);
         // Menampilkan list transaksi (misalnya untuk paginasi)
         Route::put('/transaksi/update-status/{id}', [TransaksiController::class, 'updateStatus']);
-        Route::post('/transaksi/storer', [TransaksiController::class, 'storePenilaian']);
+        Route::post('/transaksi/storer', action: [TransaksiController::class, 'storePenilaian']);
         // Route::middleware('auth')->group(function () {
         //     // Route::put('/transaksi/{transaksi}', [TransaksiController::class, 'update']);
         // });

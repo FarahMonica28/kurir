@@ -19,10 +19,31 @@ const columns = [
     column.accessor("no_resi", { header: "No Resi" }),
     column.accessor("nama_barang", { header: "Nama Barang" }),
     column.accessor("penerima", { header: "Nama Penerima" }),
+    column.accessor("pengirim", { header: "Nama Pengirim" }),
     column.accessor("no_hp_penerima", { header: "No Hp Penerima" }),
     column.accessor("alamat_tujuan", { header: "Alamat Tujuan" }),
     column.accessor("kurir.user.name", { header: "Nama Kurir" }),
-    column.accessor("penilaian", { header: "penilaian" }),
+    column.accessor("rating", {
+        header: "Rating",
+        cell: (cell) => {
+            const rating = parseInt(cell.getValue());
+            const isRated = !isNaN(rating);
+
+            const stars = isRated
+                ? "★".repeat(rating) + "☆".repeat(5 - rating)
+                : "Belum ada rating";
+
+            return h(
+                "span",
+                {
+                    class: isRated ? "badge bg-succes rating-stars" : "badge bg-warning text-dark",
+                    style: isRated ? { color: "gold", fontSize: "16px" } : {},
+                },
+                stars
+            );
+        }
+    }),
+
     column.accessor("status", {
         header: "Status",
         cell: (cell) => {
@@ -68,7 +89,7 @@ watch(openForm, (val) => {
 
     <div class="card">
         <div class="card-header align-items-center">
-            <h2 class="mb-0">List Orderan</h2>
+            <h2 class="mb-0">Riwayat Orderan</h2>
         </div>
         <div class="card-body">
             <!-- <paginate

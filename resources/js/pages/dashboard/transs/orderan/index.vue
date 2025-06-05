@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { h, ref, watch } from "vue";
+import { computed, h, ref, watch } from "vue";
 import { useDelete } from "@/libs/hooks";
 import Form from "./Form.vue";
 import { createColumnHelper } from "@tanstack/vue-table";
@@ -28,10 +28,10 @@ const columns = [
         header: "Nama Barang",
     }),
     column.accessor("tujuan_provinsi.name", {
-        header: "Tujuan Provinsi",
+        header: "Provinsi Tujuan",
     }),
     column.accessor("tujuan_kota.name", {
-        header: "Tujuan Kota",
+        header: "Kota Tujuan",
     }),
     column.accessor("alamat_asal", {
         header: "Alamat Pengmbilan barang",
@@ -54,7 +54,7 @@ const columns = [
                                     : status === "diambil kurir"
                                         ? "badge bg-info text-dark fw-bold"
                                         : status === "menunggu"
-                                            ? "badge bg-secondary text-light fw-bold"
+                                            ? "badge bg-dark text-white fw-bold" 
                                             : "badge bg-secondary fw-bold";
 
 
@@ -86,7 +86,7 @@ const columns = [
                 buttonText = "Digudang";
                 nextStatus = "digudang";
                 swalTitle = "Kirim ke Gudang";
-                swalText = "Apakah Anda sudah mengirimkan barang ke gudang?";
+                swalText = "Apakah Anda sudah mengirim barang ke gudang?";
             } else if (status === "digudang") {
                 return h("span", { class: "text-muted fst-italic" }, "Menunggu dikirim");
             } else {
@@ -105,14 +105,14 @@ const columns = [
 
                 if (result.isConfirmed) {
                     try {
-                        await axios.put(`/transaksii/${cell.getValue()}/ubah-status`, {
+                        await axios.put(`/transaksii/${cell.getValue()}/ambil`, {
                             status: nextStatus,
                         });
                         refresh(); // refresh data table
 
                         await Swal.fire({
                             title: "Berhasil!",
-                            text: `Status berhasil diubah menjadi "${nextStatus}".`,
+                            // text: `Status berhasil diubah menjadi "${nextStatus}".`,
                             icon: "success",
                             timer: 1500,
                             showConfirmButton: false,
@@ -141,6 +141,14 @@ const columns = [
     }),
 
 ];
+const url = computed(() => {
+    const params = new URLSearchParams();
+    ['digudang', 'tiba digudang', 'diproses', 'dikirim', 'selesai'].forEach(status => {
+        params.append('exclude_status[]', status);
+    });
+    return `/transaksii?${params.toString()}`;
+});
+
 
 const refresh = () => paginateRef.value.refetch();
 
@@ -161,7 +169,7 @@ watch(openForm, (val) => {
         </div>
         <div class="card-body">
             <!-- <paginate ref="paginateRef" id="table-transaksi" url="/transaksi" :columns="columns"></paginate> -->
-            <paginate ref="paginateRef" id="table-transaksii" url="/transaksii?exclude_status=selesai"
+            <paginate ref="paginateRef" id="table-transaksii" :url=url
                 :columns="columns" />
 
         </div>

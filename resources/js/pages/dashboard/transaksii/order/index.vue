@@ -11,13 +11,13 @@ const paginateRef = ref<any>(null);
 const selected = ref<string>("");
 const openForm = ref<boolean>(false);
 
-const detailData = ref<transaksii | null>(null);
 
 const showRincian = (data: transaksii) => {
     console.log("rincian");
     detailData.value = data;
 };
 
+const detailData = ref<transaksii | null>(null);
 const closeDetail = () => {
     detailData.value = null;
 };
@@ -69,7 +69,7 @@ const columns = [
                                     : status === "diambil kurir"
                                         ? "badge bg-info text-dark fw-bold"
                                         : status === "menunggu"
-                                            ? "badge bg-secondary text-light fw-bold"
+                                            ? "badge bg-dark text-white fw-bold"
                                             : "badge bg-secondary fw-bold";
 
 
@@ -198,7 +198,14 @@ watch(openForm, (val) => {
 
                     <div class="row">
                         <div class="col-md-12">
-                            <p><strong>Penilaian:</strong> {{ detailData.penilaian || 'Belum ada penilaian' }}
+                            <!-- <p><strong>Penilaian:</strong> {{ detailData.rating || 'Belum ada rating' }}
+                            </p> -->
+                            <p><strong>Penilaian:</strong>
+                                <span v-if="detailData.rating" class="rating-stars">
+                                    {{ "★".repeat(parseInt(detailData.rating)) + "☆".repeat(5 -
+                                        parseInt(detailData.rating)) }}
+                                </span>
+                                <span v-else>Belum ada rating</span>
                             </p>
                             <p><strong>Komentar:</strong> {{ detailData.komentar || 'Belum ada komentar' }}</p>
                         </div>

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { h, ref, watch } from "vue";
 import { useDelete } from "@/libs/hooks";
-// import Form from "./Form.vue";
+import Form from "./Form.vue";
 import { createColumnHelper } from "@tanstack/vue-table";
 import type { transaksii } from "@/types";
 import Swal from "sweetalert2";
@@ -22,27 +22,27 @@ const closeDetail = () => {
     detailData.value = null;
 };
 function showKurirDetail(kurir) {
-  if (!kurir || !kurir.user) {
-    Swal.fire('Data tidak tersedia', 'Kurir belum ditugaskan', 'warning');
-    return;
-  }
+    if (!kurir || !kurir.user) {
+        Swal.fire('Data tidak tersedia', 'Kurir belum ditugaskan', 'warning');
+        return;
+    }
 
-  Swal.fire({
-    title: kurir.user.name,
-    html: `
-      <img src="${kurir.user.photo  ? "/storage/" + kurir.user.photo : "/default-avatar.png"}" alt="Foto Kurir" class="rounded-circle" width="110" height="110">
+    Swal.fire({
+        title: kurir.user.name,
+        html: `
+      <img src="${kurir.user.photo ? "/storage/" + kurir.user.photo : "/default-avatar.png"}" alt="Foto Kurir" class="rounded-circle" width="110" height="110">
      <div style="margin-top: 15px;">
       <p><strong>Email:</strong> ${kurir.user.email}</p>
       <p><strong>Telepon:</strong> ${kurir.user.phone}</p>`,
-      showCloseButton: true,
-  });
+        showCloseButton: true,
+    });
 }
 
 const columns = [
     column.accessor("no", {
         header: "#",
     }),
-    column.accessor("pengguna.name", {
+    column.accessor("pengirim", {
         header: "Pengirim",
     }),
     column.accessor("nama_barang", {
@@ -50,6 +50,44 @@ const columns = [
     }),
     column.accessor("no_resi", {
         header: " No Resi",
+    }),
+    column.accessor("id", {
+        header: "Rating",
+        cell: (cell) => {
+            const transaksii = cell.row.original;
+            const isRated = !!transaksii.rating;
+
+            return h(
+                "button",
+                {
+                    // class: `${isRated ? "text-white bg-success rounded px-2 py-1" : "bg-warning text-dark rounded px-2 py-1 border-0 fw-normal"}`,
+                    class: `${isRated ? "text-white rounded px-2 py-1" : "bg-warning text-dark rounded px-2 py-1 border-0 fw-normal"}`,
+                    style: isRated ? { fontSize: "13px" } : { fontSize: "12px" },
+                    disabled: isRated,
+                    onClick: () => {
+                        if (!isRated) {
+                            selected.value = cell.getValue();
+                            openForm.value = true;
+                        }
+                    },
+                },
+                [
+                    h(
+                        "span",
+                        { class: isRated ? "rating-stars" : "" },
+                        isRated
+                            ? "★".repeat(parseInt(transaksii.rating)) + "☆".repeat(5 - parseInt(transaksii.rating))
+                            : "Beri Rating"
+                    )
+                ]
+            );
+        }
+    }),
+
+
+
+    column.accessor("waktu", {
+        header: "Waktu Order",
     }),
     column.accessor("status", {
         header: "Status",
@@ -77,9 +115,6 @@ const columns = [
         },
     }),
 
-    column.accessor("waktu", {
-        header: "Waktu Order",
-    }),
     column.display({
         id: "rincian",
         header: "Aksi",
@@ -192,8 +227,17 @@ watch(openForm, (val) => {
 
                     <div class="row">
                         <div class="col-md-12">
-                            <p><strong>Penilaian:</strong> {{ detailData.penilaian || 'Belum ada penilaian' }}
+                            <!-- <p><strong>Penilaian:</strong> {{ detailData.rating || 'Belum ada rating' }}
+                            </p> -->
+                            <p><strong>Penilaian:</strong>
+                                <span v-if="detailData.rating" class="rating-stars">
+                                    {{ "★".repeat(parseInt(detailData.rating)) + "☆".repeat(5 -
+                                        parseInt(detailData.rating)) }}
+                                </span>
+                                <span v-else>Belum ada rating</span>
                             </p>
+
+
                             <p><strong>Komentar:</strong> {{ detailData.komentar || 'Belum ada komentar' }}</p>
                         </div>
                     </div>
@@ -203,3 +247,10 @@ watch(openForm, (val) => {
         </div>
     </div>
 </template>
+<style>
+.rating-stars {
+    color:rgb(255, 255, 46);
+    font-size: 1.2rem;
+    letter-spacing: 2px;
+}
+</style>

@@ -165,7 +165,7 @@ class TransaksiiController extends Controller
             'alamat_asal' => 'required|string',
 
             'waktu' => 'nullable|date|before_or_equal:now',
-            'penilaian' => 'nullable|integer|min:1|max:5',
+            'rating' => 'nullable|integer|min:1|max:5',
             'status' => 'nullable|string',
             // 'status' => 'nullable|in:menunggu,diproses,dikirim,selesai', 
             'komentar' => 'nullable|string',
@@ -182,7 +182,7 @@ class TransaksiiController extends Controller
         // $kurir = auth()->user()->kurir;
         // Simpan transaksii baru
         Transaksii::create([
-            'no_resi' => 'TRX-' . strtoupper(uniqid()),
+            'no_resi' => 'ABC-' . strtoupper(uniqid()),
             'nama_barang' => $request->nama_barang,
             'berat_barang' => $request->berat_barang, // pastikan field DB kamu memang 'berat_barat'
             'alamat_asal' => $request->alamat_asal,
@@ -194,7 +194,7 @@ class TransaksiiController extends Controller
             'ekspedisi' => $request->ekspedisi,
             'layanan' => $request->layanan,
             'biaya' => $request->biaya,
-            'penilaian' => $request->penilaian,
+            'rating' => $request->rating,
             'komentar' => $request->komentar,
             'waktu' => now()->format('Y-m-d H:i:s'),
             // 'pengguna_id' => $pengguna->pengguna_id,
@@ -212,73 +212,34 @@ class TransaksiiController extends Controller
         ]);
     }
 
-        public function update(Request $request, $id)
+    public function storePenilaian(Request $request)
     {
-        // Validasi input yang diterima dari request
-        // Memastikan bahwa status, jarak, dan biaya memiliki format yang benar
+        // Validasi input dari request
+        // - 'id' bersifat nullable, harus berupa integer dan ada di tabel transaksi
+        // - 'rating' wajib diisi dan harus berupa string
+        // - 'komentar' bersifat nullable dan harus berupa string jika ada
         $request->validate([
-            'status' => 'required|string', // status wajib diisi dan harus berupa string
+            'id' => 'nullable|integer|exists:transaksii,id', // Validasi id transaksi, integer dan harus ada di database
+            'rating' => 'required|string', // Penilaian wajib diisi dan berupa string
+            'komentar' => 'nullable|string', // Komentar opsional, jika ada harus berupa string
         ]);
     
-        // Mencari transaksii berdasarkan ID yang diberikan
-        // Jika transaksii tidak ditemukan, maka akan menghasilkan error 404
-        $transaksii = Transaksii::where('id', $id)->firstOrFail();
-        
-        // Mendapatkan data pengguna yang sedang login
-        // $user = auth()->user();
-
-        // Mendapatkan ID pengguna dari data user, jika ada
-        // $penggunaId = $user->pengguna->pengguna_id ?? null;
-    
-        // Mengatur waktu berdasarkan status transaksii yang baru
-        // Tergantung pada status yang diterima, waktu yang sesuai akan diset
-        switch ($request->status) {
-            case 'diambil kurir':
-                $transaksii->waktu_diambil = now(); // Set waktu penjemputan barang
-                break;
-            case 'dikurir':
-                $transaksii->waktu_dikurir = now(); // Set waktu penjemputan barang
-                break;
-            case 'digudang':
-                $transaksii->waktu_digudang = now(); // Set waktu penjemputan barang
-                break;
-            case 'diproses':
-                $transaksii->waktu_proses = now(); // Set waktu penjemputan barang
-                break;
-            case 'tiba digudang':
-                $transaksii->waktu_tiba = now(); // Set waktu penjemputan barang
-                break;
-            case 'dikirim':
-                $transaksii->waktu_kirim = now(); // Set waktu proses pengiriman
-                break;
-            case 'selesai':
-                $transaksii->waktu_selesai = now(); // Set waktu barang terkirim
-                break;
+        // Mencari transaksi berdasarkan ID yang diterima dari request
+        $transaksii = Transaksii::find($request->id);
+        // Jika transaksii tidak ditemukan, mengembalikan response 404 dengan pesan error
+        if (!$transaksii) {
+            return response()->json(['message' => 'Transaksi tidak ditemukan'], 404);
         }
     
-        // Update penilaian dan komentar berdasarkan input yang diterima dari request
-        $transaksii->penilaian = $request->penilaian;
+        // Menyimpan rating dan komentar yang diterima dari request ke dalam transaksii
+        $transaksii->rating = $request->rating;
         $transaksii->komentar = $request->komentar;
-    
-        // Mendapatkan waktu baru dengan format yang diinginkan untuk status transaksii
-        $waktuBaru = now()->format('d-m-Y H:i:s');
-    
-        // Membuat string status yang berisi status transaksii dan waktu terbaru
-        $statusString = $request->status . ' (' . $waktuBaru . ')';
-    
-        // Update transaksii dengan status baru, jarak, biaya, dan kurir_id (yang dipilih pada request)
-        $transaksii->update([
-            'status' => $request->status,
-        ]);
-    
-        // Simpan perubahan transaksii yang sudah diupdate
+        
+        // Menyimpan perubahan ke dalam database
         $transaksii->save();
     
-        // Mengembalikan response sukses dengan status dan pesan konfirmasi
-        return response()->json([
-            'message' => 'Status berhasil diperbarui', // Pesan sukses
-            'status' => $transaksii->status,  // Status terbaru transaksii
-        ]);
+        // Mengembalikan response sukses setelah rating berhasil disimpan
+        return response()->json(['message' => 'Penilaian disimpan.']);
     }
     
     
@@ -325,7 +286,7 @@ public function antar(Request $request, $id)
         return response()->json(['message' => 'Status berhasil diperbarui']);
     }
 
-    public function ubahStatus(Request $request, $id)
+    public function ambil(Request $request, $id)
 {
     $request->validate([
         'status' => 'required|string',

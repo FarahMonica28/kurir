@@ -1,5 +1,7 @@
 export interface kurir {
-    kurir_id?: number;
+    kurir_id: {
+        id: number,
+        name: string};
     name: string;
     email: string;
     phone: string;

@@ -124,7 +124,7 @@
     <h2 class="text-xl font-semibold mb-4 mt-8">Lacak Pengiriman</h2>
     <div class="mb-4" id="no">
       <h3><label for="noResi" class="block mb-1 mt-6">Nomor Resi :</label>
-      <input v-model="noResi" id="noResi" type="text" class="form-input w-full border rounded" placeholder="Contoh: TRX-ABC123" /></h3>
+      <input v-model="noResi" id="noResi" type="text" class="form-input w-full border rounded" placeholder="Contoh: ABC-123456" /></h3>
     </div>
 
     <button class="px-4 py-2 rounded" id="lacak" @click="trackResi" :disabled="loading">
@@ -160,7 +160,7 @@
             <div class="dot"></div>
             <div class="content">
               <div class="time">{{ data.waktu_diambil.slice(11, 16) }}</div>
-              <div class="desc">Kurir sedang menuju ke rumahmu ({{ data.alamat_asal }})</div>
+              <div class="desc">Kurir sedang menuju ke rumahmu {{ data.alamat_asal }}</div>
             </div>
           </div>
         </div>
@@ -211,7 +211,7 @@
       </div>
 
       <!-- tiba digudang -->
-      <div v-if="data.waktu_proses" class="tracking-header">
+      <div v-if="data.waktu_tiba" class="tracking-header">
         <p class="tracking-date">{{ formatDate(data.waktu_tiba) }}</p>
         <div class="tracking-timeline mt-6">
           <div class="tracking-item">
@@ -234,7 +234,7 @@
             <div class="dot"></div>
             <div class="content">
               <div class="time">{{ data.waktu_kirim.slice(11, 16) }}</div>
-              <div class="desc">Paket sedang dikirim ke alamat tujuan ({{ data.alamat_tujuan }})</div>
+              <div class="desc">Paket menuju ke alamat tujuan {{ data.alamat_tujuan }}</div>
             </div>
           </div>
         </div>
