@@ -106,8 +106,10 @@ Route::middleware(['auth', 'verified', 'json'])->group(function () {
         Route::put('/kurir/{kurir_id}/toggle-status', [KurirController::class, 'toggleStatus']);
         Route::put('/kurir/{kurir_id}', [KurirController::class, 'updateKurir']);
         Route::put('/transaksi/{transaksi_id}/status', [KurirController::class, 'updateStatusTransaksi']);
+        Route::put('/kurir/{id}/update-rating', [KurirController::class, 'updateRating']);
         Route::get('/kurir/transaksii-count', [KurirController::class, 'transaksiiCount']);
         Route::middleware('can:kurir')->get('/kurir/transaksii-list', [KurirController::class, 'transaksiiList']);
+        Route::get('/rating/{id}', [KurirController::class, 'show']);
         Route::apiResource('kurir', KurirController::class)
         ->except(['index', 'store']);
     });

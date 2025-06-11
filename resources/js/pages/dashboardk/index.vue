@@ -62,6 +62,14 @@ const currentTab = ref<'dashboard' | 'ongkir' | 'order' | 'orde' | 'riwayat' | '
           </button>
         </div>
 
+        <!-- Tambahkan bagian login di kanan -->
+        <ul class="navbar-nav ms-auto"> <!-- gunakan ml-auto untuk Bootstrap 4 -->
+          <li class="nav-item">
+            <router-link to="/" class="nav-link">
+              Login
+            </router-link>
+          </li>
+        </ul>
         <!-- Tombol Logout
         <button class="btn btn-light text-primary fw-semibold" @click="handleLogout">
           Logout
@@ -88,13 +96,41 @@ const currentTab = ref<'dashboard' | 'ongkir' | 'order' | 'orde' | 'riwayat' | '
 .btn-outline-light.fw-bold {
   border: 2px solid white;
 }
-body{
+
+body {
   background-color: white;
 }
+
 .btn.fw-bold {
   font-weight: bold;
 }
+
 /* button{
    background-color: blue; 
 } */
+ .navbar {
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+/* Style untuk tombol Login */
+.navbar .nav-link {
+  font-weight: 500;
+  color: #fff;
+}
+
+.navbar .nav-link:hover {
+  color: #ddd;
+}
+
+/* Jika ingin tombol mirip btn */
+.navbar .nav-link.btn-login {
+  padding: 6px 12px;
+  border: 1px solid #fff;
+  border-radius: 4px;
+}
+
+.navbar .nav-link.btn-login:hover {
+  background-color: rgba(255,255,255,0.2);
+}
 </style>

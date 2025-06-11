@@ -26,6 +26,7 @@ import { vue3Debounce } from "vue-debounce";
 import { VueQueryPlugin, QueryClient } from "@tanstack/vue-query";
 import { useThemeStore } from "./stores/theme";
 import Vue3Toastify, { type ToastContainerOptions } from "vue3-toastify";
+import vue3StarRatings from 'vue3-star-ratings';
 import "vue3-toastify/dist/index.css";
 
 import "@/core/plugins/prismjs";
@@ -57,6 +58,7 @@ app.component("file-upload", FileUpload);
 app.component("select2", Select2);
 app.component("paginate", Paginate);
 app.component("vswitch", Switch);
+app.component("Vue3StarRatings",vue3StarRatings)
 
 const queryClient = new QueryClient({
     defaultOptions: {

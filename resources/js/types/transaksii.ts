@@ -14,6 +14,7 @@ export interface transaksii {
     status: "menunggu"|"diambil kurir"| "dikurir" |"digudang"| "diproses" | "tiba digudang" | "dikirim" | "selesai";  // Status internal sistem
     rating?: number | null;  // Penilaian opsional
     komentar?: string | null;   // Komentar opsional
+    pernah_digudang: number;
 
     asal_provinsi_id: {
         id: number;

@@ -32,6 +32,22 @@ const form = ref({
   photo: ""
 });
 
+const avgRating = ref(0);
+
+onMounted(async () => {
+  await getProfile();
+  if (kurir.value.kurir_id) {
+    try {
+      const res = await axios.put(`/kurir/${kurir.value.kurir_id}/update-rating`);
+      avgRating.value = parseFloat(res.data.rating) || 0;
+    } catch (error) {
+      console.error("Gagal mengambil rating", error);
+    }
+  }
+});
+
+
+
 const column = createColumnHelper<kurir>();
 const columns = [
   column.accessor("kurir_id", {
@@ -89,6 +105,7 @@ const getProfile = async () => {
     photo: store.user.photo ? "/storage/" + store.user.photo : "/default-avatar.png",
     status: store.user.kurir?.status,
     rating: 0,
+    // avgRating:0.0,
   };
 };
 
@@ -105,12 +122,8 @@ watch(openForm, (val) => {
 </script>
 
 <template>
-  <Form
-    :selected="selectedId"
-    v-if="openForm"
-    @close="openForm = false"
-    @refresh="() => { getProfile(); refresh(); }"
-  />
+  <Form :selected="selectedId" v-if="openForm" @close="openForm = false"
+    @refresh="() => { getProfile(); refresh(); }" />
 
   <div class="card">
     <div class="card-header text-center">
@@ -128,22 +141,26 @@ watch(openForm, (val) => {
           <p><strong>Nama :</strong> {{ kurir.name }}</p>
           <p><strong>Email :</strong> {{ kurir.email }}</p>
           <p><strong>Nomor Telepon :</strong> {{ kurir.phone }}</p>
-
           <p>
             <strong>Status : </strong>
-            <span
-              :class="{
-                'text-success': kurir.status === 'aktif',
-                'text-danger': kurir.status === 'nonaktif',
-                'text-warning': kurir.status === 'sedang menerima orderan'
-              }"
-              role="button"
-              class="cursor-pointer"
-              @click="kurir.status !== 'sedang menerima orderan' && toggleStatus(kurir.kurir_id)"
-            >
+            <span :class="{
+              'text-success': kurir.status === 'aktif',
+              'text-danger': kurir.status === 'nonaktif',
+              'text-warning': kurir.status === 'sedang menerima orderan'
+            }" role="button" class="cursor-pointer"
+              @click="kurir.status !== 'sedang menerima orderan' && toggleStatus(kurir.kurir_id)">
               {{ kurir.status === 'sedang menerima orderan' ? 'Sedang Menerima Orderan' : kurir.status }}
             </span>
           </p>
+          <div class="rating-display mt-3">
+            <p>
+              <strong>Rating Kurir:</strong>
+              <!-- <span class="ms-2">{{ avgRating.toFixed(1) }}/5</span> -->
+              <Vue3StarRatings v-model="avgRating" :numberOfStars="5" :starSize="15" starColor="#ff9800" class="mt-1"
+                inactiveColor="#ddd" :disableClick="true" />
+            </p>
+          </div>
+
         </div>
       </div>
 
@@ -160,9 +177,11 @@ watch(openForm, (val) => {
 .text-muted {
   color: #376186;
 }
+
 img {
   margin-left: 0%;
 }
+
 .nama {
   margin-top: -20%;
 }

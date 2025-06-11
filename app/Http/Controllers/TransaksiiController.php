@@ -237,6 +237,9 @@ class TransaksiiController extends Controller
         
         // Menyimpan perubahan ke dalam database
         $transaksii->save();
+
+        // Update rating kurir
+        app(KurirController::class)->updateRating($transaksii->kurir_id);
     
         // Mengembalikan response sukses setelah rating berhasil disimpan
         return response()->json(['message' => 'Penilaian disimpan.']);
@@ -244,11 +247,19 @@ class TransaksiiController extends Controller
     
     
     // TransaksiController.php
-public function antar(Request $request, $id)
+    public function antar(Request $request, $id)
     {
         $transaksii = Transaksii::findOrFail($id);
         
+        $statusBaru = $request->status;
 
+        // Update status
+        $transaksii->status = $statusBaru;
+
+        // Jika statusnya digudang, set kolom pernah_digudang = true
+        if ($statusBaru === 'digudang') {
+            $transaksii->pernah_digudang = true;
+        }
         if (!$transaksii->kurir_id) {
         $transaksii->kurir_id = $request->kurir_id;
         }
@@ -287,51 +298,60 @@ public function antar(Request $request, $id)
     }
 
     public function ambil(Request $request, $id)
-{
-    $request->validate([
-        'status' => 'required|string',
-    ]);
-    
+    {
+        $request->validate([
+            'status' => 'required|string',
+        ]);
+        
 
-    $transaksii = Transaksii::findOrFail($id);//
-    
-    $user = auth()->user();
+        $transaksii = Transaksii::findOrFail($id);//
+        $statusBaru = $request->status;
 
-    switch ($request->status) {
-        case 'diambil kurir':
-            $transaksii->waktu_diambil = now();
-            break;
-        case 'dikurir':
-            $transaksii->waktu_dikurir = now();
-            break;
-        case 'digudang':
-            $transaksii->waktu_digudang = now();
-            break;
-        case 'diproses':
-            $transaksii->waktu_proses = now();
-            break;
-        case 'tiba digudang':
-            $transaksii->waktu_tiba = now();
-            break;
-        case 'dikirim':
-            $transaksii->waktu_kirim = now();
-            break;
-        case 'selesai':
-            $transaksii->waktu_selesai = now();
-            break;
+        // Update status
+        $transaksii->status = $statusBaru;
+
+        // Jika statusnya digudang, set kolom pernah_digudang = true
+        if ($statusBaru === 'digudang') {
+            $transaksii->pernah_digudang = true;
+        }
+        
+        $user = auth()->user();
+
+        switch ($request->status) {
+            case 'diambil kurir':
+                $transaksii->waktu_diambil = now();
+                break;
+            case 'dikurir':
+                $transaksii->waktu_dikurir = now();
+                break;
+            case 'digudang':
+                $transaksii->waktu_digudang = now();
+                break;
+            case 'diproses':
+                $transaksii->waktu_proses = now();
+                break;
+            case 'tiba digudang':
+                $transaksii->waktu_tiba = now();
+                break;
+            case 'dikirim':
+                $transaksii->waktu_kirim = now();
+                break;
+            case 'selesai':
+                $transaksii->waktu_selesai = now();
+                break;
+        }
+        
+        if ($transaksii->status !== 'digudang' && $request->status === 'digudang') {
+            $transaksii->pernah_digudang = true;
+        }
+        $transaksii->status = $request->status;//
+        $transaksii->save();//
+
+        return response()->json([
+            'message' => 'Status berhasil diubah',
+            'status' => $transaksii->status,
+        ]);
     }
-    
-    if ($transaksii->status !== 'digudang' && $request->status === 'digudang') {
-        $transaksii->pernah_digudang = true;
-    }
-    $transaksii->status = $request->status;//
-    $transaksii->save();//
-
-    return response()->json([
-        'message' => 'Status berhasil diubah',
-        'status' => $transaksii->status,
-    ]);
-}
 
 
 

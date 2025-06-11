@@ -195,6 +195,15 @@ const routes: Array<RouteRecordRaw> = [
                     // breadcrumbs: ["Halaman", "Akun dan Profl"],
                 },
             },
+            {
+                path: "/dashboard/gudang/riwyat",
+                name: "dashboard.gudang.riwayat",
+                component: () => import("@/pages/dashboard/gudang/riwayat.vue"),
+                meta: {
+                    // pageTitle: "",
+                    // breadcrumbs: ["Halaman", "Akun dan Profl"],
+                },
+            },
 
 
             //kurir

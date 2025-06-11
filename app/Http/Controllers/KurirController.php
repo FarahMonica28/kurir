@@ -198,7 +198,18 @@ class KurirController extends Controller
     }
 
 
+    // public function show($kurir_id)
+    // {
+    //     $kurir = Kurir::findOrFail($kurir_id);
+    //     $avg = DB::table('transaksii')
+    //             ->where('kurir_id', $kurir_id)
+    //             ->avg('rating');
 
+    //     return response()->json([
+    //         'kurir'     => $kurir,
+    //         'avg_rating' => round($avg ?: 0, 2),
+    //     ]);
+    // }
 
     /**
      * Store a newly created kurir
@@ -367,26 +378,47 @@ class KurirController extends Controller
         ]);
     }
 
-    public function destroy(Kurir $kurir)
+    public function updateRating($kurir_id)
     {
-        // Hapus foto dari storage jika user memiliki foto
-        if ($kurir->user && $kurir->user->photo) {
-            Storage::disk('public')->delete($kurir->user->photo);
-        }
+        $kurir = Kurir::findOrFail($kurir_id);
 
-        // Hapus data user yang terkait
-        if ($kurir->user) {
-            $kurir->user->delete();
-        }
+        // Hitung rata-rata rating dari semua transaksi selesai yang punya rating (tidak null)
+        $averageRating = Transaksii::where('kurir_id', $kurir_id)
+            ->where('status', 'selesai')
+            ->whereNotNull('rating')
+            ->avg('rating');
 
-        // Hapus data kurir
-        $kurir->delete();
+        // Update rating di tabel kurir
+        $kurir->rating = round($averageRating, 2); // dibulatkan ke 2 angka di belakang koma
+        $kurir->save();
 
         return response()->json([
             'success' => true,
-            'message' => 'Data kurir berhasil dihapus'
+            'message' => 'Rating kurir berhasil diperbarui',
+            'rating' => $kurir->rating
         ]);
     }
+
+    // public function destroy(Kurir $kurir)
+    // {
+    //     // Hapus foto dari storage jika user memiliki foto
+    //     if ($kurir->user && $kurir->user->photo) {
+    //         Storage::disk('public')->delete($kurir->user->photo);
+    //     }
+
+    //     // Hapus data user yang terkait
+    //     if ($kurir->user) {
+    //         $kurir->user->delete();
+    //     }
+
+    //     // Hapus data kurir
+    //     $kurir->delete();
+
+    //     return response()->json([
+    //         'success' => true,
+    //         'message' => 'Data kurir berhasil dihapus'
+    //     ]);
+    // }
 }
 
 

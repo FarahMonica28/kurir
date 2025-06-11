@@ -1,7 +1,6 @@
 <?php
 
 namespace App\Models;
-
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -24,7 +23,7 @@ class Kurir extends Model
     ];
 
     protected $casts = [
-        'password' => 'hashed',
+        'password' => 'hashed', // untuk menyimpan didatabase nya secara acak
     ];
 
     // Relasi dengan model Pengiriman
@@ -35,6 +34,14 @@ class Kurir extends Model
     }    
 
     public $timestamps = false; // Jika tidak ada created_at & updated_at
+
+    protected $appends = ['avg_rating'];
+
+    public function getAvgRatingAttribute()
+    {
+        // Menghitung rata-rata langsung dari database
+        return $this->transaksii()->avg('rating') ?? 0;
+    }
 
     public function user()
     {
@@ -49,6 +56,5 @@ class Kurir extends Model
     {
         return $this->hasMany(Transaksii::class, 'kurir_id', 'kurir_id');
     }
-
 
 }

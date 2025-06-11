@@ -79,6 +79,12 @@ const MainMenuConfig: Array<MenuItem> = [
                 name: "gudang",
                 keenthemesIcon: "bi bi-bookmark-plus",
             },
+            {
+                heading: "Riwayat",
+                route: "/dashboard/gudang",
+                name: "riwayat",
+                keenthemesIcon: "bi bi-bookmark-plus",
+            },
             
             //pengguna
             {
