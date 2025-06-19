@@ -1,7 +1,11 @@
 <?php
 
 // use App\Http\Controllers\TrackingController;
-use App\Http\Controllers\Api\PengirimansController;
+// use App\Http\Controllers\tidakdipakai\PengirimanController;
+// use App\Http\Controllers\Api\PengirimansController;
+use App\Http\Controllers\MidtransController;
+use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\PengirimanController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CheckOngkirController;
 use App\Http\Controllers\GudangController;
@@ -12,12 +16,13 @@ use App\Http\Controllers\TransController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SettingController;
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\XenditController;
+use App\Http\Controllers\PembayaranController;
 use App\Http\Controllers\KurirController;
-use App\Http\Controllers\PengirimanController;
 use App\Http\Controllers\TrackingController;
 use App\Http\Controllers\RajaOngkirController;
 
+use Illuminate\Support\Facades\Route;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -59,16 +64,42 @@ Route::put('/transaksii/{id}/antar', [TransaksiiController::class, 'antar']);
 Route::put('/transaksii/{id}/ambil', [TransaksiiController::class, 'ambil']);
 Route::post('/rating', action: [TransaksiiController::class, 'storePenilaian']);
 
+// Route::post('/xendit/callback', [TransaksiiController::class, 'handleCallback']);
+
+// Route::post('/payment', [TransaksiiController::class, 'payment']);
+// Route::post('/payment', [PembayaranController::class, 'createInvoice']);
+// Route::post('/payment', [PembayaranController::class, 'store']);
+// Route::prefix('v1')->group(function () {
+//     Route::post('/payment', [PembayaranController::class, 'store']);
+Route::post('/payment', [TransaksiiController::class, 'payment']);
+Route::get('/payment/success', function () {
+    return view('payment.success');
+})->withoutMiddleware(['auth', 'permission']); // atau 'web' saja
+
+// Route::post('/payment-temp', [TransaksiiController::class, 'paymentTemp']);
+// Route::post('/payment', [PembayaranController::class, 'payment']);
+// });
+// Route::post('/payment', [PaymentController::class, 'create']);
+// Route::post('/payment', [PaymentController::class, 'pay']);
+Route::post('/payment/callback', [MidtransController::class, 'handleCallback']);
+
+
+// Route::post('/payment', [PembayaranController::class, 'createPayment']);
+// Route::post('/xendit/invoice', [XenditController::class, 'buatInvoice']);
+
+
 Route::get('/tracking/{no_resi}', [TrackingController::class, 'track']);
 // Route::get('/tracking/{no_resi}', [TrackingController::class, 'track'])->withoutMiddleware(['auth']);
 // Route::get('/tracking/{no_resi}', [TrackingController::class, 'show']);
+
+// Route::get('/checkout', 'PaymentController@checkout');
 
 //semua masuk ke sini
 Route::middleware(['auth', 'verified', 'json'])->group(function () {
     Route::prefix('setting')->middleware('can:setting')->group(function () {
         Route::post('', [SettingController::class, 'update']);
     });
-
+    // Route::post('/payment', [TransaksiiController::class, 'payment']);
     Route::prefix('master')->group(function () {
         Route::middleware('can:master-user')->group(function () {
             Route::get('users', [UserController::class, 'get']);
@@ -124,14 +155,14 @@ Route::middleware(['auth', 'verified', 'json'])->group(function () {
     });
 
     //pengiriman 
-    // Route::prefix('kurir')->group(function () {
-    //     Route::get('/', [KurirController::class, 'index']); // List kurir dengan pagination
-    //     Route::post('/store', [KurirController::class, 'store']); // Tambah kurir
+    Route::prefix('kurir')->group(function () {
+        Route::get('/', [KurirController::class, 'index']); // List kurir dengan pagination
+        Route::post('/store', [KurirController::class, 'store']); // Tambah kurir
 
-        // Route::get('/{kurir}', [KurirController::class, 'show']); // Lihat detail kurir
-        // Route::put('/{kurir}', [KurirController::class, 'update']); // Update kurir
-        // Route::delete('/{kurir}', [KurirController::class, 'destroy']); // Hapus kurir
-    // });
+        Route::get('/{kurir}', [KurirController::class, 'show']); // Lihat detail kurir
+        Route::put('/{kurir}', [KurirController::class, 'update']); // Update kurir
+        Route::delete('/{kurir}', [KurirController::class, 'destroy']); // Hapus kurir
+    });
 
     Route::middleware('can:pengiriman')->group(function () {
         Route::get('pengiriman', [PengirimanController::class, 'get'])->withoutMiddleware('can:pengiriman');
@@ -142,10 +173,10 @@ Route::middleware(['auth', 'verified', 'json'])->group(function () {
         ->except(['index', 'store']);
     });
 
-    // Route::middleware(['auth:sanctum', 'role:kurir'])->group(function () {
-    //     Route::put('/pengiriman/{id}/status', [PengirimanController::class, 'updateStatus']);
-    //     Route::get('/kurir/pengiriman', [PengirimanController::class, 'pengirimanKurir']);
-    // });
+    Route::middleware(['auth:sanctum', 'role:kurir'])->group(function () {
+        Route::put('/pengiriman/{id}/status', [PengirimanController::class, 'updateStatus']);
+        Route::get('/kurir/pengiriman', [PengirimanController::class, 'pengirimanKurir']);
+    });
 
     //tracking
     Route::middleware('can:tracking')->group(function () {
@@ -166,24 +197,26 @@ Route::middleware(['auth', 'verified', 'json'])->group(function () {
     //     Route::post('/selesai-kirim', [PengirimansController::class, 'selesaiKirim']);
     //     Route::post('/pengirimans/laporkan-masalah', [PengirimansController::class, 'laporkanMasalah']);
     // });
-    Route::prefix('pengirimans')->group(function () {
-        Route::get('/pengirimans', [PengirimansController::class, 'index']);                // GET semua data (dengan search & paginate)
-        Route::post('/pengirimans', [PengirimansController::class, 'store']);               // POST tambah data
-        // Route::get('/pengirimans{id}', [PengirimansController::class, 'get']);              // GET detail data by ID
-        Route::get('pengirimans{id}', [PengirimansController::class, 'get'])->withoutMiddleware('can:pengirimans');
-        Route::put('/pengirimans{id}', [PengirimansController::class, 'update']);           // PUT update data by ID
-        Route::delete('/pengirimans{id}', [PengirimansController::class, 'destroy']);       // DELETE data by ID
-        Route::put('/pengirimans{id}/status', [PengirimansController::class, 'updateStatus']); // PUT update status pengiriman
 
-        Route::post('/pengirimans/{id}/mulai', [PengirimansController::class, 'mulai']);
-        Route::post('/pengirimans/{id}/selesai', [PengirimansController::class, 'selesai']);
 
-        // Operasi khusus tracking
-        Route::post('/ambil-barang', [PengirimansController::class, 'ambilBarang']);
-        Route::post('/mulai-kirim', [PengirimansController::class, 'mulaiKirim']);
-        Route::post('/selesai-kirim', [PengirimansController::class, 'selesaiKirim']);
-        Route::post('/lapor-masalah', [PengirimansController::class, 'laporkanMasalah']);
-    });
+    // Route::prefix('pengirimans')->group(function () {
+    //     Route::get('/pengirimans', [PengirimansController::class, 'index']);                // GET semua data (dengan search & paginate)
+    //     Route::post('/pengirimans', [PengirimansController::class, 'store']);               // POST tambah data
+    //     // Route::get('/pengirimans{id}', [PengirimansController::class, 'get']);              // GET detail data by ID
+    //     Route::get('pengirimans{id}', [PengirimansController::class, 'get'])->withoutMiddleware('can:pengirimans');
+    //     Route::put('/pengirimans{id}', [PengirimansController::class, 'update']);           // PUT update data by ID
+    //     Route::delete('/pengirimans{id}', [PengirimansController::class, 'destroy']);       // DELETE data by ID
+    //     Route::put('/pengirimans{id}/status', [PengirimansController::class, 'updateStatus']); // PUT update status pengiriman
+
+    //     Route::post('/pengirimans/{id}/mulai', [PengirimansController::class, 'mulai']);
+    //     Route::post('/pengirimans/{id}/selesai', [PengirimansController::class, 'selesai']);
+
+    //     // Operasi khusus tracking
+    //     Route::post('/ambil-barang', [PengirimansController::class, 'ambilBarang']);
+    //     Route::post('/mulai-kirim', [PengirimansController::class, 'mulaiKirim']);
+    //     Route::post('/selesai-kirim', [PengirimansController::class, 'selesaiKirim']);
+    //     Route::post('/lapor-masalah', [PengirimansController::class, 'laporkanMasalah']);
+    // });
     
     //transaksi
     Route::middleware('can:orderan')->group(function () {

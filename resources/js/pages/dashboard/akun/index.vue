@@ -41,7 +41,7 @@ onMounted(async () => {
       const res = await axios.put(`/kurir/${kurir.value.kurir_id}/update-rating`);
       avgRating.value = parseFloat(res.data.rating) || 0;
     } catch (error) {
-      console.error("Gagal mengambil rating", error);
+      console.error("Gagal mengambil rating", error); 
     }
   }
 });

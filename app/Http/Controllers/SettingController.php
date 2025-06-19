@@ -44,7 +44,7 @@ class SettingController extends Controller
             if ($setting->banner != null && $setting->banner != '') {
                 $old_photo = str_replace('/storage/', '', $setting->banner);
                 Storage::disk('public')->delete($old_photo);
-            }
+            } 
 
             $data = $request->all();
 

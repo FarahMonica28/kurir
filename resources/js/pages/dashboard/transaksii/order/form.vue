@@ -4,17 +4,17 @@ import { onMounted, ref, computed, watch } from "vue";
 import * as Yup from "yup";
 import axios from "@/libs/axios";
 import { toast } from "vue3-toastify";
-import ApiService from "@/core/services/ApiService"; // ApiService custom untuk GET/POST/PUT/DELETE API
+import ApiService from "@/core/services/ApiService";
 import { useAuthStore } from "@/stores/auth";
-import { useForm, Field, ErrorMessage, Form as VForm } from "vee-validate";
+import { useForm } from "vee-validate";
 import type { transaksii } from "@/types";
 
+// Auth dan form reference
 const authStore = useAuthStore();
 const currentPengguna = computed(() => authStore.user);
-
 const formRef = ref();
 
-// Data provinces, cities asal dan tujuan
+// State lokasi dan input form
 const provinces = ref<Record<string, string>>({});
 const citiesOrigin = ref<Record<string, string>>({});
 const citiesDestination = ref<Record<string, string>>({});
@@ -29,31 +29,29 @@ const alamat_tujuan = ref("");
 const no_hp_penerima = ref("");
 const nama_barang = ref("");
 
-// Kurir / ekspedisi dan layanan
+// Ekspedisi dan layanan
 const couriers = ref([
   { code: "jne", name: "JNE" },
   { code: "tiki", name: "TIKI" },
   { code: "pos", name: "POS Indonesia" },
 ]);
 
-const selectedCourier = ref("");  // ekspedisi/kurir dipilih
-// const services = ref<ServiceCost[]>([]);
+const selectedCourier = ref("");
 const services = ref<{ service: string; description: string; cost: number; etd: string }[]>([]);
-// const services = ref<Array<{ service: string; description: string; cost: number }>>([]);
 const selectedService = ref("");
 const berat_barang = ref<number | null>(null);
 const biaya = ref<number>(0);
 
-// Props & Emit
+// Tambahan: status pembayaran dan metode
+const sudahBayar = ref(false);
+const metodePembayaran = ref(""); // 'cod' atau 'transfer'
+
+// Props dan emit
 const props = defineProps({ selected: { type: String, default: null } });
 const emit = defineEmits(["close", "refresh"]);
-
-// Form state transaksi
 const transaksi = ref<transaksii>({} as transaksii);
 
-
-
-// Validation schema
+// Validasi form
 const formSchema = Yup.object({
   nama_barang: Yup.string().required("Nama Barang harus diisi"),
   penerima: Yup.string().required("Nama Penerima harus diisi"),
@@ -61,17 +59,16 @@ const formSchema = Yup.object({
   alamat_tujuan: Yup.string().required("Alamat Tujuan harus diisi"),
   no_hp_penerima: Yup.string().required("No HP Penerima harus diisi"),
   pengirim: Yup.string().required("pengirim harus diisi"),
-  provinceOrigin: Yup.string().required("Provinsi asal harus dipilih").notOneOf(["0"], "Provinsi asal harus dipilih"),
+  provinceOrigin: Yup.string().required().notOneOf(["0"], "Provinsi asal harus dipilih"),
   cityOrigin: Yup.string().required("Kota asal harus dipilih"),
-  provinceDestination: Yup.string().required("Provinsi tujuan harus dipilih").notOneOf(["0"], "Provinsi tujuan harus dipilih"),
+  provinceDestination: Yup.string().required().notOneOf(["0"], "Provinsi tujuan harus dipilih"),
   cityDestination: Yup.string().required("Kota tujuan harus dipilih"),
   kurir: Yup.string().required("Ekspedisi harus dipilih"),
   layanan: Yup.string().required("Layanan harus dipilih"),
   berat_barang: Yup.number().required("Berat barang harus diisi").min(0.1, "Berat minimal 0.1 kg"),
-  // biaya: Yup.string().required("Biaya")
 });
 
-const { handleSubmit, errors, resetForm, } = useForm({
+const { handleSubmit, errors, resetForm } = useForm({
   validationSchema: formSchema,
   initialValues: {
     nama_barang: "",
@@ -86,20 +83,19 @@ const { handleSubmit, errors, resetForm, } = useForm({
     layanan: "",
     berat_barang: 0,
     pengirim: "",
-  }
+  },
 });
 
-// Fetch provinsi
+// Fetch data dari API
 const fetchProvinces = async () => {
   try {
     const res = await axios.get("/provinces");
     provinces.value = res.data;
-  } catch (error) {
+  } catch {
     toast.error("Gagal mengambil data provinsi");
   }
 };
 
-// Fetch kota berdasarkan provinsi
 const fetchCities = async (type: "origin" | "destination") => {
   const provId = type === "origin" ? provinceOrigin.value : provinceDestination.value;
   if (provId === "0") return;
@@ -112,19 +108,16 @@ const fetchCities = async (type: "origin" | "destination") => {
       citiesDestination.value = res.data;
       cityDestination.value = "";
     }
-  } catch (error) {
+  } catch {
     toast.error("Gagal mengambil data kota");
   }
 };
-const getSelectedCost = () => {
-  console.log('All services:', services.value);
-  console.log('Selected service:', selectedService.value);
 
+// Ongkir
+const getSelectedCost = () => {
   const service = services.value.find(s => s.service === selectedService.value);
   const cost = service?.cost ?? 0;
   biaya.value = cost;
-
-  console.log('Selected cost:', cost);
   return cost;
 };
 
@@ -134,11 +127,9 @@ const fetchOngkir = async () => {
     provinceDestination.value === "0" || !cityDestination.value ||
     !selectedCourier.value || !berat_barang.value || berat_barang.value <= 0
   ) {
-    console.log(berat_barang.value)
     services.value = [];
     selectedService.value = "";
     biaya.value = 0;
-    console.log("Keluar")
     return;
   }
 
@@ -147,47 +138,78 @@ const fetchOngkir = async () => {
     const res = await axios.post("/cost", {
       origin: cityOrigin.value,
       destination: cityDestination.value,
-      weight: Math.round(berat_barang.value * 1000), // gram
+      weight: Math.round(berat_barang.value * 1000),
       courier: selectedCourier.value,
     });
 
-
-
-    // const resultServices = res.data.rajaongkir.results[0]?.costs || [];
     services.value = res.data.map((s: any) => ({
       service: s.service,
       description: s.description,
       cost: s.cost[0].value,
-      etd: s.cost[0].etd
-      // courier: selectedCourier.value.code,
+      etd: s.cost[0].etd,
     }));
 
-    // Reset selected service dan biaya
     selectedService.value = "";
     biaya.value = 0;
-    console.log("1", biaya.value)
-  } catch (error) {
+  } catch {
     toast.error("Gagal mengambil data ongkir");
     services.value = [];
     selectedService.value = "";
     biaya.value = 0;
-    console.log("2", biaya.value)
   } finally {
     unblock(document.getElementById("form-transaksii"));
   }
 };
 
-// Watchers untuk fetch ongkir saat data berubah
-watch([provinceOrigin, cityOrigin, provinceDestination, cityDestination, selectedCourier, berat_barang], () => {
-  fetchOngkir();
-});
-watch(selectedService, (val) => {
-  const service = services.value.find(s => s.service === val);
-  biaya.value = service ? service.cost : 0;
-  getSelectedCost();
-});
+watch([provinceOrigin, cityOrigin, provinceDestination, cityDestination, selectedCourier, berat_barang], fetchOngkir);
+watch(selectedService, getSelectedCost);
 
-// Submit handler
+// Pembayaran ongkir
+// Invoice URL dari Xendit akan disimpan di sini
+const invoiceUrl = ref("");
+
+// ID transaksi yang akan dibayar (bisa juga dari props atau parameter dinamis)
+const transaksiId = props.selected || 1; // fallback ke 1 jika props.selected kosong
+
+
+const bayarOngkir = async () => {
+  const draft = {
+    penerima: penerima.value,
+    no_hp_penerima: no_hp_penerima.value,
+    provinceDestination: provinceDestination.value,
+    cityDestination: cityDestination.value,
+    alamat_tujuan: alamat_tujuan.value,
+
+    pengirim: pengirim.value,
+    nama_barang: nama_barang.value,
+    provinceOrigin: provinceOrigin.value,
+    cityOrigin: cityOrigin.value,
+    alamat_asal: transaksi.value.alamat_asal || "",
+
+    selectedCourier: selectedCourier.value,
+    selectedService: selectedService.value,
+    berat_barang: berat_barang.value,
+    biaya: biaya.value,
+  };
+
+  // Simpan data transaksi ke sessionStorage untuk digunakan nanti
+  sessionStorage.setItem("draftTransaksi", JSON.stringify(draft));
+
+  try {
+    const res = await axios.post("/payment", draft);
+
+    const { redirect_url } = res.data;
+    if (redirect_url) {
+      window.location.href = redirect_url;
+    } else {
+      toast.error("URL pembayaran tidak ditemukan.");
+    }
+  } catch (err: any) {
+    toast.error(err?.response?.data?.message || "Gagal membuat pembayaran.");
+  }
+};
+
+// Submit transaksi
 function onSubmit() {
   const formData = new FormData();
 
@@ -197,9 +219,7 @@ function onSubmit() {
   formData.append("alamat_tujuan", alamat_tujuan.value);
   formData.append("no_hp_penerima", no_hp_penerima.value);
 
-
   formData.append("pengirim", pengirim.value);
-  // formData.append("id", currentPengguna.value.id);
   formData.append("nama_barang", nama_barang.value);
   formData.append("asal_provinsi_id", provinceOrigin.value);
   formData.append("asal_kota_id", cityOrigin.value);
@@ -228,7 +248,7 @@ function onSubmit() {
       emit("close");
       emit("refresh");
       toast.success("Data berhasil disimpan");
-      formRef.value.resetForm(); // Reset form setelah submit
+      formRef.value.resetForm();
     })
     .catch((err: any) => {
       const message = err.response?.data?.message || "Terjadi kesalahan.";
@@ -238,17 +258,42 @@ function onSubmit() {
       unblock(document.getElementById("form-transaksii"));
     });
 }
-// watch(selectedService, () => {
-//   getSelectedCost();
-// });
 
+onMounted(fetchProvinces);
+// PaymentSuccess.vue
 onMounted(() => {
-  fetchProvinces();
+  const draft = JSON.parse(sessionStorage.getItem("draftTransaksi") || "{}");
+
+  const formData = new FormData();
+  for (const key in draft) {
+    formData.append(key, draft[key]);
+  }
+
+  axios.post("/transaksii/store", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  })
+  .then(() => {
+    toast.success("Order berhasil disimpan setelah pembayaran!");
+    sessionStorage.removeItem("draftTransaksi");
+  })
+  .catch(() => {
+    toast.error("Gagal menyimpan order setelah pembayaran.");
+  });
 });
 
+// onMounted(() => {
+//   const script = document.createElement('script');
+//   script.src = 'https://app.sandbox.midtrans.com/snap/snap.js';
+//   script.setAttribute('data-client-key', 'SB-Mid-client-xxxxxx');
+//   script.async = true;
+//   document.body.appendChild(script);
+// });
 </script>
 
+
+
 <template>
+
   <VForm id="form-transaksii" class="form card mb-10" @submit="onSubmit" :validation-schema="formSchema" ref="formRef">
     <div class="card-header align-items-center">
       <h2 class="mb-0">{{ props.selected ? "Edit" : "Tambah" }} Order</h2>
@@ -321,7 +366,8 @@ onMounted(() => {
         </div> -->
         <div class="col-md-4 mb-7 mt-4">
           <label class="form-label required fw-bold" for="pengirim">Nama Pengirim</label>
-          <Field type="text" name="pengirim" class="form-control" v-model="pengirim" placeholder="Masukan nama pengirim">
+          <Field type="text" name="pengirim" class="form-control" v-model="pengirim"
+            placeholder="Masukan nama pengirim">
           </Field>
           <ErrorMessage name="pengirim" class="text-danger small" />
         </div>
@@ -398,11 +444,12 @@ onMounted(() => {
         </div>
 
         <!-- Biaya Otomatis (Tampilkan hanya jika layanan dipilih) -->
-        <div class="col-md-4 mb-7" v-if="services.length > 0">
+        <!-- <div class="col-md-4 mb-7" v-if="services.length > 0">
           <label class="form-label fw-bold">Biaya (Rp)</label>
           <input type="text" name="biaya" class="form-control" :value="biaya ? biaya.toLocaleString('id-ID') : '-'"
             readonly />
         </div>
+        <button @click="bayarOngkir">Bayar Ongkir</button>
 
       </div>
 
@@ -410,7 +457,29 @@ onMounted(() => {
         <button type="submit" class="btn btn-primary ms-auto">
           <i class="la la-save"></i> Order Kurir
         </button>
+      </div> -->
+
+        <!-- Biaya Otomatis (Tampilkan hanya jika layanan dipilih) -->
+        <div class="col-md-4 mb-3" v-if="services.length > 0">
+          <label class="form-label fw-bold">Biaya (Rp)</label>
+          <input type="text" name="biaya" class="form-control mb-2" :value="biaya ? biaya.toLocaleString('id-ID') : '-'"
+            readonly />
+
+          <!-- Tombol Bayar Ongkir -->
+          <!-- <button type="button" class="btn btn-success w-100" @click="bayarOngkir"
+            :disabled="sudahBayar || metodePembayaran === 'cod'">
+            <i class="la la-money-bill"></i> Bayar Ongkir
+          </button> -->
+        </div>
       </div>
+
+      <!-- Footer -->
+      <div class="card-footer d-flex">
+        <button type="submit" class="btn btn-primary ms-auto" @click="bayarOngkir">
+          <i class="la la-save"></i> Order Kurir
+        </button>
+      </div>
+
 
     </div>
   </VForm>

@@ -52,6 +52,11 @@ class Transaksii extends Model
     public function kurir() {
         return $this->belongsTo(Kurir::class, 'kurir_id');
     }
+    public function pengiriman()
+    {
+        return $this->hasMany(Pengiriman::class, 'transaksii_id', 'id');
+    }
+
 }
 
 

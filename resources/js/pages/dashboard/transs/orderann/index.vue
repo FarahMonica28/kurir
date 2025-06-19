@@ -60,7 +60,7 @@ const columns = [
     column.accessor("penerima", { header: "Nama Penerima" }),
     column.accessor("no_hp_penerima", { header: "No Hp Penerima" }),
     column.accessor("alamat_tujuan", { header: "Alamat Tujuan" }),
-    column.accessor("kurir.user.name", { header: "Nama Kurir" }),
+    column.accessor("kurir.user.name", { header: "Nama Kurir" }) | "-", 
     column.accessor("status", {
         header: "Status",
         cell: (cell) => {

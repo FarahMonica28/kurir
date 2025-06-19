@@ -13,9 +13,9 @@ class Pengiriman extends Model
     protected $table = 'pengiriman';
     
     protected $fillable = [
-        'no_resi', 'paket', 'penerima', 'alamat',
-        'kurir_id', 'status', 'tanggal_dibuat','tanggal_pengiriman',
-        'tanggal_penerimaan', 'biaya',
+        'deskripsi',
+        'kurir_id', 
+        'transaksii_id',
     ];
 
     public function trackingLogs()
@@ -27,5 +27,9 @@ class Pengiriman extends Model
     {
         return $this->belongsTo(Kurir::class);
     }
-    
+        public function transaksi()
+    {
+        return $this->belongsTo(Transaksii::class, 'transaksii_id', 'id');
+    }
+
 }

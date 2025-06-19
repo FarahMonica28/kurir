@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Pembayaran;
 use App\Models\Pengguna;
 use App\Models\Province;
 use App\Models\Transaksii;
@@ -11,6 +12,11 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
+use Xendit\Invoice\CreateInvoiceRequest;
+use Xendit\Invoice\Invoice;
+use Xendit\Configuration;
+use Xendit\Invoice\InvoiceApi;
 
 class TransaksiiController extends Controller
 {
@@ -104,22 +110,6 @@ class TransaksiiController extends Controller
                 }
             })
 
-            // Role: pengguna — hanya tampilkan transaksii milik pengguna yang sedang login
-            // ->when(auth()->user()->role->name === 'pengguna', function ($query) {
-            //     Log::info('pengguna'); // log debug
-            //     $penggunaId = auth()->user()->id;
-            //     Log::info("Pengguna ID : ", ["user" => $penggunaId]);
-            //     $query->where('pengguna_id', $penggunaId);
-            // })
-            // ->when(auth()->user()->role->name === 'kurir', function ($query) {
-            //     Log::info('b'); // log debug
-            //     $query->where(function ($q) {
-            //         Log::info('e'); // log debug
-            //         $kurirId = auth()->user()->kurir->kurir_id;
-            //         $q->whereNull('kurir_id')
-            //           ->orWhere('kurir_id', $kurirId);
-            //     });
-            // })
             ->latest()
             
             // Paginate hasil query
@@ -133,20 +123,153 @@ class TransaksiiController extends Controller
         return response()->json($data);
     }
 
-    // Ambil data transaksiii berdasarkan id
-    public function get($id)
+// Pindahkan ke constructor
+    public function __construct()
     {
-        $transaksiii = Transaksii::with(['asalProvinsi', 'asalKota', 'tujuanProvinsi', 'tujuanKota'])
-        // $transaksiii = Transaksii::with(['asalProvinsi', 'asalKota', 'tujuanProvinsi', 'tujuanKota', 'pengguna'])
-            ->findOrFail($id);
-
-        return response()->json($transaksiii);
+        Configuration::setXenditKey(config('services.xendit.secret'));
     }
 
-    // Simpan atau update transaksiii
+    public function payment(Request $request)
+    {
+        $biaya = $request->input('biaya');
+
+        if (!$biaya || !is_numeric($biaya) || $biaya <= 0) {
+            return response()->json([
+                'message' => 'Biaya ongkir belum valid',
+            ], 400);
+        }
+
+        $order_id = 'ONGKIR-' . now()->timestamp . '-' . Str::random(4);
+
+        $params = [
+            'transaction_details' => [
+                'order_id' => $order_id,
+                'gross_amount' => (int) $biaya,
+            ],
+            'item_details' => [
+                [
+                    'id' => $order_id,
+                    'price' => (int) $biaya,
+                    'quantity' => 1,
+                    'name' => 'Biaya Ongkir Transaksi',
+                ]
+            ],
+            'customer_details' => [
+                'first_name' => $request->input('pengirim') ?? 'User',
+                'email' => 'default@email.com',
+            ],
+            'callbacks' => [
+                // 'finish' => url('/payment/success'),
+                'finish' => env('APP_URL') . '/#/payment/success',
+                'unfinish' => url('/payment/failed'),
+                'error' => url('/payment/error'),
+            ]
+        ];
+
+        $auth = base64_encode(env('MIDTRANS_SERVER_KEY'));
+        $response = Http::withHeaders([
+            'Accept' => 'application/json',
+            'Authorization' => "Basic $auth",
+        ])->withBody(json_encode($params), 'application/json')
+        ->post('https://app.sandbox.midtrans.com/snap/v1/transactions');
+
+        $data = json_decode($response->body());
+
+        if (!isset($data->redirect_url)) {
+            return response()->json([
+                'message' => 'Gagal membuat link pembayaran Midtrans',
+                'error' => $data,
+            ], 500);
+        }
+
+        return response()->json([
+            'redirect_url' => $data->redirect_url,
+            'order_id' => $order_id,
+        ]);
+    }
+
+
+    
+    
+//     public function paymentTemp(Request $request)
+// {
+//     $request->validate([
+//         'pengirim' => 'required|string',
+//         'penerima' => 'required|string',
+//         'alamat_asal' => 'required|string',
+//         'alamat_tujuan' => 'required|string',
+//         'berat_barang' => 'required|numeric',
+//         'biaya' => 'required|numeric|min:1000',
+//     ]);
+
+//     $orderId = 'ONGKIR-' . now()->timestamp . '-' . Str::random(4);
+
+//     $params = [
+//         'transaction_details' => [
+//             'order_id' => $orderId,
+//             'gross_amount' => (int) $request->biaya,
+//         ],
+//         'customer_details' => [
+//             'first_name' => $request->pengirim,
+//             'email' => 'user@example.com',
+//         ],
+//     ];
+
+//     $auth = base64_encode(env('MIDTRANS_SERVER_KEY'));
+//     $response = Http::withHeaders([
+//         'Accept' => 'application/json',
+//         'Authorization' => "Basic $auth",
+//     ])->withBody(json_encode($params), 'application/json')
+//       ->post('https://app.sandbox.midtrans.com/snap/v1/transactions');
+
+//     if (!$response->successful()) {
+//         return response()->json(['message' => 'Gagal membuat Snap Token'], 500);
+//     }
+
+//     $data = $response->json();
+
+//     return response()->json([
+//         'snap_token' => $data['token'] ?? null,
+//         'redirect_url' => $data['redirect_url'] ?? null,
+//         'order_id' => $orderId,
+//     ]);
+//     }
+
+
+
+
+    // public function handleCallback(Request $request)
+    // {
+    //     $data = $request->all();
+
+    //     if ($data['status'] === 'PAID') {
+    //         $transaksiId = explode('-', $data['external_id'])[1];
+    //         $transaksi = Transaksii::find($transaksiId);
+
+    //         if ($transaksi) {
+    //             $transaksi->status = 'dibayar';
+    //             $transaksi->save();
+    //         }
+    //     }
+
+    //     return response()->json(['message' => 'Callback diterima']);
+    // }
+    // Ambil data transaksii berdasarkan id
+
+    
+    public function get($id)
+    {
+        $transaksii = Transaksii::with(['asalProvinsi', 'asalKota', 'tujuanProvinsi', 'tujuanKota'])
+        // $transaksii = Transaksii::with(['asalProvinsi', 'asalKota', 'tujuanProvinsi', 'tujuanKota', 'pengguna'])
+            ->findOrFail($id);
+
+        return response()->json($transaksii);
+    }
+
+    // Simpan atau update transaksii
     public function store(Request $request)
     {
-        $transaksiii = $request->validate([
+        $transaksii = $request->validate([
             'penerima' => 'required|string',
             'pengirim' => 'required|string',
             'no_hp_penerima' => 'required|string',
@@ -208,7 +331,7 @@ class TransaksiiController extends Controller
 
         return response()->json([
             'message' => 'Berhasil menambahkan transaksii',
-            'data' => $transaksiii
+            'data' => $transaksii
         ]);
     }
 

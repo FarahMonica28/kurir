@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\City;
 use App\Models\Province;
 use Illuminate\Http\Request;
-use Kavist\RajaOngkir\Facades\RajaOngkir;
+use dimaslanjaka\RajaOngkir\Facades\RajaOngkir;
 
 class CheckOngkirController extends Controller
 {

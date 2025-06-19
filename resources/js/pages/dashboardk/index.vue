@@ -48,14 +48,14 @@ const currentTab = ref<'dashboard' | 'ongkir' | 'order' | 'orde' | 'riwayat' | '
             @click="currentTab = 'ongkir'">
             Check Ongkir
           </button>
-          <button class="btn btn-outline-light" :class="{ 'fw-bold': currentTab === 'orde' }"
+          <!-- <button class="btn btn-outline-light" :class="{ 'fw-bold': currentTab === 'orde' }"
             @click="currentTab = 'orde'">
-            Order Kurir
+            Order
           </button>
           <button class="btn btn-outline-light" :class="{ 'fw-bold': currentTab === 'riwayatt' }"
             @click="currentTab = 'riwayatt'">
             Riwayat
-          </button>
+          </button> -->
           <button class="btn btn-outline-light" :class="{ 'fw-bold': currentTab === 'tracking' }"
             @click="currentTab = 'tracking'">
             Lacak Barang
@@ -63,7 +63,8 @@ const currentTab = ref<'dashboard' | 'ongkir' | 'order' | 'orde' | 'riwayat' | '
         </div>
 
         <!-- Tambahkan bagian login di kanan -->
-        <ul class="navbar-nav ms-auto"> <!-- gunakan ml-auto untuk Bootstrap 4 -->
+         <!-- gunakan ml-auto untuk Bootstrap 4 -->
+        <ul class="navbar-nav ms-auto"> 
           <li class="nav-item">
             <router-link to="/" class="nav-link">
               Login

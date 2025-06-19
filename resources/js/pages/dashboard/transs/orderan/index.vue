@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, h, ref, watch } from "vue";
 import { useDelete } from "@/libs/hooks";
-import Form from "./Form.vue";
+// import Form from "./Form.vue";
 import { createColumnHelper } from "@tanstack/vue-table";
 import type { transaksii } from "@/types";
 import axios from "axios";
@@ -86,7 +86,7 @@ const columns = [
                 buttonText = "Digudang";
                 nextStatus = "digudang";
                 swalTitle = "Kirim ke Gudang";
-                swalText = "Apakah Anda sudah mengirim barang ke gudang?";
+                swalText = "Apakah barang sudah sampai di gudang?";
             } else if (status === "digudang") {
                 return h("span", { class: "text-muted fst-italic" }, "Menunggu dikirim");
             } else {

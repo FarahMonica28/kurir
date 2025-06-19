@@ -284,6 +284,11 @@ const routes: Array<RouteRecordRaw> = [
                     breadcrumbs: ["Master", "Users"],
                 },
             },
+            {
+                path: "/payment/success",
+                name: "PaymentSuccess",
+                component: () => import("@/views/PaymentSuccess.vue"),
+            },
         ],
     },
     
