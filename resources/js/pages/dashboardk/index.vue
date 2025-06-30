@@ -28,7 +28,7 @@ const currentTab = ref<'dashboard' | 'ongkir' | 'order' | 'orde' | 'riwayat' | '
         <div class="d-flex align-items-center gap-2">
           <button class="btn btn-outline-light" :class="{ 'fw-bold': currentTab === 'dashboard' }"
             @click="currentTab = 'dashboard'">
-            Dashboard Pengguna
+            Dashboard 
           </button>
           <!-- <button
         class="btn btn-outline-light"

@@ -22,7 +22,7 @@ const columns = [
     column.accessor("pengirim", { header: "Nama Pengirim" }),
     column.accessor("no_hp_penerima", { header: "No Hp Penerima" }),
     column.accessor("alamat_tujuan", { header: "Alamat Tujuan" }),
-    column.accessor("kurir.user.name", { header: "Nama Kurir" }),
+    // column.accessor("kurir.user.name", { header: "Nama Kurir" }),
     column.accessor("rating", {
         header: "Rating",
         cell: (cell) => {

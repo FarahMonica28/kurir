@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { h, ref, watch } from "vue";
+import { h, ref, watch, computed } from "vue";
 import { useDelete } from "@/libs/hooks";
 import Form from "./Form.vue";
 import { createColumnHelper } from "@tanstack/vue-table";
@@ -37,7 +37,17 @@ function showKurirDetail(kurir) {
         showCloseButton: true,
     });
 }
+const kurirAmbil = computed(() =>
+    detailData.value?.pengiriman?.find(p =>
+        p.deskripsi?.toLowerCase().includes("menuju rumahmu untuk mengambil barang")
+    )?.kurir
+);
 
+const kurirKirim = computed(() =>
+    detailData.value?.pengiriman?.find(p =>
+        p.deskripsi?.toLowerCase().includes("menuju ke alamat tujuan")
+    )?.kurir
+);
 const columns = [
     column.accessor("no", {
         header: "#",
@@ -201,11 +211,20 @@ watch(openForm, (val) => {
                         <div class="col-md-6">
                             <!-- <p><strong>Estimasi:</strong> {{ detailData.estimasi || '-' }}</p> -->
                             <p><strong>Biaya:</strong> Rp. {{ detailData.biaya || '-' }}</p>
-                            <p><strong>Kurir:</strong>
-                                <span @click="showKurirDetail(detailData.kurir)"
-                                    style="cursor: pointer; color: blue; text-decoration: underline;">
-                                    {{ detailData.kurir?.user.name || 'Tidak ada kurir' }}
+                            <p><strong>Kurir Pengambil : </strong>
+                                <span v-if="kurirAmbil" @click="showKurirDetail(kurirAmbil)"
+                                    style="cursor: pointer; color: blue;">
+                                    {{ kurirAmbil.user.name }}
                                 </span>
+                                <span v-else>Tidak ada kurir</span>
+                            </p>
+
+                            <p><strong>Kurir Pengantar : </strong>
+                                <span v-if="kurirKirim" @click="showKurirDetail(kurirKirim)"
+                                    style="cursor: pointer; color: blue;">
+                                    {{ kurirKirim.user.name }}
+                                </span>
+                                <span v-else>Tidak ada kurir</span>
                             </p>
                         </div>
                     </div>
@@ -249,7 +268,7 @@ watch(openForm, (val) => {
 </template>
 <style>
 .rating-stars {
-    color:rgb(255, 255, 46);
+    color: rgb(255, 255, 46);
     font-size: 1.2rem;
     letter-spacing: 2px;
 }

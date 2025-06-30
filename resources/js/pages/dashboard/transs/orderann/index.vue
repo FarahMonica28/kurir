@@ -38,7 +38,7 @@ const handleUpdateStatus = async (id: string, currentStatus: string) => {
                 kurir_id: kurirId,
             });
 
-            Swal.fire("Berhasil", "Anda selesai mengantar paket", "success");
+            Swal.fire("Berhasil", "Terimakasih", "success");
             refresh();
         } catch (error: any) {
             Swal.fire("Error", error.message || "Gagal mengubah status", "error");
@@ -60,7 +60,7 @@ const columns = [
     column.accessor("penerima", { header: "Nama Penerima" }),
     column.accessor("no_hp_penerima", { header: "No Hp Penerima" }),
     column.accessor("alamat_tujuan", { header: "Alamat Tujuan" }),
-    column.accessor("kurir.user.name", { header: "Nama Kurir" }) | "-", 
+    // column.accessor("kurir.user.name", { header: "Nama Kurir" }),
     column.accessor("status", {
         header: "Status",
         cell: (cell) => {

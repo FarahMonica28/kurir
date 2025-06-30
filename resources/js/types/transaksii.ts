@@ -15,7 +15,8 @@ export interface transaksii {
     rating?: number | null;  // Penilaian opsional
     komentar?: string | null;   // Komentar opsional
     pernah_digudang: number;
-
+    status_pembayaran: string;
+    
     asal_provinsi_id: {
         id: number;
         name: string;
@@ -34,6 +35,11 @@ export interface transaksii {
     }
 
     pengguna: {
+        name: string;
+        // name: string;
+    };
+    kurir: {
+        id: number;
         name: string;
         // name: string;
     };

@@ -3,7 +3,7 @@ import { computed, h, ref, watch } from "vue";
 import { useDelete } from "@/libs/hooks";
 // import Form from "./Form.vue";
 import { createColumnHelper } from "@tanstack/vue-table";
-import type { transaksii } from "@/types";
+import type { transaksii, Pengiriman } from "@/types";
 import axios from "axios";
 import Swal from "sweetalert2";
 
@@ -54,13 +54,17 @@ const columns = [
                                     : status === "diambil kurir"
                                         ? "badge bg-info text-dark fw-bold"
                                         : status === "menunggu"
-                                            ? "badge bg-dark text-white fw-bold" 
+                                            ? "badge bg-dark text-white fw-bold"
                                             : "badge bg-secondary fw-bold";
 
 
             return h("span", { class: statusClass }, status);
         },
     }),
+    // column.accessor("kurir.user.name", {
+    //     header: "Kurir",
+    // }),
+
     column.accessor("id", {
         header: "Aksi",
         cell: (cell) => {
@@ -108,11 +112,14 @@ const columns = [
                         await axios.put(`/transaksii/${cell.getValue()}/ambil`, {
                             status: nextStatus,
                         });
-                        refresh(); // refresh data table
+
+                        // Tambahkan delay kecil sebelum refresh agar backend selesai proses
+                        await new Promise(resolve => setTimeout(resolve, 300));
+
+                        await refresh(); // pastikan ini menunggu data ter-refresh
 
                         await Swal.fire({
                             title: "Berhasil!",
-                            // text: `Status berhasil diubah menjadi "${nextStatus}".`,
                             icon: "success",
                             timer: 1500,
                             showConfirmButton: false,
@@ -127,6 +134,7 @@ const columns = [
                     }
                 }
             };
+
 
             return h(
                 "button",
@@ -169,8 +177,7 @@ watch(openForm, (val) => {
         </div>
         <div class="card-body">
             <!-- <paginate ref="paginateRef" id="table-transaksi" url="/transaksi" :columns="columns"></paginate> -->
-            <paginate ref="paginateRef" id="table-transaksii" :url=url
-                :columns="columns" />
+            <paginate ref="paginateRef" id="table-transaksii" :url=url :columns="columns" />
 
         </div>
     </div>

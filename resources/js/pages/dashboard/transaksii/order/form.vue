@@ -1,28 +1,33 @@
 <script setup lang="ts">
-import { block, unblock } from "@/libs/utils";
 import { onMounted, ref, computed, watch } from "vue";
 import * as Yup from "yup";
 import axios from "@/libs/axios";
 import { toast } from "vue3-toastify";
-import ApiService from "@/core/services/ApiService";
+import { block, unblock } from "@/libs/utils";
 import { useAuthStore } from "@/stores/auth";
 import { useForm } from "vee-validate";
 import type { transaksii } from "@/types";
 
-// Auth dan form reference
+// Store dan auth
 const authStore = useAuthStore();
 const currentPengguna = computed(() => authStore.user);
-const formRef = ref();
 
-// State lokasi dan input form
+// Form dan props
+const formRef = ref();
+const transaksi = ref<transaksii>({} as transaksii);
+const props = defineProps({ selected: { type: String, default: null } });
+const emit = defineEmits(["close", "refresh"]);
+
+// Lokasi
 const provinces = ref<Record<string, string>>({});
 const citiesOrigin = ref<Record<string, string>>({});
 const citiesDestination = ref<Record<string, string>>({});
-
 const provinceOrigin = ref("0");
 const cityOrigin = ref("");
 const provinceDestination = ref("0");
 const cityDestination = ref("");
+
+// Input pengguna
 const penerima = ref("");
 const pengirim = ref("");
 const alamat_tujuan = ref("");
@@ -35,37 +40,31 @@ const couriers = ref([
   { code: "tiki", name: "TIKI" },
   { code: "pos", name: "POS Indonesia" },
 ]);
-
 const selectedCourier = ref("");
 const services = ref<{ service: string; description: string; cost: number; etd: string }[]>([]);
 const selectedService = ref("");
 const berat_barang = ref<number | null>(null);
 const biaya = ref<number>(0);
 
-// Tambahan: status pembayaran dan metode
+// Pembayaran
 const sudahBayar = ref(false);
-const metodePembayaran = ref(""); // 'cod' atau 'transfer'
+const metodePembayaran = ref("");
+const invoiceUrl = ref("");
 
-// Props dan emit
-const props = defineProps({ selected: { type: String, default: null } });
-const emit = defineEmits(["close", "refresh"]);
-const transaksi = ref<transaksii>({} as transaksii);
-
-// Validasi form
+// Validasi
 const formSchema = Yup.object({
-  nama_barang: Yup.string().required("Nama Barang harus diisi"),
-  penerima: Yup.string().required("Nama Penerima harus diisi"),
-  alamat_asal: Yup.string().required("Alamat Tujuan harus diisi"),
-  alamat_tujuan: Yup.string().required("Alamat Tujuan harus diisi"),
-  no_hp_penerima: Yup.string().required("No HP Penerima harus diisi"),
-  pengirim: Yup.string().required("pengirim harus diisi"),
-  provinceOrigin: Yup.string().required().notOneOf(["0"], "Provinsi asal harus dipilih"),
-  cityOrigin: Yup.string().required("Kota asal harus dipilih"),
-  provinceDestination: Yup.string().required().notOneOf(["0"], "Provinsi tujuan harus dipilih"),
-  cityDestination: Yup.string().required("Kota tujuan harus dipilih"),
-  kurir: Yup.string().required("Ekspedisi harus dipilih"),
-  layanan: Yup.string().required("Layanan harus dipilih"),
-  berat_barang: Yup.number().required("Berat barang harus diisi").min(0.1, "Berat minimal 0.1 kg"),
+  nama_barang: Yup.string().required(),
+  penerima: Yup.string().required(),
+  alamat_tujuan: Yup.string().required(),
+  no_hp_penerima: Yup.string().required(),
+  pengirim: Yup.string().required(),
+  provinceOrigin: Yup.string().required().notOneOf(["0"]),
+  cityOrigin: Yup.string().required(),
+  provinceDestination: Yup.string().required().notOneOf(["0"]),
+  cityDestination: Yup.string().required(),
+  kurir: Yup.string().required(),
+  layanan: Yup.string().required(),
+  berat_barang: Yup.number().required().min(0.1),
 });
 
 const { handleSubmit, errors, resetForm } = useForm({
@@ -86,13 +85,13 @@ const { handleSubmit, errors, resetForm } = useForm({
   },
 });
 
-// Fetch data dari API
+// API Lokasi
 const fetchProvinces = async () => {
   try {
     const res = await axios.get("/provinces");
     provinces.value = res.data;
   } catch {
-    toast.error("Gagal mengambil data provinsi");
+    toast.error("Gagal mengambil provinsi");
   }
 };
 
@@ -109,16 +108,14 @@ const fetchCities = async (type: "origin" | "destination") => {
       cityDestination.value = "";
     }
   } catch {
-    toast.error("Gagal mengambil data kota");
+    toast.error("Gagal mengambil kota");
   }
 };
 
 // Ongkir
 const getSelectedCost = () => {
   const service = services.value.find(s => s.service === selectedService.value);
-  const cost = service?.cost ?? 0;
-  biaya.value = cost;
-  return cost;
+  biaya.value = service?.cost ?? 0;
 };
 
 const fetchOngkir = async () => {
@@ -152,65 +149,62 @@ const fetchOngkir = async () => {
     selectedService.value = "";
     biaya.value = 0;
   } catch {
-    toast.error("Gagal mengambil data ongkir");
-    services.value = [];
-    selectedService.value = "";
-    biaya.value = 0;
+    toast.error("Gagal mengambil ongkir");
   } finally {
     unblock(document.getElementById("form-transaksii"));
   }
 };
 
+// Watch lokasi/ekspedisi
 watch([provinceOrigin, cityOrigin, provinceDestination, cityDestination, selectedCourier, berat_barang], fetchOngkir);
 watch(selectedService, getSelectedCost);
 
-// Pembayaran ongkir
-// Invoice URL dari Xendit akan disimpan di sini
-const invoiceUrl = ref("");
-
-// ID transaksi yang akan dibayar (bisa juga dari props atau parameter dinamis)
-const transaksiId = props.selected || 1; // fallback ke 1 jika props.selected kosong
-
-
-const bayarOngkir = async () => {
-  const draft = {
-    penerima: penerima.value,
-    no_hp_penerima: no_hp_penerima.value,
-    provinceDestination: provinceDestination.value,
-    cityDestination: cityDestination.value,
-    alamat_tujuan: alamat_tujuan.value,
-
-    pengirim: pengirim.value,
-    nama_barang: nama_barang.value,
-    provinceOrigin: provinceOrigin.value,
-    cityOrigin: cityOrigin.value,
-    alamat_asal: transaksi.value.alamat_asal || "",
-
-    selectedCourier: selectedCourier.value,
-    selectedService: selectedService.value,
-    berat_barang: berat_barang.value,
-    biaya: biaya.value,
-  };
-
-  // Simpan data transaksi ke sessionStorage untuk digunakan nanti
-  sessionStorage.setItem("draftTransaksi", JSON.stringify(draft));
-
-  try {
-    const res = await axios.post("/payment", draft);
-
-    const { redirect_url } = res.data;
-    if (redirect_url) {
-      window.location.href = redirect_url;
-    } else {
-      toast.error("URL pembayaran tidak ditemukan.");
-    }
-  } catch (err: any) {
-    toast.error(err?.response?.data?.message || "Gagal membuat pembayaran.");
-  }
+const statusLabel = (status: string) => {
+  if (status === 'lunas') return 'Lunas';
+  if (status === 'pending') return 'Menunggu Pembayaran';
+  if (status === 'gagal') return 'Gagal';
+  return status;
 };
 
+// Pembayaran via Midtrans
+// const bayarOngkir = async () => {
+//   const draft = {
+//     penerima: penerima.value,
+//     no_hp_penerima: no_hp_penerima.value,
+//     provinceDestination: provinceDestination.value,
+//     cityDestination: cityDestination.value,
+//     alamat_tujuan: alamat_tujuan.value,
+//     pengirim: pengirim.value,
+//     nama_barang: nama_barang.value,
+//     provinceOrigin: provinceOrigin.value,
+//     cityOrigin: cityOrigin.value,
+//     alamat_asal: transaksi.value.alamat_asal || "",
+//     selectedCourier: selectedCourier.value,
+//     selectedService: selectedService.value,
+//     berat_barang: berat_barang.value,
+//     biaya: biaya.value,
+//   };
+  
+
+//   sessionStorage.setItem("draftTransaksi", JSON.stringify(draft));
+
+//   try {
+//     const res = await axios.post("/payment", draft);
+//     // const res = await axios.post("/payment", draft);
+//     const { redirect_url, order_id } = res.data;
+//     if (redirect_url) {
+//     sessionStorage.setItem("midtrans_order_id", order_id); // simpan untuk post-redirect
+//     window.location.href = redirect_url;
+//   } else {
+//       toast.error("URL pembayaran tidak ditemukan.");
+//     }
+//   } catch (err: any) {
+//     toast.error(err?.response?.data?.message || "Gagal membuat pembayaran.");
+//   }
+// };
+
 // Submit transaksi
-function onSubmit() {
+const onSubmit = () => {
   const formData = new FormData();
 
   formData.append("penerima", penerima.value);
@@ -218,13 +212,11 @@ function onSubmit() {
   formData.append("tujuan_kota_id", cityDestination.value);
   formData.append("alamat_tujuan", alamat_tujuan.value);
   formData.append("no_hp_penerima", no_hp_penerima.value);
-
   formData.append("pengirim", pengirim.value);
   formData.append("nama_barang", nama_barang.value);
   formData.append("asal_provinsi_id", provinceOrigin.value);
   formData.append("asal_kota_id", cityOrigin.value);
   formData.append("alamat_asal", transaksi.value.alamat_asal || "");
-
   formData.append("ekspedisi", selectedCourier.value);
   formData.append("layanan", selectedService.value);
   formData.append("berat_barang", berat_barang.value?.toString() || "0");
@@ -247,8 +239,8 @@ function onSubmit() {
     .then(() => {
       emit("close");
       emit("refresh");
-      toast.success("Data berhasil disimpan");
-      formRef.value.resetForm();
+      toast.success("Transaksi berhasil disimpan");
+      formRef.value?.resetForm();
     })
     .catch((err: any) => {
       const message = err.response?.data?.message || "Terjadi kesalahan.";
@@ -257,37 +249,35 @@ function onSubmit() {
     .finally(() => {
       unblock(document.getElementById("form-transaksii"));
     });
-}
+};
 
-onMounted(fetchProvinces);
-// PaymentSuccess.vue
-onMounted(() => {
-  const draft = JSON.parse(sessionStorage.getItem("draftTransaksi") || "{}");
-
-  const formData = new FormData();
-  for (const key in draft) {
-    formData.append(key, draft[key]);
-  }
-
-  axios.post("/transaksii/store", formData, {
-    headers: { "Content-Type": "multipart/form-data" },
-  })
-  .then(() => {
-    toast.success("Order berhasil disimpan setelah pembayaran!");
-    sessionStorage.removeItem("draftTransaksi");
-  })
-  .catch(() => {
-    toast.error("Gagal menyimpan order setelah pembayaran.");
-  });
-});
-
+// Setelah redirect dari Midtrans
 // onMounted(() => {
-//   const script = document.createElement('script');
-//   script.src = 'https://app.sandbox.midtrans.com/snap/snap.js';
-//   script.setAttribute('data-client-key', 'SB-Mid-client-xxxxxx');
-//   script.async = true;
-//   document.body.appendChild(script);
+//   const draft = JSON.parse(sessionStorage.getItem("draftTransaksi") || "{}");
+//   const orderId = sessionStorage.getItem("midtrans_order_id");
+//   if (!draft || !orderId) return;
+
+//   draft.order_id = orderId;
+//   draft.status = "diproses";
+
+//   const formData = new FormData();
+//   Object.entries(draft).forEach(([key, val]) => formData.append(key, val as string));
+
+//   axios.post("/transaksii/store", formData, {
+//     headers: { "Content-Type": "multipart/form-data" },
+//   })
+//     .then(() => {
+//       toast.success("Transaksi berhasil disimpan.");
+//       sessionStorage.removeItem("draftTransaksi");
+//       sessionStorage.removeItem("midtrans_order_id");
+//     })
+//     .catch(() => {
+//       toast.error("Gagal menyimpan transaksi.");
+//     });
 // });
+
+// Inisialisasi
+onMounted(fetchProvinces);
 </script>
 
 

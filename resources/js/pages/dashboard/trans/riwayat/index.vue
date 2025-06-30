@@ -3,10 +3,10 @@ import { h, ref, watch } from "vue";
 import { useDelete } from "@/libs/hooks";
 // import Form from "./Form.vue";
 import { createColumnHelper } from "@tanstack/vue-table";
-import type { transaksii } from "@/types";
+import type { transaksi } from "@/types";
 import Swal from "sweetalert2";
 
-const column = createColumnHelper<transaksii>();
+const column = createColumnHelper<transaksi>();
 const paginateRef = ref<any>(null);
 const selected = ref<string>("");
 const openForm = ref<boolean>(false);
@@ -43,9 +43,9 @@ function showKurirDetail(pengguna) {
 const { delete: deleteOrder } = useDelete({
   onSuccess: () => paginateRef.value.refetch(),
 });
-const detailData = ref<transaksii | null>(null);
+const detailData = ref<transaksi | null>(null);
 
-const showRincian = (data: transaksii) => {
+const showRincian = (data: transaksi) => {
   detailData.value = data;
 };
 
@@ -125,8 +125,8 @@ watch(openForm, (val) => {
             </button> -->
     </div>
     <div class="card-body">
-      <!-- <paginate ref="paginateRef" id="table-transaksii" url="/transaksii" :columns="columns"></paginate> -->
-      <paginate ref="paginateRef" id="table-transaksii" url="/trans?status=Terkirim" :columns="columns"></paginate>
+      <!-- <paginate ref="paginateRef" id="table-transaksi" url="/transaksi" :columns="columns"></paginate> -->
+      <paginate ref="paginateRef" id="table-transaksi" url="/trans?status=Terkirim" :columns="columns"></paginate>
 
       <!-- DETAIL -->
       <div v-if="detailData" class="card mt-5">

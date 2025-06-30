@@ -28,9 +28,9 @@ class PengirimanController extends Controller
         DB::statement(query: 'set @no=0+' . $page * $per);
         // $pengiriman = Pengiriman::with('user')
         // Pengiriman::with('kurir.user');
-       $data = Pengiriman::with('transaksii') // tambahkan ini
-        ->join('kurir','kurir.kurir_id', '=','pengiriman.kurir_id')
-        ->join('users','users.id','=','kurir.user_id')
+       $data = Pengiriman::with('transaksii')->with('kurir.user')// tambahkan ini
+        // ->join('kurir','kurir.kurir_id', '=','pengiriman.kurir_id')
+        // ->join('users','users.id','=','kurir.user_id')
         ->when($request->search, function (Builder $query, string $search) {
             $query->where('kurir_id', 'like', "%$search%")
                 ->orWhere('deskripsi', 'like', "%$search%")
@@ -82,7 +82,7 @@ class PengirimanController extends Controller
     {
         $request->validate([
             'deskripsi' => 'required|string',
-            'kurir_id' => 'required|exists:kurir,kurir_id',
+            'kurir_id' => 'nullable|exists:kurir,kurir_id',
             'transaksii_id' => 'required|exists:transaksii,id',
         ]);
 

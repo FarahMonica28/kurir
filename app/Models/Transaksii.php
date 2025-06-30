@@ -18,12 +18,12 @@ class Transaksii extends Model
         'berat_barang', 'ekspedisi', 'layanan', 'biaya', 'waktu',
         'status', 'rating', 'komentar',
         'asal_provinsi_id', 'asal_kota_id', 'tujuan_provinsi_id', 'tujuan_kota_id',
-        'pengguna_id', 'pernah_digudang',
+        'pengguna_id', 'pernah_digudang', 'status_pembayaran',
     ];
 
     protected static function generateNoResi()
     {
-        $prefix = 'RESI-' . now()->format('Ymd');
+        $prefix = 'ABC-' . now()->format('Ymd');
         $random = strtoupper(Str::random(6));
 
         return $prefix . '-' . $random;
@@ -51,6 +51,9 @@ class Transaksii extends Model
 
     public function kurir() {
         return $this->belongsTo(Kurir::class, 'kurir_id');
+    }
+    public function pengguna() {
+        return $this->belongsTo(Kurir::class, 'pengguna_id');
     }
     public function pengiriman()
     {

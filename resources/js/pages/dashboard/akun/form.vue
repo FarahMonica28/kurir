@@ -1,4 +1,4 @@
-<script setup lang="ts">
+ <script setup lang="ts">
 import { block, unblock } from "@/libs/utils";
 import { onMounted, ref, watch } from "vue";
 import * as Yup from "yup";
@@ -133,7 +133,7 @@ onMounted(() => {
   if (props.selected) {
     getEdit();
   }
-});
+});  
 
 watch(
   () => props.selected,

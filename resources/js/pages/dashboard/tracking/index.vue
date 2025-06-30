@@ -1,10 +1,12 @@
-
 <template>
   <div class="container">
     <h2 class="text-xl font-semibold mb-4 mt-8">Lacak Pengiriman</h2>
     <div class="mb-4" id="no">
-      <h3><label for="noResi" class="block mb-1 mt-6">Nomor Resi :</label>
-      <input v-model="noResi" id="noResi" type="text" class="form-input w-full border rounded" placeholder="Contoh: ABC-123456" /></h3>
+      <h3>
+        <label for="noResi" class="block mb-1 mt-6">Nomor Resi :</label>
+        <input v-model="noResi" id="noResi" type="text" class="form-input w-full border rounded"
+          placeholder="Contoh: ABC-123456" />
+      </h3>
     </div>
 
     <button class="px-4 py-2 rounded" id="lacak" @click="trackResi" :disabled="loading">
@@ -14,9 +16,7 @@
     <div v-if="error" class="text-red-600 mt-4">{{ error }}</div>
 
     <div v-if="data" class="mt-6 border rounded p-4 bg-gray-50">
-      <p class="mt-5">
-        <strong>Status : </strong> {{ data.status }}
-      </p>
+      <p class="mt-5"><strong>Status : </strong> {{ data.status }}</p>
       <p class="mt-5">
         <strong>Ekspedisi : </strong> <span class="text-danger">{{ data.ekspedisi }}</span>
       </p>
@@ -43,11 +43,15 @@
             <div class="dot"></div>
             <div class="content">
               <div class="time">{{ data.waktu_diambil.slice(11, 16) }}</div>
-              <div class="desc">Kurir sedang menuju ke rumahmu {{ data.alamat_asal }}</div>
+              <div class="desc">
+                Kurir <strong>{{ data?.ambil?.name || 'Kurir' }}</strong> sedang menuju ke rumahmu {{
+                  data.alamat_asal }}
+              </div>
             </div>
           </div>
         </div>
       </div>
+
       <!-- Diambil -->
       <div v-if="data.waktu_dikurir" class="tracking-header">
         <p class="tracking-date">{{ formatDate(data.waktu_dikurir) }}</p>
@@ -56,7 +60,7 @@
             <div class="dot"></div>
             <div class="content">
               <div class="time">{{ data.waktu_dikurir.slice(11, 16) }}</div>
-              <div class="desc">Kurir menuju gudang penempatan paket</div>
+              <div class="desc">Kurir <strong>{{ data?.ambil?.name || 'Kurir' }}</strong> menuju gudang penempatan paket</div>
             </div>
           </div>
         </div>
@@ -85,7 +89,8 @@
             <div class="content">
               <div class="time">{{ data.waktu_proses.slice(11, 16) }}</div>
               <div class="desc">
-                Paket akan dikirim ke provinsi {{ data.tujuan_provinsi.name }} dan ke kota {{ data.asal_kota.name }}
+                Paket akan dikirim ke provinsi {{ data.tujuan_provinsi.name }} dan ke kota
+                {{ data.asal_kota.name }}
               </div>
             </div>
           </div>
@@ -100,9 +105,7 @@
             <div class="dot"></div>
             <div class="content">
               <div class="time">{{ data.waktu_tiba.slice(11, 16) }}</div>
-              <div class="desc">
-                Paket telah tiba digudang kota {{ data.asal_kota.name }}
-              </div>
+              <div class="desc">Paket telah tiba digudang kota {{ data.asal_kota.name }}</div>
             </div>
           </div>
         </div>
@@ -117,6 +120,7 @@
             <div class="content">
               <div class="time">{{ data.waktu_kirim.slice(11, 16) }}</div>
               <div class="desc">Paket menuju ke alamat tujuan {{ data.alamat_tujuan }}</div>
+              <!-- <div class="desc">Kurir <strong>{{ data?.antar?.name || 'Kurir' }}</strong> menuju ke alamat tujuan {{ data.alamat_tujuan }}</div> -->
             </div>
           </div>
         </div>
@@ -135,13 +139,12 @@
           </div>
         </div>
       </div>
-
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import axios from 'axios'
 
 const noResi = ref('')
@@ -151,11 +154,8 @@ const loading = ref(false)
 
 function formatDate(dateString: string): string {
   const date = new Date(dateString)
-  // return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }) // contoh: "27 Mei"
   return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
 }
-
-
 
 const trackResi = async () => {
   error.value = ''
@@ -166,26 +166,47 @@ const trackResi = async () => {
     const response = await axios.get(`/tracking/${noResi.value}`)
     data.value = response.data.data
     console.log("Sudah dapat Data :", data.value)
+
+    // Ambil data kurir jika ada
+    if (data.value.kurir_id) {
+      try {
+        const resKurir = await axios.get(`/kurir/${data.value.kurir_id}`)
+        data.value.kurir = resKurir.data
+      } catch (e) {
+        console.warn('Gagal memuat data kurir', e)
+      }
+    }
   } catch (err: any) {
-    error.value =
-      err.response?.data?.message || 'Terjadi kesalahan saat melacak resi.'
+    error.value = err.response?.data?.message || 'Terjadi kesalahan saat melacak resi.'
   } finally {
-    console.log("finaly")
     loading.value = false
   }
 }
+const kurirAmbil = computed(() =>
+  data.value?.pengiriman?.find(p => p.status?.toLowerCase() === 'ambil')?.kurir
+)
+
+
+const kurirKirim = computed(() =>
+  data.value?.pengiriman?.find(p => p.status?.toLowerCase() === 'antar')?.kurir
+)
+
+
 </script>
 
 
+
 <style scoped>
-input{
+input {
   border-radius: 5%;
 }
-.container{
+
+.container {
   /* text-align: center; */
   /* border: 1px solid; */
   width: 60%;
 }
+
 #noResi {
   width: 50%;
   margin-left: 1%;

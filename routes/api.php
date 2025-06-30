@@ -70,18 +70,38 @@ Route::post('/rating', action: [TransaksiiController::class, 'storePenilaian']);
 // Route::post('/payment', [PembayaranController::class, 'createInvoice']);
 // Route::post('/payment', [PembayaranController::class, 'store']);
 // Route::prefix('v1')->group(function () {
-//     Route::post('/payment', [PembayaranController::class, 'store']);
-Route::post('/payment', [TransaksiiController::class, 'payment']);
+    // Route::post('/payment', [PembayaranController::class, 'payment']);
+    //     Route::post('/payment', [PembayaranController::class, 'store']);
 Route::get('/payment/success', function () {
     return view('payment.success');
 })->withoutMiddleware(['auth', 'permission']); // atau 'web' saja
+// Route::post('/midtrans/notification', [MidtransController::class, 'handleNotification']);
+
+
 
 // Route::post('/payment-temp', [TransaksiiController::class, 'paymentTemp']);
 // Route::post('/payment', [PembayaranController::class, 'payment']);
 // });
+
+Route::post('/payment', [PaymentController::class, 'payment']);
+// Route::post('/payment/callback', [PaymentController::class, 'handleCallback']);
+// Route::post('/midtrans/notification', [PaymentController::class, 'handleNotification']);
+Route::get('/payment/{id}', [PaymentController::class, 'show'])->name('payment.show');
+Route::post('/pay', [PaymentController::class, 'pay']);
+Route::get('/payment/token/{id}', [PaymentController::class, 'getSnapToken']);
+// Route::post('/webhook/midtrans', [PaymentController::class, 'handleNotification']);
+// Route::post('/webhook/midtrans', [PaymentController::class, 'handleWebhook']);
+
+Route::post('/midtrans/notification', [PaymentController::class, 'handleNotification']);
+Route::post('/manual-update-status', [Paymentcontroller::class, 'manualUpdateStatus']);
+
+// Route::post('/payment/callback', [paymentController::class, 'callback']);
+
+
+
 // Route::post('/payment', [PaymentController::class, 'create']);
 // Route::post('/payment', [PaymentController::class, 'pay']);
-Route::post('/payment/callback', [MidtransController::class, 'handleCallback']);
+// Route::post('/payment/callback', [MidtransController::class, 'handleCallback']);
 
 
 // Route::post('/payment', [PembayaranController::class, 'createPayment']);
@@ -229,7 +249,7 @@ Route::middleware(['auth', 'verified', 'json'])->group(function () {
         // Menampilkan list transaksi (pada halaman index)
         Route::get('transaksi', [TransaksiController::class, 'get'])->withoutMiddleware('can:transaksi');
         // Route::post('transaksi', [TransaksiController::class, 'index'])->withoutMiddleware('can:transaksi'); // ini mengijinkan kurir mengambil data yang dimasukan pengguna
-        Route::post('transaksi', [TransaksiController::class, 'index']); // => ini salah mangkanya role kurir tidak memunculkan data        Route::get('pengirimans{id}', [PengirimansController::class, 'get'])->withoutMiddleware('can:pengirimans');
+        Route::post('transaksi', [TransaksiController::class, 'index'])->withoutMiddleware('can:transaksi'); // => ini salah mangkanya role kurir tidak memunculkan data        Route::get('pengirimans{id}', [PengirimansController::class, 'get'])->withoutMiddleware('can:pengirimans');
         // Halaman untuk membuat transaksi baru
         Route::get('transaksi/create', [TransaksiController::class, 'create'])->name('transaksi.create');
         // Route::get('/transaksi', [TransaksiController::class, 'index'])->middleware('can:viewAny,App\Models\Transaksi');
