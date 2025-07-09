@@ -25,7 +25,7 @@ class PermissionSeeder extends Seeder
         $permissionsByRole = [
             'admin' => ['dashboard', ...$menuMaster, ...$menuWebsite],
             'kurir' => ['dashboard', ...$menuMaster, ...$menuWebsite],
-            'pengguna' => ['dashboard', ...$menuMaster, ...$menuWebsite],
+            'pengguna' => ['', ...$menuMaster, ...$menuWebsite],
         ];
 
         $insertPermissions = fn ($role) => collect($permissionsByRole[$role])

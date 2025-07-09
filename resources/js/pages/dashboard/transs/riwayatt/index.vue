@@ -24,6 +24,9 @@ const columns = [
     // column.accessor("pengguna.name", {
     //     header: "Pengirim",
     // }),
+    column.accessor("pengguna.user.name", {
+    header: "Pengirim",
+    }),
     column.accessor("nama_barang", {
         header: "Nama Barang",
     }),
@@ -166,3 +169,13 @@ watch(openForm, (val) => {
         </div>
     </div>
 </template>
+
+
+
+
+
+
+
+
+
+

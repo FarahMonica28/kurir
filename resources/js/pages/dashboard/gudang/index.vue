@@ -13,7 +13,7 @@ const paginateRef = ref<any>(null);
 const selected = ref<string>("");
 const openForm = ref<boolean>(false);
 const detailData = ref<transaksii | null>(null);
-const printData = ref<transaksii  | null>(null);
+const printData = ref<transaksii | null>(null);
 
 // Cetak PDF
 const printResi = async (data: transaksii) => {
@@ -30,7 +30,7 @@ const printResi = async (data: transaksii) => {
     if (result.isConfirmed) {
         try {
             // Update status menjadi 'diproses'
-            await axios.put(`/transaksii/${data.id}/ambil`, { status: "diproses" });
+            await axios.put(`/transaksii/${data.id}/gudang`, { status: "diproses" });
 
             // Refresh table agar status langsung terlihat berubah
             refresh();
@@ -84,7 +84,7 @@ const markAsArrived = async (data: transaksii) => {
 
     if (result.isConfirmed) {
         try {
-            await axios.put(`/transaksii/${data.id}/ambil`, { status: "tiba digudang" });
+            await axios.put(`/transaksii/${data.id}/gudang`, { status: "tiba digudang" });
             refresh();
             Swal.fire({
                 title: "Berhasil",
@@ -107,7 +107,7 @@ const markAsArrived = async (data: transaksii) => {
 
 const url = computed(() => {
     const params = new URLSearchParams();
-    ['menunggu','dikurir', 'diambil kurir', 'dikirim', 'selesai'].forEach(status => {
+    ['menunggu', 'dikurir', 'diambil kurir', 'dikirim', 'selesai'].forEach(status => {
         params.append('exclude_status[]', status);
     });
     return `/transaksii?${params.toString()}`;
@@ -124,9 +124,10 @@ const closeDetail = () => {
 const columns = [
     column.accessor("no", { header: "#" }),
     column.accessor("no_resi", { header: "No Resi" }),
-    column.accessor("tujuan_provinsi.name", {header: "Provinsi Tujuan",}),
-    column.accessor("tujuan_kota.name", {header: "Kota Tujuan",}),
-    column.accessor("pengirim", { header: "Pengirim" }),
+    column.accessor("tujuan_provinsi.name", { header: "Provinsi Tujuan", }),
+    column.accessor("tujuan_kota.name", { header: "Kota Tujuan", }),
+    // column.accessor("pengirim", { header: "Pengirim" }),
+    column.accessor("pengguna.user.name", { header: "Pengirim" }),
     column.accessor("nama_barang", { header: "Nama Barang" }),
     column.accessor("status", {
         header: "Status",
@@ -211,7 +212,7 @@ watch(openForm, (val) => {
 
                     <div class="resi-content">
                         <div class="resi-left">
-                            <div class="mb-2 text-center">
+                            <div class="mb-2 text-center mt-4">
                                 <strong>Ekspedisi:</strong><br />
                                 <h1><strong>{{ printData.ekspedisi || 'JNE / J&T' }}</strong></h1>
                             </div>
@@ -220,7 +221,8 @@ watch(openForm, (val) => {
                             </strong>
                             <div class="mt-4">
                                 <strong>Informasi Pengirim:</strong>
-                                <p class="mt-4">Nama Pengirim : {{ printData.pengirim || '-' }}</p>
+                                <!-- <p class="mt-4">Nama Pengirim : {{ printData.pengirim || '-' }}</p> -->
+                                <p><strong>Pengirim:</strong> {{ detailData.pengguna?.user.name || '-' }}</p>
                                 <p>Asal Provinsi : {{ printData.asal_provinsi?.name }}</p>
                                 <p>Asal Kota : {{ printData.asal_kota?.name }}</p>
                                 <p>Alamat Asal : {{ printData.alamat_asal }} </p>
@@ -231,7 +233,9 @@ watch(openForm, (val) => {
                             <div class="mb-2">
                                 <strong>Tanggal:</strong> {{ printData.waktu }}<br />
                                 <strong>Jumlah:</strong> {{ printData.berat_barang }} kg<br />
-                                <strong>Biaya:</strong> Rp{{ printData.biaya?.toLocaleString() || '-' }}
+                                <strong>Biaya:</strong> Rp{{ printData.biaya?.toLocaleString() || '-' }} <br />
+                                <strong>Status Pembayaran :</strong> {{ printData.status_pembayaran }}<br />
+
                             </div>
                             <div class="mt-4">
                                 <strong>Informasi Penerima:</strong><br />
@@ -256,13 +260,21 @@ watch(openForm, (val) => {
                 </div>
                 <div class="card-body">
                     <div class="row">
-                        <div class="col-md-6">
-                            <p><strong>No Resi:</strong> {{ detailData.no_resi }}</p>
-                        </div>
-                        <hr />
                         <div class="row">
                             <div class="col-md-6">
-                                <p><strong>Pengirim:</strong> {{ detailData.pengirim || '-' }}</p>
+                                <p><strong>No Resi:</strong> {{ detailData.no_resi }}</p>
+                            </div>
+
+                            <div class="col-md-6">
+                                <p><strong>Status Pembayaran:</strong> {{ detailData.status_pembayaran }}</p>
+
+                            </div>
+                        </div>
+                        <hr class="mt-4" />
+                        <div class="row">
+                            <div class="col-md-6">
+                                <!-- <p><strong>Pengirim:</strong> {{ detailData.pengirim || '-' }}</p> -->
+                                <p><strong>Pengirim:</strong> {{ detailData.pengguna?.user.name || '-' }}</p>
                                 <p><strong>Nama Barang:</strong> {{ detailData.nama_barang }}</p>
                                 <p><strong>Berat Barang:</strong> {{ detailData.berat_barang }} kg</p>
                                 <p><strong>Provinsi Asal:</strong> {{ detailData.asal_provinsi?.name || '-' }}</p>
@@ -278,6 +290,7 @@ watch(openForm, (val) => {
                                 <p><strong>Alamat Tujuan:</strong> {{ detailData.alamat_tujuan }}</p>
                             </div>
                         </div>
+                        <hr />
                     </div>
                     <hr />
                 </div>

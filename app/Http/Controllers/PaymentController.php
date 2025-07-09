@@ -227,7 +227,9 @@ public function getSnapToken($id)
         ],
         'customer_details' => [
             'first_name' => $transaksii->pengirim,
-            'email' => $transaksii->pengguna->email ?? 'user@gmail.com',
+            // 'email' => $transaksii->pengguna->email ?? 'user@gmail.com',
+            'email' => $transaksii->pengguna_id ? ($transaksii->pengguna->email ?? 'user@gmail.com') : 'user@gmail.com',
+
         ]
     ];
 

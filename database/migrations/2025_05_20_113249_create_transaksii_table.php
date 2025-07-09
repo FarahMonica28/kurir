@@ -32,7 +32,7 @@ return new class extends Migration
             $table->foreignId('tujuan_kota_id')->constrained('cities');
 
             // Relasi pengguna dan kurir
-            $table->foreignId('pengguna_id')->constrained('users');
+            $table->foreignId('pengguna_id')->constrained('pengguna');
             // $table->foreignId('kurir_id')->constrained('users');
 
             $table->timestamps();

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Kurir;
 use App\Http\Requests\StoreKurirRequest;
 use App\Http\Requests\UpdateKurirRequest;
+use App\Models\Pengiriman;
 use App\Models\Transaksi;
 use App\Models\Transaksii;
 use Illuminate\Http\Request;
@@ -378,26 +379,41 @@ class KurirController extends Controller
         ]);
     }
 
-    public function updateRating($kurir_id)
-    {
-        $kurir = Kurir::findOrFail($kurir_id);
+    // public function updateRating($kurir_id)
+    // {
+    //     $kurir = Kurir::findOrFail($kurir_id);
 
-        // Hitung rata-rata rating dari semua transaksi selesai yang punya rating (tidak null)
-        $averageRating = Transaksii::where('kurir_id', $kurir_id)
-            ->where('status', 'selesai')
+    //     // Hitung rata-rata rating dari semua transaksi selesai yang punya rating (tidak null)
+    //     $averageRating = Transaksii::where('kurir_id', $kurir_id)
+    //         ->where('status', 'selesai')
+    //         ->whereNotNull('rating')
+    //         ->avg('rating');
+
+    //     // Update rating di tabel kurir
+    //     $kurir->rating = round($averageRating, 2); // dibulatkan ke 2 angka di belakang koma
+    //     $kurir->save();
+
+    //     return response()->json([
+    //         'success' => true,
+    //         'message' => 'Rating kurir berhasil diperbarui',
+    //         'rating' => $kurir->rating
+    //     ]);
+    // }
+
+
+    public function updateRating($kurirId)
+    {
+        $avgRating = Pengiriman::where('kurir_id', $kurirId)
             ->whereNotNull('rating')
             ->avg('rating');
 
-        // Update rating di tabel kurir
-        $kurir->rating = round($averageRating, 2); // dibulatkan ke 2 angka di belakang koma
-        $kurir->save();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Rating kurir berhasil diperbarui',
-            'rating' => $kurir->rating
-        ]);
+        $kurir = Kurir::find($kurirId);
+        if ($kurir) {
+            $kurir->rating = $avgRating;
+            $kurir->save();
+        }
     }
+
 
     // public function destroy(Kurir $kurir)
     // {

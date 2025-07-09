@@ -15,7 +15,10 @@ class Pengiriman extends Model
     protected $fillable = [
         'deskripsi',
         'kurir_id', 
+        'status',
         'transaksii_id',
+        'rating',
+        'komentar',
     ];
 
     public function trackingLogs()

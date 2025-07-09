@@ -6,6 +6,7 @@ use App\Models\City;
 use App\Models\Province;
 use Illuminate\Http\Request;
 use dimaslanjaka\RajaOngkir\Facades\RajaOngkir;
+use Illuminate\Support\Facades\Http;
 
 class CheckOngkirController extends Controller
 {
@@ -41,5 +42,22 @@ class CheckOngkirController extends Controller
         ])->get();
 
         return response()->json($cost);
+    }
+
+    public function trackWaybill(Request $request)
+    {
+        $validated = $request->validate([
+            'waybill' => 'required|string',
+            'courier' => 'required|string', // misalnya: jne, tiki, pos, sicepat, jnt, dll
+        ]);
+
+        $response = Http::withHeaders([
+            'key' => env('RAJAONGKIR_API_KEY'),
+        ])->post('https://pro.rajaongkir.com/api/waybill', [
+            'waybill' => $validated['waybill'],
+            'courier' => $validated['courier'],
+        ]);
+
+        return response()->json($response->json());
     }
 }

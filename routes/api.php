@@ -22,6 +22,7 @@ use App\Http\Controllers\KurirController;
 use App\Http\Controllers\TrackingController;
 use App\Http\Controllers\RajaOngkirController;
 
+use App\Http\Controllers\BinderbyteController;
 use Illuminate\Support\Facades\Route;
 /*
 |--------------------------------------------------------------------------
@@ -49,6 +50,9 @@ Route::get('/rajaongkir/cities', [RajaOngkirController::class, 'getCities']);
 Route::get('/province', [CheckOngkirController::class, 'getProvinces']);
 Route::get('/cities/{province_id}', [CheckOngkirController::class, 'getCities']);
 Route::post('/ongkir', [CheckOngkirController::class, 'checkOngkir']);
+    // Route::post('/track-waybill', [CheckOngkirController::class, 'trackWaybill']);
+
+    
     
 Route::post('/transaksii', [TransaksiiController::class, 'index']);
 Route::get('/transaksii/{id}', [TransaksiiController::class, 'get']);
@@ -61,7 +65,8 @@ Route::get('/cities/{provinceId}', [TransaksiiController::class, 'getCities']);
 Route::post('/cost', [TransaksiiController::class, 'hitungOngkir']);
     // routes/api.php
 Route::put('/transaksii/{id}/antar', [TransaksiiController::class, 'antar']);
-Route::put('/transaksii/{id}/ambil', [TransaksiiController::class, 'ambil']);
+Route::put('/transaksii/{id}/ambil', action: [TransaksiiController::class, 'ambil']);
+Route::put('/transaksii/{id}/gudang', [TransaksiiController::class, 'gudang']);
 Route::post('/rating', action: [TransaksiiController::class, 'storePenilaian']);
 
 // Route::post('/xendit/callback', [TransaksiiController::class, 'handleCallback']);
@@ -83,11 +88,11 @@ Route::get('/payment/success', function () {
 // Route::post('/payment', [PembayaranController::class, 'payment']);
 // });
 
-Route::post('/payment', [PaymentController::class, 'payment']);
+// Route::post('/payment', [PaymentController::class, 'payment']);
 // Route::post('/payment/callback', [PaymentController::class, 'handleCallback']);
 // Route::post('/midtrans/notification', [PaymentController::class, 'handleNotification']);
 Route::get('/payment/{id}', [PaymentController::class, 'show'])->name('payment.show');
-Route::post('/pay', [PaymentController::class, 'pay']);
+// Route::post('/pay', [PaymentController::class, 'pay']);
 Route::get('/payment/token/{id}', [PaymentController::class, 'getSnapToken']);
 // Route::post('/webhook/midtrans', [PaymentController::class, 'handleNotification']);
 // Route::post('/webhook/midtrans', [PaymentController::class, 'handleWebhook']);
@@ -111,6 +116,12 @@ Route::post('/manual-update-status', [Paymentcontroller::class, 'manualUpdateSta
 Route::get('/tracking/{no_resi}', [TrackingController::class, 'track']);
 // Route::get('/tracking/{no_resi}', [TrackingController::class, 'track'])->withoutMiddleware(['auth']);
 // Route::get('/tracking/{no_resi}', [TrackingController::class, 'show']);
+
+
+Route::get('/cek-ongkir', [BinderbyteController::class, 'cekOngkir']);
+Route::get('/cek-resi', [BinderbyteController::class, 'cekResi']);
+Route::post('/ongkir', [BinderbyteController::class, 'cekOngkir']);
+
 
 // Route::get('/checkout', 'PaymentController@checkout');
 

@@ -32,11 +32,6 @@ class Pengguna extends Model
     {
         return $this->belongsTo(User::class, 'user_id', 'id');
     }
-
-    public function pengguna()
-    {
-        return $this->belongsTo(Pengguna::class, 'pengguna_id');
-    }
     public function transaksi()
     {
         return $this->hasMany(Transaksi::class, 'pengguna_id', 'pengguna_id');

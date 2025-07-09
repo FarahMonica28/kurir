@@ -37,22 +37,37 @@ function showKurirDetail(kurir) {
         showCloseButton: true,
     });
 }
+
+
 const kurirAmbil = computed(() =>
-    detailData.value?.pengiriman?.find(p =>
-        p.deskripsi?.toLowerCase().includes("menuju rumahmu untuk mengambil barang")
-    )?.kurir
+    detailData.value?.ambil
 );
 
 const kurirKirim = computed(() =>
-    detailData.value?.pengiriman?.find(p =>
-        p.deskripsi?.toLowerCase().includes("menuju ke alamat tujuan")
-    )?.kurir
+    detailData.value?.antar
 );
+
+const getPembayaranBadgeClass = (status: string | undefined) => {
+    const statusMap: Record<string, string> = {
+        settlement: "badge bg-success fw-bold",
+        pending: "badge bg-warning text-dark fw-bold",
+        expire: "badge bg-secondary fw-bold",
+        cancel: "badge bg-dark fw-bold",
+        deny: "badge bg-danger fw-bold",
+        failure: "badge bg-danger fw-bold",
+        refund: "badge bg-info text-dark fw-bold",
+        "belum di bayar": "badge bg-danger fw-bold",
+    };
+
+    return statusMap[status?.toLowerCase() ?? ""] || "badge bg-secondary fw-bold";
+};
+
+
 const columns = [
     column.accessor("no", {
         header: "#",
     }),
-    column.accessor("pengirim", {
+    column.accessor("pengguna.user.name", {
         header: "Pengirim",
     }),
     column.accessor("nama_barang", {
@@ -183,8 +198,8 @@ watch(openForm, (val) => {
                         <div class="row">
                             <div class="col-md-6">
                                 <!-- <h2>Informasi Pengirim</h2> -->
-                                <!-- <p><strong>Pengirim:</strong> {{ detailData.pengguna?.name || '-' }}</p> -->
-                                <p><strong>Pengirim:</strong> {{ detailData.pengirim || '-' }}</p>
+                                <p><strong>Pengirim:</strong> {{ detailData.pengguna?.user.name || '-' }}</p>
+                                <!-- <p><strong>Pengirim:</strong> {{ detailData.pengirim || '-' }}</p> -->
                                 <p><strong>Nama Barang:</strong> {{ detailData.nama_barang }}</p>
                                 <p><strong>Berat Barang:</strong> {{ detailData.berat_barang }} kg</p>
                                 <p><strong>Provinsi Asal:</strong> {{ detailData.asal_provinsi.name || '-' }}</p>
@@ -207,6 +222,18 @@ watch(openForm, (val) => {
                         <div class="col-md-6">
                             <p><strong>Status:</strong> {{ detailData.status }}</p>
                             <p><strong>Layanan:</strong> {{ detailData.layanan || '-' }}</p>
+                            <p><strong>Status Pembayaran: </strong>
+                                <span :class="getPembayaranBadgeClass(detailData.status_pembayaran)">
+                                    {{
+                                        detailData.status_pembayaran === 'settlement' ? 'Settlement' :
+                                            detailData.status_pembayaran === 'pending' ? 'Pending' :
+                                                detailData.status_pembayaran === 'cancel' ? 'Cancel' :
+                                                    detailData.status_pembayaran === 'expire' ? 'Expire' :
+                                                        detailData.status_pembayaran === 'belum dibayar' ? 'belum dibayar' :
+                                                            '-'
+                                    }}
+                                </span>
+                            </p>
                         </div>
                         <div class="col-md-6">
                             <!-- <p><strong>Estimasi:</strong> {{ detailData.estimasi || '-' }}</p> -->

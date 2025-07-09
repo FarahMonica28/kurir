@@ -18,7 +18,10 @@
     <div v-if="data" class="mt-6 border rounded p-4 bg-gray-50">
       <p class="mt-5"><strong>Status : </strong> {{ data.status }}</p>
       <p class="mt-5">
-        <strong>Ekspedisi : </strong> <span class="text-danger">{{ data.ekspedisi }}</span>
+        <strong>Ekspedisi : </strong> <span class="text-info">{{ data.ekspedisi }}</span>
+      </p>
+      <p class="mt-5">
+        <strong>Status Pembayaran : </strong> <span class="text-primary">{{ data.status_pembayaran }}</span>
       </p>
 
       <!-- Paket dibuat -->
@@ -60,7 +63,8 @@
             <div class="dot"></div>
             <div class="content">
               <div class="time">{{ data.waktu_dikurir.slice(11, 16) }}</div>
-              <div class="desc">Kurir <strong>{{ data?.ambil?.name || 'Kurir' }}</strong> menuju gudang penempatan paket</div>
+              <div class="desc">Kurir <strong>{{ data?.ambil?.name || 'Kurir' }}</strong> menuju gudang penempatan paket
+              </div>
             </div>
           </div>
         </div>

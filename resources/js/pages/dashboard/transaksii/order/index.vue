@@ -22,18 +22,25 @@ const showRincian = (data: transaksii) => {
 const closeDetail = () => {
     detailData.value = null;
 };
+// const kurirAmbil = computed(() =>
+//     detailData.value?.pengiriman?.find(p =>
+//         p.deskripsi?.toLowerCase().includes("menuju rumahmu untuk mengambil barang")
+//     )?.kurir
+// );
 
+// const kurirKirim = computed(() =>
+//     detailData.value?.pengiriman?.find(p =>
+//         p.deskripsi?.toLowerCase().includes("menuju ke alamat tujuan")
+//     )?.kurir
+// );
+// yg benar
 // ===[✅ TAMBAHAN: KOMPUTED UNTUK KURIR AMBIL DAN KIRIM]===
 const kurirAmbil = computed(() =>
-    detailData.value?.pengiriman?.find(p =>
-        p.deskripsi?.toLowerCase().includes("menuju rumahmu untuk mengambil barang")
-    )?.kurir
+    detailData.value?.ambil
 );
 
 const kurirKirim = computed(() =>
-    detailData.value?.pengiriman?.find(p =>
-        p.deskripsi?.toLowerCase().includes("menuju ke alamat tujuan")
-    )?.kurir
+    detailData.value?.antar
 );
 
 // ===[3]=== MODAL KURIR DETAIL
@@ -102,8 +109,8 @@ const redirectToPayment = async (id: number) => {
                 });
             },
             onPending: async (result: any) => {
-                console.log("⏳ Pembayaran pending:", result);
-                await axios.post('/api/manual-update-status', {
+                // console.log("⏳ Pembayaran pending:", result);
+                await axios.post('/manual-update-status', {
                     order_id: result.order_id,
                     transaction_status: result.transaction_status,
                     payment_type: result.payment_type
@@ -144,6 +151,18 @@ const redirectToPayment = async (id: number) => {
 
 
 
+// const getPembayaranBadgeClass = (status: string | undefined) => {
+//     const statusMap: Record<string, string> = {
+//         settlement: "badge bg-success fw-bold",
+//         pending: "badge bg-warning text-dark fw-bold",
+//         expire: "badge bg-secondary fw-bold",
+//         cancel: "badge bg-dark fw-bold",
+//         deny: "badge bg-danger fw-bold",
+//         failure: "badge bg-danger fw-bold",
+//         refund: "badge bg-info text-dark fw-bold",
+//     };
+//     return statusMap[status?.toLowerCase() ?? ""] || "badge bg-secondary fw-bold";
+// };
 const getPembayaranBadgeClass = (status: string | undefined) => {
     const statusMap: Record<string, string> = {
         settlement: "badge bg-success fw-bold",
@@ -153,14 +172,18 @@ const getPembayaranBadgeClass = (status: string | undefined) => {
         deny: "badge bg-danger fw-bold",
         failure: "badge bg-danger fw-bold",
         refund: "badge bg-info text-dark fw-bold",
+        "belum di bayar": "badge bg-danger fw-bold",
     };
+
     return statusMap[status?.toLowerCase() ?? ""] || "badge bg-secondary fw-bold";
 };
 
 // ===[5]=== KOLUMN
 const columns = [
     column.accessor("no", { header: "#" }),
-    column.accessor("pengirim", { header: "Pengirim" }),
+    column.accessor("pengguna.user.name", {
+        header: "Pengirim",
+    }),
     column.accessor("nama_barang", { header: "Nama Barang" }),
     column.accessor("no_resi", { header: "No Resi" }),
     column.accessor("status", {
@@ -180,28 +203,28 @@ const columns = [
             return h("span", { class: statusClass }, status);
         },
     }),
-    // column.accessor("status_pembayaran", {
-    //     header: "Pembayaran",
-    //     cell: (cell) => {
-    //         const status = cell.getValue()?.toLowerCase();
-    //         const statusMap: Record<string, { label: string; class: string }> = {
-    //             settlement: { label: "settlement", class: "badge bg-success fw-bold" },
-    //             pending: { label: "Pending", class: "badge bg-warning text-dark fw-bold" },
-    //             expire: { label: "expire", class: "badge bg-secondary fw-bold" },
-    //             failure: { label: "cancel", class: "badge bg-danger fw-bold" },
-    //             refund: { label: "Refund", class: "badge bg-info text-dark fw-bold" },
-    //         };
+    column.accessor("status_pembayaran", {
+        header: "Pembayaran",
+        cell: (cell) => {
+            const status = cell.getValue()?.toLowerCase();
+            const statusMap: Record<string, { label: string; class: string }> = {
+                settlement: { label: "settlement", class: "badge bg-success fw-bold" },
+                pending: { label: "Pending", class: "badge bg-warning text-dark fw-bold" },
+                expire: { label: "expire", class: "badge bg-secondary fw-bold" },
+                failure: { label: "cancel", class: "badge bg-danger fw-bold" },
+                refund: { label: "Refund", class: "badge bg-info text-dark fw-bold" },
+            };
 
-    //         const { label, class: badgeClass } = statusMap[status] || {
-    //             label: status ?? "Tidak Diketahui",
-    //             class: "badge bg-secondary fw-bold"
-    //         };
+            const { label, class: badgeClass } = statusMap[status] || {
+                label: status ?? "Tidak Diketahui",
+                class: "badge bg-secondary fw-bold"
+            };
 
-    //         return h("span", { class: badgeClass }, label);
-    //     }
-    // }),
+            return h("span", { class: badgeClass }, label);
+        }
+    }),
     column.accessor("waktu", { header: "Waktu Order" }),
-    column.accessor("status_pembayaran", { header: "Status Pembayaran" }),
+    // column.accessor("status_pembayaran", { header: "Status Pembayaran" }),
     column.display({
         id: "rincian",
         header: "Aksi",
@@ -291,8 +314,8 @@ onMounted(() => {
                         <div class="row">
                             <div class="col-md-6">
                                 <!-- <h2>Informasi Pengirim</h2> -->
-                                <p><strong>Pengirim:</strong> {{ detailData.pengirim || '-' }}</p>
-                                <!-- <p><strong>Pengirim:</strong> {{ detailData.pengguna?.name || '-' }}</p> -->
+                                <!-- <p><strong>Pengirim:</strong> {{ detailData.pengirim || '-' }}</p> -->
+                                <p><strong>Pengirim:</strong> {{ detailData.pengguna?.user.name || '-' }}</p>
                                 <p><strong>Nama Barang:</strong> {{ detailData.nama_barang }}</p>
                                 <p><strong>Berat Barang:</strong> {{ detailData.berat_barang }} kg</p>
                                 <p><strong>Provinsi Asal:</strong> {{ detailData.asal_provinsi.name || '-' }}</p>
@@ -315,21 +338,22 @@ onMounted(() => {
                         <div class="col-md-6">
                             <p><strong>Status:</strong> {{ detailData.status }}</p>
                             <p><strong>Layanan:</strong> {{ detailData.layanan || '-' }}</p>
+                            <p><strong>Biaya:</strong> Rp. {{ detailData.biaya || '-' }}</p>
                         </div>
                         <div class="col-md-6">
-                            <p><strong>Status Pembayaran:</strong>
+                            <p><strong>Status Pembayaran: </strong>
                                 <span :class="getPembayaranBadgeClass(detailData.status_pembayaran)">
                                     {{
                                         detailData.status_pembayaran === 'settlement' ? 'Settlement' :
                                             detailData.status_pembayaran === 'pending' ? 'Pending' :
                                                 detailData.status_pembayaran === 'cancel' ? 'Cancel' :
                                                     detailData.status_pembayaran === 'expire' ? 'Expire' :
+                                                    detailData.status_pembayaran === 'belum dibayar' ? 'belum dibayar' :
                                                         '-'
                                     }}
                                 </span>
                             </p>
                             <!-- <p><strong>Estimasi:</strong> {{ detailData.estimasi || '-' }}</p> -->
-                            <p><strong>Biaya:</strong> Rp. {{ detailData.biaya || '-' }}</p>
                             <!-- <p><strong>Kurir : </strong>
                                 <span @click="showKurirDetail(detailData.kurir)"
                                     style="cursor: pointer; color: blue; text-decoration: underline;">
@@ -339,7 +363,7 @@ onMounted(() => {
                             <p><strong>Kurir Pengambil : </strong>
                                 <span v-if="kurirAmbil" @click="showKurirDetail(kurirAmbil)"
                                     style="cursor: pointer; color: blue;">
-                                    {{ kurirAmbil.user.name }}
+                                    {{ kurirAmbil.name }}
                                 </span>
                                 <span v-else>Tidak ada kurir</span>
                             </p>
@@ -347,7 +371,7 @@ onMounted(() => {
                             <p><strong>Kurir Pengantar : </strong>
                                 <span v-if="kurirKirim" @click="showKurirDetail(kurirKirim)"
                                     style="cursor: pointer; color: blue;">
-                                    {{ kurirKirim.user.name }}
+                                    {{ kurirKirim.name }}
                                 </span>
                                 <span v-else>Tidak ada kurir</span>
                             </p>
@@ -372,6 +396,7 @@ onMounted(() => {
                     <hr />
 
                     <div class="row">
+
                         <div class="col-md-12">
                             <!-- <p><strong>Penilaian:</strong> {{ detailData.rating || 'Belum ada rating' }}
                             </p> -->
@@ -388,6 +413,7 @@ onMounted(() => {
 
                 </div>
             </div>
+
         </div>
     </div>
 </template>

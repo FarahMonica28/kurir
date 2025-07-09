@@ -10,7 +10,7 @@ class AuthController extends Controller
 {
     public function me()
     {
-        $user = Auth::user()->load('kurir'); // penting: load relasi kurir
+        $user = Auth::user()->load('kurir','pengguna'); // penting: load relasi kurir
         return response()->json([
             'user' => auth()->user()
         ]);

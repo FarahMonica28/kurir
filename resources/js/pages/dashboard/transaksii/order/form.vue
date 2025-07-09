@@ -57,7 +57,7 @@ const formSchema = Yup.object({
   penerima: Yup.string().required(),
   alamat_tujuan: Yup.string().required(),
   no_hp_penerima: Yup.string().required(),
-  pengirim: Yup.string().required(),
+  // pengirim: Yup.string().required(),
   provinceOrigin: Yup.string().required().notOneOf(["0"]),
   cityOrigin: Yup.string().required(),
   provinceDestination: Yup.string().required().notOneOf(["0"]),
@@ -81,7 +81,7 @@ const { handleSubmit, errors, resetForm } = useForm({
     kurir: "",
     layanan: "",
     berat_barang: 0,
-    pengirim: "",
+    // pengirim: "",
   },
 });
 
@@ -184,7 +184,7 @@ const statusLabel = (status: string) => {
 //     berat_barang: berat_barang.value,
 //     biaya: biaya.value,
 //   };
-  
+
 
 //   sessionStorage.setItem("draftTransaksi", JSON.stringify(draft));
 
@@ -207,12 +207,13 @@ const statusLabel = (status: string) => {
 const onSubmit = () => {
   const formData = new FormData();
 
+  formData.append("id", currentPengguna.value.id);
   formData.append("penerima", penerima.value);
   formData.append("tujuan_provinsi_id", provinceDestination.value);
   formData.append("tujuan_kota_id", cityDestination.value);
   formData.append("alamat_tujuan", alamat_tujuan.value);
   formData.append("no_hp_penerima", no_hp_penerima.value);
-  formData.append("pengirim", pengirim.value);
+  // formData.append("pengirim", pengirim.value);
   formData.append("nama_barang", nama_barang.value);
   formData.append("asal_provinsi_id", provinceOrigin.value);
   formData.append("asal_kota_id", cityOrigin.value);
@@ -232,7 +233,7 @@ const onSubmit = () => {
   block(document.getElementById("form-transaksii"));
   axios({
     method: "post",
-    url: props.selected ? `/transaksii/${props.selected}` : "/transaksii/store",
+    url: props.selected ? `/transaksii/${props.selected}` : "transaksii/store",
     data: formData,
     headers: { "Content-Type": "multipart/form-data" },
   })
@@ -348,19 +349,19 @@ onMounted(fetchProvinces);
         <!-- Infromasi Pengguna -->
         <h2 class="mt-7 text-purple">Informasi Pengirim</h2>
         <!-- Pengirim -->
-        <!-- <div class="col-md-4 mb-7 mt-4">
-          <label class="form-label required fw-bold" for="pengguna">Nama Pengirim</label>
+        <div class="col-md-4 mb-7 mt-4">
+          <label class="form-label required fw-bold" for="pengguna_id">Nama Pengirim</label>
           <Field type="text" name="pengguna_id" class="form-control" :value="`${currentPengguna.name}`" readonly>
           </Field>
           <ErrorMessage name="pengguna_id" class="text-danger small" />
-        </div> -->
-        <div class="col-md-4 mb-7 mt-4">
+        </div>
+        <!-- <div class="col-md-4 mb-7 mt-4">
           <label class="form-label required fw-bold" for="pengirim">Nama Pengirim</label>
           <Field type="text" name="pengirim" class="form-control" v-model="pengirim"
             placeholder="Masukan nama pengirim">
           </Field>
           <ErrorMessage name="pengirim" class="text-danger small" />
-        </div>
+        </div> -->
 
         <!-- Nama Barang -->
         <div class="col-md-4 mb-7 mt-4">
@@ -462,6 +463,18 @@ onMounted(fetchProvinces);
           </button> -->
         </div>
       </div>
+      <ErrorMessage name="nama_barang" class="text-danger small" />
+      <ErrorMessage name="penerima" class="text-danger small" />
+      <ErrorMessage name="alamat_tujuan" class="text-danger small" />
+      <ErrorMessage name="no_hp_penerima" class="text-danger small" />
+      <ErrorMessage name="pengirim" class="text-danger small" />
+      <ErrorMessage name="provinceOrigin" class="text-danger small" />
+      <ErrorMessage name="cityOrigin" class="text-danger small" />
+      <ErrorMessage name="provindeDestination" class="text-danger small" />
+      <ErrorMessage name="cityDestination" class="text-danger small" />
+      <ErrorMessage name="kurir" class="text-danger small" />
+      <!-- <ErrorMessage name="layanan" class="text-danger small" /> -->
+      <ErrorMessage name="berat_barang" class="text-danger small" />
 
       <!-- Footer -->
       <div class="card-footer d-flex">

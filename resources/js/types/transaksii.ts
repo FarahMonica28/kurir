@@ -5,7 +5,7 @@ export interface transaksii {
     alamat_asal: string;      // Alamat asal
     alamat_tujuan: string;    // Alamat tujuan
     penerima: string;         // Nama penerima
-    pengirim: string;         // Nama penerima
+    // pengirim: string;         // Nama penerima
     berat_barang: number;     // Berat barang
     ekspedisi: string;        // Nama ekspedisi (JNE, J&T, dll.)
     layanan: string;          // Jenis layanan (YES, REG, dll.)

@@ -78,7 +78,7 @@ class TransaksiiController extends Controller
         
 
 
-        $data = Transaksii::with(['asalProvinsi', 'asalKota', 'tujuanProvinsi', 'tujuanKota',])->with('pengiriman.kurir.user')
+        $data = Transaksii::with(['asalProvinsi', 'asalKota', 'tujuanProvinsi', 'tujuanKota',])->with('pengiriman.kurir.user')->with('pengguna.user', 'kurir')
             ->when($request->search, function ($query, $search) {
                 $query->where( 'no_resi', 'like', "%$search%")
                     // ->orwhere('no_resi', 'like', "%$search%")
@@ -91,11 +91,28 @@ class TransaksiiController extends Controller
             ->when($request->status, function ($query, $status) {
                 $query->where('status', $status);
             })
+            // ->when($request->has('exclude_status'), function ($query) use ($request) {
+            //     $query->where('status', '!=', $request->exclude_status);
+            //     Log::info('a'); // log debug
+            // })
+            ->when($request->has('exclude_status'), function ($query) use ($request) {
+                $excludeStatuses = $request->input('exclude_status');
+                if (is_array($excludeStatuses)) {
+                    $query->whereNotIn('status', $excludeStatuses);
+                } else {
+                    $query->where('status', '!=', $excludeStatuses);
+                }
+            })
             // Tambahkan ini ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
             ->when($request->has('pernah_digudang'), function ($q) {
                 $q->where('pernah_digudang', true)
                 ->orWhere('status', 'digudang');
             })
+            // Tambahkan filter status_pembayaran settlement
+            ->when($request->status_pembayaran, function ($q, $statusPembayaran) {
+                $q->where('status_pembayaran', $statusPembayaran);
+            })
+            
 
             // Role: kurir — tampilkan transaksi yang belum ada kurir_id atau milik kurir itu sendiri 
             ->when(auth()->user()->role->name === 'kurir', function ($query) {
@@ -114,18 +131,6 @@ class TransaksiiController extends Controller
                 $query->where('pengguna_id', $penggunaId);
             })
 
-            // ->when($request->has('exclude_status'), function ($query) use ($request) {
-            //     $query->where('status', '!=', $request->exclude_status);
-            //     Log::info('a'); // log debug
-            // })
-            ->when($request->has('exclude_status'), function ($query) use ($request) {
-                $excludeStatuses = $request->input('exclude_status');
-                if (is_array($excludeStatuses)) {
-                    $query->whereNotIn('status', $excludeStatuses);
-                } else {
-                    $query->where('status', '!=', $excludeStatuses);
-                }
-            })
 
             ->latest()
             
@@ -139,6 +144,7 @@ class TransaksiiController extends Controller
             $antarPengiriman = $item->pengiriman->firstWhere('status', 'antar');
 
             Log::info("INFO",["Ambil" => $ambilPengiriman]);
+            Log::info("INFO",["Antar" => $antarPengiriman]);
             // Log::info("INFO",["Ambil" => $ambilPengiriman->kurir]);
             
             // Ambil user dari kurir masing-masing
@@ -329,7 +335,7 @@ class TransaksiiController extends Controller
 {
     $validated = $request->validate([
         'penerima' => 'required|string',
-        'pengirim' => 'required|string',
+        // 'pengirim' => 'required|string',
         'no_hp_penerima' => 'required|string',
         'tujuan_provinsi_id' => 'required|exists:provinces,id',
         'tujuan_kota_id' => 'required|exists:cities,id',
@@ -347,19 +353,29 @@ class TransaksiiController extends Controller
         'status' => 'nullable|string',
         'komentar' => 'nullable|string',
         // 'kurir_id' => 'nullable|exists:kurir,kurir_id'
+        'pengguna_id' => 'nullable|exits:pengguna,pengguna_id',
     ]);
-
+    
     $noResi = 'ABC-' . strtoupper(uniqid());
+    // $pengguna_id = Pengguna::where('user_id',auth()->id())->first('pengguna_id');
+    // Pastikan user_id ada dalam request dan sesuai dengan relasi pada model
+        $pengguna = Pengguna::where('user_id', $request->id)->first();
+        if (!$pengguna) {
+            // Jika pengguna tidak ditemukan, kembalikan response error
+            return response()->json(['message' => 'Pengguna tidak ditemukan'], 404);
+        }
+
+    // Log::info($pengguna_id);
 
     // Simpan transaksi ke database
-    $transaksi = Transaksii::create([
+    $transaksii = Transaksii::create([
         'no_resi' => $noResi,
         'nama_barang' => $validated['nama_barang'],
         'berat_barang' => $validated['berat_barang'],
         'alamat_asal' => $validated['alamat_asal'],
         'alamat_tujuan' => $validated['alamat_tujuan'],
         'penerima' => $validated['penerima'],
-        'pengirim' => $validated['pengirim'],
+        // 'pengirim' => $validated['pengirim'],
         'no_hp_penerima' => $validated['no_hp_penerima'],
         'status' => $validated['status'] ?? 'diproses',
         'ekspedisi' => $validated['ekspedisi'],
@@ -372,187 +388,159 @@ class TransaksiiController extends Controller
         'asal_kota_id' => $validated['asal_kota_id'],
         'tujuan_provinsi_id' => $validated['tujuan_provinsi_id'],
         'tujuan_kota_id' => $validated['tujuan_kota_id'],
-        'status_pembayaran' => 'pending',
+        'status_pembayaran' => 'belum dibayar',
         // 'kurir_id' => $validated['kurir_id'] ?? null,
+        // 'pengguna_id' => $validated['pengguna_id'],
+        // 'pengguna_id' => $pengguna_id->pengguna_id, // ✅ ambil dari user yang login
+        'pengguna_id' => $pengguna->pengguna_id // Mengaitkan transaksi dengan pengguna yang terkait
+
     ]);
+    
+    $transaksii->save();
+
 
     return response()->json([
         'message' => 'Transaksi berhasil dibuat',
-        'data' => $transaksi,
+        'data' => $transaksii,
     ]);
+    }
+
+    // public function storePenilaian(Request $request)
+    // {
+    //     // Validasi input dari request
+    //     // - 'id' bersifat nullable, harus berupa integer dan ada di tabel transaksi
+    //     // - 'rating' wajib diisi dan harus berupa string
+    //     // - 'komentar' bersifat nullable dan harus berupa string jika ada
+    //     $request->validate([
+    //         'id' => 'nullable|integer|exists:transaksii,id', // Validasi id transaksi, integer dan harus ada di database
+    //         'rating' => 'required|string', // Penilaian wajib diisi dan berupa string
+    //         'komentar' => 'nullable|string', // Komentar opsional, jika ada harus berupa string
+    //     ]);
+    
+    //     // Mencari transaksi berdasarkan ID yang diterima dari request
+    //     $transaksii = Transaksii::find($request->id);
+    //     // Jika transaksii tidak ditemukan, mengembalikan response 404 dengan pesan error
+    //     if (!$transaksii) {
+    //         return response()->json(['message' => 'Transaksi tidak ditemukan'], 404);
+    //     }
+    
+    //     // Menyimpan rating dan komentar yang diterima dari request ke dalam transaksii
+    //     $transaksii->rating = $request->rating;
+    //     $transaksii->komentar = $request->komentar;
+        
+    //     // Menyimpan perubahan ke dalam database
+    //     $transaksii->save();
+
+    //     // Update rating kurir
+    //     app(KurirController::class)->updateRating($transaksii->kurir_id);
+    
+    //     // Mengembalikan response sukses setelah rating berhasil disimpan
+    //     return response()->json(['message' => 'Penilaian disimpan.']);
+    // }
+    
+public function storePenilaian(Request $request)
+{
+    $request->validate([
+        'id' => 'required|integer|exists:transaksii,id',
+        'rating' => 'required|numeric|min:1|max:5',
+        'komentar' => 'nullable|string',
+    ]);
+
+    // Cari transaksi berdasarkan ID (id transaksi, bukan id pengiriman)
+    $transaksii = Transaksii::find($request->id);
+    if (!$transaksii) {
+        return response()->json(['message' => 'Transaksi tidak ditemukan'], 404);
+    }
+
+    // Simpan rating & komentar di transaksi (opsional, kalau kamu memang mau simpan di Transaksii juga)
+    $transaksii->rating = $request->rating;
+    $transaksii->komentar = $request->komentar;
+    $transaksii->save();
+
+    // Ambil semua pengiriman yg terkait transaksi ini
+    $pengirimanList = Pengiriman::where('transaksii_id', $transaksii->id)->get();
+
+    foreach ($pengirimanList as $pengiriman) {
+        $pengiriman->rating = $request->rating;
+        $pengiriman->komentar = $request->komentar;
+        $pengiriman->save();
+
+        // Update rata-rata rating kurir
+        app(KurirController::class)->updateRating($pengiriman->kurir_id);
+    }
+
+    return response()->json(['message' => 'Penilaian disimpan untuk semua kurir yang terkait.']);
 }
 
-    public function storePenilaian(Request $request)
-    {
-        // Validasi input dari request
-        // - 'id' bersifat nullable, harus berupa integer dan ada di tabel transaksi
-        // - 'rating' wajib diisi dan harus berupa string
-        // - 'komentar' bersifat nullable dan harus berupa string jika ada
-        $request->validate([
-            'id' => 'nullable|integer|exists:transaksii,id', // Validasi id transaksi, integer dan harus ada di database
-            'rating' => 'required|string', // Penilaian wajib diisi dan berupa string
-            'komentar' => 'nullable|string', // Komentar opsional, jika ada harus berupa string
-        ]);
-    
-        // Mencari transaksi berdasarkan ID yang diterima dari request
-        $transaksii = Transaksii::find($request->id);
-        // Jika transaksii tidak ditemukan, mengembalikan response 404 dengan pesan error
-        if (!$transaksii) {
-            return response()->json(['message' => 'Transaksi tidak ditemukan'], 404);
-        }
-    
-        // Menyimpan rating dan komentar yang diterima dari request ke dalam transaksii
-        $transaksii->rating = $request->rating;
-        $transaksii->komentar = $request->komentar;
-        
-        // Menyimpan perubahan ke dalam database
-        $transaksii->save();
 
-        // Update rating kurir
-        app(KurirController::class)->updateRating($transaksii->kurir_id);
-    
-        // Mengembalikan response sukses setelah rating berhasil disimpan
-        return response()->json(['message' => 'Penilaian disimpan.']);
-    }
-    
     
     // TransaksiController.php
 //   use App\Models\Pengiriman;
 
-public function antar(Request $request, $id)
-{
-    // $transaksii = Transaksii::findOrFail($id);
-    // $statusBaru = $request->status;
+    public function antar(Request $request, $id)
+    {
+        $request->validate([
+            'status' => 'required|string',
+        ]);
 
-    // // Update status transaksi
-    // $transaksii->status = $statusBaru;
+        $transaksii = Transaksii::find($id);
+        if (!$transaksii) {
+            return response()->json(['message' => 'Transaksi tidak ditemukan'], 404);
+        }
 
-    // // Jika statusnya digudang, set kolom pernah_digudang = true
-    // if ($statusBaru === 'digudang') {
-    //     $transaksii->pernah_digudang = true;
-    // }
-
-     $request->validate([
-        'status' => 'required|string',
-    ]);
-
-    $transaksii = Transaksii::with('kurir')->findOrFail($id);
-    $statusBaru = $request->status;
-
-    $user = auth()->user();
-    $kurir = $user->kurir;
-
-    if (!$kurir) {
-        return response()->json([
-            'message' => 'Kurir tidak ditemukan.',
-        ], 403);
-    }
-
-    
-    $transaksii->kurir_id = $kurir->kurir_id;
-    // Simpan waktu status
         $user = auth()->user();
+        $kurir = $user->kurir;
 
-        switch ($request->status) {
-            case 'diambil kurir':
-                $transaksii->waktu_diambil = now();
-                // Buat entri pengiriman dengan deskripsi khusus
-                Pengiriman::create([
-                    'kurir_id' => $kurir->kurir_id,
-                    'transaksii_id' => $transaksii->id,
-                    'deskripsi' => 'Kurir sedang menuju rumahmu untuk mengambil barang',
-                    'status' => 'antar',
-                ]);
-                break;
-            case 'dikurir':
-                $transaksii->waktu_dikurir = now();
-                Pengiriman::create([
-                    'kurir_id' => $kurir->kurir_id,
-                    'transaksii_id' => $transaksii->id,
-                    'deskripsi' => 'Kurir menuju gudang penempatan paket',
-                    'status' => 'antar',
-                ]);
-                break;
-            case 'digudang':
-                $transaksii->waktu_digudang = now();
-                Pengiriman::create([
-                    'kurir_id' => $kurir->kurir_id,
-                    'transaksii_id' => $transaksii->id,
-                    'deskripsi' => 'Paket telah sampai di gudang',
-                    'status' => 'antar',
-                ]);
-                break;
-            case 'diproses':
-                $transaksii->waktu_proses = now();
-                Pengiriman::create([
-                    'kurir_id' => $kurir->kurir_id,
-                    'transaksii_id' => $transaksii->id,
-                    'deskripsi' => 'Paket akan dikirim ke provinsi ' . $transaksii->tujuanProvinsi->name . ' dan ke kota ' . $transaksii->asalKota->name,
-                    'status' => 'antar',
-                ]);
-                break;
-            case 'tiba digudang':
-                $transaksii->waktu_tiba = now();
-                Pengiriman::create([
-                    'kurir_id' => $kurir->kurir_id,
-                    'transaksii_id' => $transaksii->id,
-                    'deskripsi' => 'Paket telah tiba digudang kota ' . $transaksii->asalKota->name,
-                    'status' => 'antar',
-                ]);
-                break;
+        if (!$kurir) {
+            return response()->json([
+                'message' => 'Kurir belum terdaftar atau tidak punya relasi.',
+            ], 403);
+        }
+
+        // Update transaksi
+        $transaksii->kurir_id = $kurir->kurir_id;
+        $transaksii->status = 'dikirim';
+        $transaksii->waktu_kirim = now();
+        $transaksii->save();
+
+        $statusBaru = $request->status;
+
+        Log::info('Status Update:', [$request->status]);
+
+        switch ($statusBaru) {
             case 'dikirim':
                 $transaksii->waktu_kirim = now();
                 Pengiriman::create([
                     'kurir_id' => $kurir->kurir_id,
                     'transaksii_id' => $transaksii->id,
-                    'deskripsi' => 'Paket menuju ke alamat tujuan' . $transaksii->alamat_tujuan,
-                    'status' => 'antar', 
+                    // 'deskripsi' => 'Paket menuju ke alamat tujuan ' . ($transaksii->alamat_tujuan ?? '-'),
+                    'status' => 'antar'
                 ]);
                 break;
             case 'selesai':
                 $transaksii->waktu_selesai = now();
-                Pengiriman::create([
-                    'kurir_id' => $kurir->kurir_id,
-                    'transaksii_id' => $transaksii->id,
-                    'deskripsi' => 'Paket telah sampai ke tujuan',
-                    'status' => 'antar',
-                ]);
+                // Pengiriman::create([
+                //     'kurir_id' => $kurir->kurir_id,
+                //     'transaksii_id' => $transaksii->id,
+                //     'deskripsi' => 'Paket telah sampai ke tujuan',
+                //     'status' => 'antar'
+                // ]);
                 break;
-            }
+        }
 
-    $transaksii->save();
+        $transaksii->status = $statusBaru;
+        $transaksii->save();
 
-    // Cek apakah sudah ada pengiriman untuk kombinasi ini
-    // $existing = Pengiriman::where('kurir_id', $request->kurir_id)
-    //     ->where('transaksii_id', $transaksii->id)
-    //     ->first();
+        // Muat ulang relasi kurir
+        $transaksii->load('kurir');
 
-    // if (!$existing) {
-    //     Pengiriman::create([
-    //         'kurir_id' => $request->kurir_id,
-    //         'transaksii_id' => $transaksii->id,
-    //         'deskripsi' => 'Mengantar Barang',
-    //     ]);
-    // }
-
-    // return response()->json(['message' => 'Status berhasil diperbarui']);
-     if ($statusBaru === 'digudang') {
-        $transaksii->pernah_digudang = true;
+        return response()->json([
+            'message' => 'Status berhasil diubah.',
+            'status' => $transaksii->status,
+            'kurir' => $transaksii->kurir,
+        ]);
     }
 
-    // Update status transaksii
-    $transaksii->status = $statusBaru;
-    $transaksii->save();
-
-    // Ambil ulang data kurir agar sinkron
-    $transaksii->load('kurir');
-
-    return response()->json([
-        'message' => 'Status berhasil diubah.',
-        'status' => $transaksii->status,
-        'kurir' => $transaksii->kurir,
-    ]);
-}
 
 
     // public function ambil(Request $request, $id)
@@ -592,6 +580,7 @@ public function antar(Request $request, $id)
     {
         $request->validate([
             'status' => 'required|string',
+            // 'kurir_id' => 'required|string',
         ]);
         $transaksii = Transaksii::find($id);
         if (!$transaksii) {
@@ -605,33 +594,18 @@ public function antar(Request $request, $id)
         $user = auth()->user();
         $kurir = $user->kurir;
 
-        // if (!$kurir) {
-        //     return response()->json([
-        //         'message' => 'Kurir tidak ditemukan.',
-        //     ], 403);
-        // }
+        if (!$kurir) {
+            return response()->json([
+                'message' => 'Kurir belum terdaftar atau tidak punya relasi.',
+            ], 403);
+        }
 
-        
-        // $transaksii->kurir_id = $kurir->kurir_id;
+        // Update transaksi
+        $transaksii->kurir_id = $kurir->kurir_id;
+        $transaksii->status = 'diambil kurir';
+        $transaksii->waktu_diambil = now();
+        $transaksii->save();
 
-        // Daftar field waktu sesuai status
-        // $waktuMap = [
-            //     'diambil kurir' => 'waktu_diambil',
-            //     'dikurir' => 'waktu_dikurir',
-            //     'digudang' => 'waktu_digudang',
-            //     'diproses' => 'waktu_proses',
-            //     'tiba digudang' => 'waktu_tiba',
-            //     'dikirim' => 'waktu_kirim',
-            //     'selesai' => 'waktu_selesai',
-            // ];
-
-            // Pengiriman::create([
-            //     'kurir_id' => $kurir->kurir_id,
-            //     'transaksii_id' =>$transaksii->id,
-            //     'deskripsi' => "Mengambil Barang"
-            // ]);
-            
-            $user = auth()->user();
 
         Log::info('Status Update:', [$request->status]);
 
@@ -641,62 +615,26 @@ public function antar(Request $request, $id)
                 Pengiriman::create([
                     'kurir_id' => $kurir->kurir_id,
                     'transaksii_id' => $transaksii->id,
-                    'deskripsi' => 'Kurir sedang menuju rumahmu untuk mengambil barang'
+                    // 'deskripsi' => 'Kurir sedang menuju rumahmu untuk mengambil barang'
                 ]);
                 break;
 
             case 'dikurir':
                 $transaksii->waktu_dikurir = now();
-                Pengiriman::create([
-                    'kurir_id' => $kurir->kurir_id,
-                    'transaksii_id' => $transaksii->id,
-                    'deskripsi' => 'Kurir menuju gudang penempatan paket'
-                ]);
+                // Pengiriman::create([
+                //     'kurir_id' => $kurir->kurir_id,
+                //     'transaksii_id' => $transaksii->id,
+                //     'deskripsi' => 'Kurir menuju gudang penempatan paket'
+                // ]);
                 break;
 
             case 'digudang':
                 $transaksii->waktu_digudang = now();
-                Pengiriman::create([
-                    'kurir_id' => $kurir->kurir_id,
-                    'transaksii_id' => $transaksii->id,
-                    'deskripsi' => 'Paket telah sampai di gudang'
-                ]);
-                break;
-
-            case 'diproses':
-                $transaksii->waktu_proses = now();
-                Pengiriman::create([
-                    // 'kurir_id' => $kurir->kurir_id,
-                    'transaksii_id' => $transaksii->id,
-                    'deskripsi' => 'Paket akan dikirim ke provinsi ' . $transaksii->tujuan_provinsi . ' dan ke kota ' . $transaksii->asal_kota
-                ]);
-                break;
-
-            case 'tiba digudang':
-                $transaksii->waktu_tiba = now();
-                Pengiriman::create([
-                    // 'kurir_id' => $kurir->kurir_id,
-                    'transaksii_id' => $transaksii->id,
-                    'deskripsi' => 'Paket telah tiba digudang kota ' . $transaksii->asal_kota
-                ]);
-                break;
-
-            case 'dikirim':
-                $transaksii->waktu_kirim = now();
-                Pengiriman::create([
-                    'kurir_id' => $kurir->kurir_id,
-                    'transaksii_id' => $transaksii->id,
-                    'deskripsi' => 'Paket menuju ke alamat tujuan ' . $transaksii->alamat_tujuan
-                ]);
-                break;
-
-            case 'selesai':
-                $transaksii->waktu_selesai = now();
-                Pengiriman::create([
-                    'kurir_id' => $kurir->kurir_id,
-                    'transaksii_id' => $transaksii->id,
-                    'deskripsi' => 'Paket telah sampai ke tujuan'
-                ]);
+                // Pengiriman::create([
+                //     'kurir_id' => $kurir->kurir_id,
+                //     'transaksii_id' => $transaksii->id,
+                //     'deskripsi' => 'Paket telah sampai di gudang'
+                // ]);
                 break;
         }
 
@@ -715,7 +653,7 @@ public function antar(Request $request, $id)
         if ($statusBaru === 'digudang') {
             $transaksii->pernah_digudang = true;
         }
-
+        
         // // Update status transaksii
         // $transaksii->status = $statusBaru;
         // $transaksii->save();
@@ -729,6 +667,98 @@ public function antar(Request $request, $id)
             'kurir' => $transaksii->kurir,
         ]);
     }
+
+//     public function ambil(Request $request, $id)
+// {
+//     $transaksii = Transaksii::find($id);
+
+//     if (!$transaksii) {
+//         return response()->json(['message' => 'Transaksi tidak ditemukan'], 404);
+//     }
+
+//     $user = auth()->user();
+//     $kurir = $user->kurir;
+
+//     if (!$kurir) {
+//         return response()->json([
+//             'message' => 'Kurir belum terdaftar atau tidak punya relasi.',
+//         ], 403);
+//     }
+
+//     // Update transaksi
+//     $transaksii->kurir_id = $kurir->kurir_id;
+//     $transaksii->status = 'diambil kurir';
+//     $transaksii->waktu_diambil = now();
+//     $transaksii->save();
+
+//     // Tambahkan deskripsi pengiriman
+//     Pengiriman::create([
+//         'kurir_id' => $kurir->kurir_id,
+//         'transaksii_id' => $transaksii->id,
+//         'deskripsi' => 'Kurir sedang menuju rumahmu untuk mengambil barang'
+//     ]);
+
+//     return response()->json([
+//         'message' => 'Barang berhasil diambil oleh kurir.',
+//         'data' => $transaksii->load('kurir')
+//     ]);
+// }
+
+    public function gudang(Request $request, $id)
+    {
+        $request->validate([
+            'status' => 'required|string',
+        ]);
+
+        $transaksii = Transaksii::find($id);
+        if (!$transaksii) {
+            return response()->json(['message' => 'Transaksi tidak ditemukan'], 404);
+        }
+
+        $statusBaru = $request->status;
+        Log::info('Status Update:', [$statusBaru]);
+
+        // Status yang tergolong aktivitas gudang
+        $statusGudang = ['digudang', 'diproses', 'tiba digudang'];
+
+        // Update waktu dan input pengiriman sesuai status
+        switch ($statusBaru) {
+            // case 'digudang':
+            //     $transaksii->waktu_digudang = now();
+            //     break;
+                
+                case 'diproses':
+                    $transaksii->waktu_proses = now();
+                    $transaksii->pernah_digudang = true; // Pastikan nilainya tidak null
+                    Pengiriman::create([
+                        'transaksii_id' => $transaksii->id,
+                        'status' => 'gudang'
+                    ]);
+                break;
+
+            case 'tiba digudang':
+                $transaksii->waktu_tiba = now();
+                break;
+        }
+        
+        // Reset kurir_id setelah sampai di gudang
+        if (in_array($statusBaru, $statusGudang)) {
+            $transaksii->kurir_id = null;
+        }
+        
+        $transaksii->status = $statusBaru;
+        $transaksii->save();
+        if ($statusBaru === 'digudang') {
+            $transaksii->pernah_digudang = true;
+        }
+
+        return response()->json([
+            'message' => 'Status berhasil diubah.',
+            'status' => $transaksii->status,
+            'pernah_digudang' => $transaksii->pernah_digudang,
+        ]);
+    }
+
 
         public function riwayat()
     {
