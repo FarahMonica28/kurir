@@ -283,7 +283,7 @@ onMounted(() => {
     <Form :selected="selected" @close="openForm = false" v-if="openForm" @refresh="refresh" />
 
     <div class="card">
-        <div class="card-header align-items-center">
+         <div class="card-header align-items-center">
             <h2 class="mb-0">List Order</h2>
             <button type="button" class="btn btn-sm btn-primary ms-auto" v-if="!openForm" @click="openForm = true">
                 Tambah

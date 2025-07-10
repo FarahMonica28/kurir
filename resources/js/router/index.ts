@@ -196,14 +196,15 @@ const routes: Array<RouteRecordRaw> = [
                 },
             },
             {
-                path: "/dashboard/gudang/riwyat",
-                name: "dashboard.gudang.riwayat",
+                path: "/dashboard/riwayat",
+                name: "dashboard.riwayat",
                 component: () => import("@/pages/dashboard/gudang/riwayat.vue"),
-                meta: {
-                    // pageTitle: "",
-                    // breadcrumbs: ["Halaman", "Akun dan Profl"],
-                },
+                // meta: {
+                //     pageTitle: "Riwayat Pengiriman Gudang",
+                //     breadcrumbs: ["Dashboard", "Riwayat Gudang"],
+                // },
             },
+
 
 
             //kurir

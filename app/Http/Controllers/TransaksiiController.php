@@ -103,6 +103,11 @@ class TransaksiiController extends Controller
                     $query->where('status', '!=', $excludeStatuses);
                 }
             })
+
+            ->when($request->pernah_digudang === 'true', function ($q) {
+                $q->where('pernah_digudang', true);
+            })
+
             // Tambahkan ini ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
             ->when($request->has('pernah_digudang'), function ($q) {
                 $q->where('pernah_digudang', true)

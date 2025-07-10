@@ -209,33 +209,35 @@ class PaymentController extends Controller
 // 1. Buat Snap Token (status awal pending)
 
 
-public function getSnapToken($id)
-{
-    $transaksii = Transaksii::with(['pengguna'])->findOrFail($id);
-    $transaksii->status_pembayaran = 'pending';
-    $transaksii->save();
+    public function getSnapToken($id)
+    {
+        $transaksii = Transaksii::with(['pengguna'])->findOrFail($id);
+        $transaksii->status_pembayaran = 'pending';
+        $transaksii->save();
 
-    Config::$serverKey = env('MIDTRANS_SERVER_KEY');
-    Config::$isProduction = false;
-    Config::$isSanitized = true;
-    Config::$is3ds = true;
+        Config::$serverKey = env('MIDTRANS_SERVER_KEY');
+        Config::$isProduction = false;
+        Config::$isSanitized = true;
+        Config::$is3ds = true;
 
-    $params = [
-        'transaction_details' => [
-            'order_id' => $transaksii->id,
-            'gross_amount' => (int) $transaksii->biaya,
-        ],
-        'customer_details' => [
-            'first_name' => $transaksii->pengirim,
-            // 'email' => $transaksii->pengguna->email ?? 'user@gmail.com',
-            'email' => $transaksii->pengguna_id ? ($transaksii->pengguna->email ?? 'user@gmail.com') : 'user@gmail.com',
+        $params = [
+            'transaction_details' => [
+                'order_id' => $transaksii->id,
+                'gross_amount' => (int) $transaksii->biaya,
+            ],
+            'customer_details' => [
+                'first_name' => $transaksii->pengirim,
+                // 'email' => $transaksii->pengguna->email ?? 'user@gmail.com',
+                // 'email' => $transaksii->pengguna_id ? ($transaksii->pengguna->email ?? 'user@gmail.com') : 'user@gmail.com',
+                'email' => optional($transaksii->pengguna)->email ?: 'user@gmail.com',
 
-        ]
-    ];
 
-    $snapToken = Snap::getSnapToken($params);
-    return response()->json(['snap_token' => $snapToken]);
-}
+            ]
+        ];
+
+        $snapToken = Snap::getSnapToken($params);
+        return response()->json(['snap_token' => $snapToken]);
+    }
 
 // 2. Terima notifikasi dari Midtrans dan update status_pembayaran
 public function handleNotification(Request $request)
