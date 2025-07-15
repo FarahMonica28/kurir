@@ -68,165 +68,6 @@ class TransaksiiController extends Controller
             return response()->json($cost);
         }
 
-     public function index(Request $request)
-    {
-        $per = $request->per ?? 10;
-        $page = $request->page ? $request->page - 1 : 0;
-
-        // DB::statement('set @no=0+' . ($page - 1) * $per);
-        DB::statement('set @no=0+' . $page * $per);
-        
-
-
-        $data = Transaksii::with(['asalProvinsi', 'asalKota', 'tujuanProvinsi', 'tujuanKota',])->with('pengiriman.kurir.user')->with('pengguna.user', 'kurir')
-            ->when($request->search, function ($query, $search) {
-                $query->where( 'no_resi', 'like', "%$search%")
-                    // ->orwhere('no_resi', 'like', "%$search%")
-                    ->orWhere('penerima', 'like', "%$search%")
-                    //   ->orWhere('alamat_asal', 'like', "%$search%")
-                    ->orWhere('alamat_tujuan', 'like', "%$search%")
-                    ->orWhere('ekspedisi', 'like', "%$search%")
-                    ->orWhere('layanan', 'like', "%$search%");
-            })
-            ->when($request->status, function ($query, $status) {
-                $query->where('status', $status);
-            })
-            // ->when($request->has('exclude_status'), function ($query) use ($request) {
-            //     $query->where('status', '!=', $request->exclude_status);
-            //     Log::info('a'); // log debug
-            // })
-            ->when($request->has('exclude_status'), function ($query) use ($request) {
-                $excludeStatuses = $request->input('exclude_status');
-                if (is_array($excludeStatuses)) {
-                    $query->whereNotIn('status', $excludeStatuses);
-                } else {
-                    $query->where('status', '!=', $excludeStatuses);
-                }
-            })
-
-            ->when($request->pernah_digudang === 'true', function ($q) {
-                $q->where('pernah_digudang', true);
-            })
-
-            // Tambahkan ini ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
-            ->when($request->has('pernah_digudang'), function ($q) {
-                $q->where('pernah_digudang', true)
-                ->orWhere('status', 'digudang');
-            })
-            // Tambahkan filter status_pembayaran settlement
-            ->when($request->status_pembayaran, function ($q, $statusPembayaran) {
-                $q->where('status_pembayaran', $statusPembayaran);
-            })
-            
-
-            // Role: kurir — tampilkan transaksi yang belum ada kurir_id atau milik kurir itu sendiri 
-            ->when(auth()->user()->role->name === 'kurir', function ($query) {
-                Log::info('b'); // log debug
-                $query->where(function ($q) {
-                    Log::info('e'); // log debug
-                    $kurirId = auth()->user()->kurir->kurir_id;
-                    $q->whereNull('kurir_id')
-                      ->orWhere('kurir_id', $kurirId);
-                });
-            })
-
-            ->when(auth()->user()->role->name === 'pengguna', function ($query) {
-                Log::info('pengguna'); // log debug
-                $penggunaId = auth()->user()->pengguna->pengguna_id;
-                $query->where('pengguna_id', $penggunaId);
-            })
-
-
-            ->latest()
-            
-            // Paginate hasil query
-            ->paginate($per);
-
-        $no = ($data->currentPage() - 1) * $per + 1;
-        foreach ($data as $item) {
-            $item->no = $no++;
-            $ambilPengiriman = $item->pengiriman->firstWhere('status', 'ambil');
-            $antarPengiriman = $item->pengiriman->firstWhere('status', 'antar');
-
-            Log::info("INFO",["Ambil" => $ambilPengiriman]);
-            Log::info("INFO",["Antar" => $antarPengiriman]);
-            // Log::info("INFO",["Ambil" => $ambilPengiriman->kurir]);
-            
-            // Ambil user dari kurir masing-masing
-            $item->ambil = $ambilPengiriman?->kurir->user;
-            $item->antar = $antarPengiriman?->kurir->user;
-        }
-
-        return response()->json($data);
-    }
-
-
-   
-    
-//     public function paymentTemp(Request $request)
-// {
-//     $request->validate([
-//         'pengirim' => 'required|string',
-//         'penerima' => 'required|string',
-//         'alamat_asal' => 'required|string',
-//         'alamat_tujuan' => 'required|string',
-//         'berat_barang' => 'required|numeric',
-//         'biaya' => 'required|numeric|min:1000',
-//     ]);
-
-//     $orderId = 'ONGKIR-' . now()->timestamp . '-' . Str::random(4);
-
-//     $params = [
-//         'transaction_details' => [
-//             'order_id' => $orderId,
-//             'gross_amount' => (int) $request->biaya,
-//         ],
-//         'customer_details' => [
-//             'first_name' => $request->pengirim,
-//             'email' => 'user@example.com',
-//         ],
-//     ];
-
-//     $auth = base64_encode(env('MIDTRANS_SERVER_KEY'));
-//     $response = Http::withHeaders([
-//         'Accept' => 'application/json',
-//         'Authorization' => "Basic $auth",
-//     ])->withBody(json_encode($params), 'application/json')
-//       ->post('https://app.sandbox.midtrans.com/snap/v1/transactions');
-
-//     if (!$response->successful()) {
-//         return response()->json(['message' => 'Gagal membuat Snap Token'], 500);
-//     }
-
-//     $data = $response->json();
-
-//     return response()->json([
-//         'snap_token' => $data['token'] ?? null,
-//         'redirect_url' => $data['redirect_url'] ?? null,
-//         'order_id' => $orderId,
-//     ]);
-//     }
-
-
-
-
-    // public function handleCallback(Request $request)
-    // {
-    //     $data = $request->all();
-
-    //     if ($data['status'] === 'PAID') {
-    //         $transaksiId = explode('-', $data['external_id'])[1];
-    //         $transaksi = Transaksii::find($transaksiId);
-
-    //         if ($transaksi) {
-    //             $transaksi->status = 'dibayar';
-    //             $transaksi->save();
-    //         }
-    //     }
-
-    //     return response()->json(['message' => 'Callback diterima']);
-    // }
-    // Ambil data transaksii berdasarkan id
 
     
     public function get($id)
@@ -248,239 +89,223 @@ class TransaksiiController extends Controller
         return response()->json($transaksii);
     }
 
-    // Simpan atau update transaksii
+    public function index(Request $request)
+    {
+        // Ambil parameter pagination: jumlah data per halaman (`per`) dan halaman ke-berapa (`page`)
+        $per = $request->per ?? 10;
+        $page = $request->page ? $request->page - 1 : 0;
 
-// public function store(Request $request)
-// {
-//     $transaksii = $request->validate([
-//         'penerima' => 'required|string',
-//         'pengirim' => 'required|string',
-//         'no_hp_penerima' => 'required|string',
-//         'tujuan_provinsi_id' => 'required|exists:provinces,id',
-//         'tujuan_kota_id' => 'required|exists:cities,id',
-//         'alamat_tujuan' => 'required|string',
-//         'nama_barang' => 'required|string',
-//         'berat_barang' => 'required|numeric|min:0.01',
-//         'ekspedisi' => 'required|string',
-//         'layanan' => 'required|string',
-//         'biaya' => 'required|integer',
-//         'asal_provinsi_id' => 'required|exists:provinces,id',
-//         'asal_kota_id' => 'required|exists:cities,id',
-//         'alamat_asal' => 'required|string',
-//         'waktu' => 'nullable|date|before_or_equal:now',
-//         'rating' => 'nullable|integer|min:1|max:5',
-//         'status' => 'nullable|string',
-//         'komentar' => 'nullable|string',
-//         // 'kurir_id' => 'nullable|exists:kurir,kurir_id'
-//     ]);
+        // Atur nomor urut dimulai dari (halaman sekarang * jumlah per halaman)
+        DB::statement('set @no=0+' . $page * $per);
 
-//     $noResi = 'ABC-' . strtoupper(uniqid());
+        // Ambil data transaksi lengkap dengan relasi: provinsi/kota asal-tujuan, pengiriman, pengguna, dan kurir
+        $data = Transaksii::with([
+                'asalProvinsi', 'asalKota', 'tujuanProvinsi', 'tujuanKota',
+                'pengiriman.kurir.user', // relasi ke kurir pengiriman
+                'pengguna.user', 'kurir'
+            ])
+            // Filter pencarian berdasarkan kolom-kolom tertentu
+            ->when($request->search, function ($query, $search) {
+                $query->where('no_resi', 'like', "%$search%")
+                    ->orWhere('penerima', 'like', "%$search%")
+                    ->orWhere('alamat_tujuan', 'like', "%$search%")
+                    ->orWhere('ekspedisi', 'like', "%$search%")
+                    ->orWhere('layanan', 'like', "%$search%");
+            })
+            // Filter berdasarkan status (misalnya: 'dikirim', 'selesai')
+            ->when($request->status, function ($query, $status) {  
+                Log::info($status); 
+                $query->where('status', $status);
+            })
+            // Filter untuk mengecualikan status tertentu
+            ->when($request->has('exclude_status'), function ($query) use ($request) {
+                Log::info("Exclude");
+                $excludeStatuses = $request->input('exclude_status');
+                if (is_array($excludeStatuses)) {
+                    $query->whereNotIn('status', $excludeStatuses);
+                } else {
+                    $query->where('status', '!=', $excludeStatuses);
+                }
+            })
+            // Filter untuk hanya menampilkan transaksi yang pernah masuk gudang
+            ->when($request->pernah_digudang === 'true', function ($q) {
+                Log::info("Pernah Digudang");
+                $q->where('pernah_digudang', true);
+            })
+            // Alternatif tambahan, jika `pernah_digudang` ada di query, tampilkan juga status `digudang`
+            ->when($request->has('pernah_digudang'), function ($q) {
+                Log::info("Pernah Digudang 2");
+                $q->where('pernah_digudang', true)
+                ->orWhere('status', 'digudang');
+            })
+            // Filter berdasarkan status pembayaran (contoh: 'settlement', 'pending')
+            ->when($request->status_pembayaran, function ($q, $statusPembayaran) {
+                Log::info("Status Pembayaran");
+                $q->where('status_pembayaran', $statusPembayaran);
+            })
+            // Jika user adalah kurir, tampilkan hanya transaksi tanpa kurir_id atau miliknya sendiri
+            ->when(auth()->user()->role->name === 'kurir', function ($query) {
+                Log::info('b');
+                $query->where(function ($q) {
+                    Log::info('e');
+                    $kurirId = auth()->user()->kurir->kurir_id;
+                    $q->whereNull('kurir_id')
+                    ->orWhere('kurir_id', $kurirId);
+                });
+            })
+            // Jika user adalah pengguna, tampilkan hanya transaksi miliknya
+            ->when(auth()->user()->role->name === 'pengguna', function ($query) {
+                Log::info('pengguna');
+                $penggunaId = auth()->user()->pengguna->pengguna_id;
+                $query->where('pengguna_id', $penggunaId);
+            })
+            ->latest() // urutkan berdasarkan waktu terbaru
+            ->paginate($per); // paginasi hasil
 
-//     // // Buat payload pembayaran ke Midtrans
-//     // $payload = [
-//     //     'transaction_details' => [
-//     //         'order_id' => $noResi,
-//     //         'gross_amount' => $request->biaya,
-//     //     ],
-//     //     'customer_details' => [
-//     //         'first_name' => $request->pengirim,
-//     //         'phone' => $request->no_hp_penerima,
-//     //     ],
-//     //     'enabled_payments' => ['gopay', 'bank_transfer'],
-//     // ];
+        // Menambahkan nomor urut ke setiap item dalam hasil
+        $no = ($data->currentPage() - 1) * $per + 1;
+        foreach ($data as $item) {
+            $item->no = $no++;
 
-//     // // Kirim request ke Midtrans
-//     $midtransResponse = Http::withBasicAuth(env('MIDTRANS_SERVER_KEY'), '')
-//         ->post('https://api.sandbox.midtrans.com/v2/charge', array_merge($payload, ['payment_type' => 'bank_transfer', 'bank_transfer' => ['bank' => 'bca']]));
+            // Ambil kurir untuk status "ambil" dan "antar"
+            $ambilPengiriman = $item->pengiriman->firstWhere('status', 'ambil');
+            $antarPengiriman = $item->pengiriman->firstWhere('status', 'antar');
 
-//     // if (!$midtransResponse->ok()) {
-//     //     return response()->json(['message' => 'Gagal membuat transaksi di Midtrans'], 500);
-//     // }
+            // Tambahkan data kurir user ke item
+            $item->ambil = $ambilPengiriman?->kurir->user;
+            $item->antar = $antarPengiriman?->kurir->user;
+        }
 
-//     $midtransData = $midtransResponse->json();
-
-//     // Tentukan status pembayaran berdasarkan response Midtrans
-//     $statusPembayaran = $midtransData['transaction_status'] ?? 'pending';
-
-//     // Simpan transaksi ke database
-//     $transaksi = Transaksii::create([
-//         'no_resi' => $noResi,
-//         'nama_barang' => $request->nama_barang,
-//         'berat_barang' => $request->berat_barang,
-//         'alamat_asal' => $request->alamat_asal,
-//         'alamat_tujuan' => $request->alamat_tujuan,
-//         'penerima' => $request->penerima,
-//         'pengirim' => $request->pengirim,
-//         'no_hp_penerima' => $request->no_hp_penerima,
-//         'status' => $request->status,
-//         'ekspedisi' => $request->ekspedisi,
-//         'layanan' => $request->layanan,
-//         'biaya' => $request->biaya,
-//         'rating' => $request->rating,
-//         'komentar' => $request->komentar,
-//         'waktu' => now(),
-//         'asal_provinsi_id' => $request->asal_provinsi_id,
-//         'asal_kota_id' => $request->asal_kota_id,
-//         'tujuan_provinsi_id' => $request->tujuan_provinsi_id,
-//         'tujuan_kota_id' => $request->tujuan_kota_id,
-//         'status_pembayaran' => $statusPembayaran,
-//         // 'kurir_id' => $request->kurir_id,
-//     ]);
-
-//     return response()->json([
-//         'message' => 'Transaksi berhasil dibuat',
-//         'data' => $transaksi,
-//         'midtrans' => $midtransData // Kirim data Midtrans ke frontend jika perlu
-//     ]);
-// }
-
-
+        return response()->json($data);
+    }
 
     public function store(Request $request)
-{
-    $validated = $request->validate([
-        'penerima' => 'required|string',
-        // 'pengirim' => 'required|string',
-        'no_hp_penerima' => 'required|string',
-        'tujuan_provinsi_id' => 'required|exists:provinces,id',
-        'tujuan_kota_id' => 'required|exists:cities,id',
-        'alamat_tujuan' => 'required|string',
-        'nama_barang' => 'required|string',
-        'berat_barang' => 'required|numeric|min:0.01',
-        'ekspedisi' => 'required|string',
-        'layanan' => 'required|string',
-        'biaya' => 'required|integer',
-        'asal_provinsi_id' => 'required|exists:provinces,id',
-        'asal_kota_id' => 'required|exists:cities,id',
-        'alamat_asal' => 'required|string',
-        'waktu' => 'nullable|date|before_or_equal:now',
-        'rating' => 'nullable|integer|min:1|max:5',
-        'status' => 'nullable|string',
-        'komentar' => 'nullable|string',
-        // 'kurir_id' => 'nullable|exists:kurir,kurir_id'
-        'pengguna_id' => 'nullable|exits:pengguna,pengguna_id',
-    ]);
-    
-    $noResi = 'ABC-' . strtoupper(uniqid());
-    // $pengguna_id = Pengguna::where('user_id',auth()->id())->first('pengguna_id');
-    // Pastikan user_id ada dalam request dan sesuai dengan relasi pada model
+    {
+        // Validasi input request
+        $validated = $request->validate([
+            'penerima' => 'required|string',
+            'no_hp_penerima' => 'required|string',
+            'no_hp_pengirim' => 'required|string',
+            'tujuan_provinsi_id' => 'required|exists:provinces,id',
+            'tujuan_kota_id' => 'required|exists:cities,id',
+            'alamat_tujuan' => 'required|string',
+            'nama_barang' => 'required|string',
+            'berat_barang' => 'required|numeric|min:0.01',
+            'ekspedisi' => 'required|string',
+            'layanan' => 'required|string',
+            'biaya' => 'required|integer',
+            'asal_provinsi_id' => 'required|exists:provinces,id',
+            'asal_kota_id' => 'required|exists:cities,id',
+            'alamat_asal' => 'required|string',
+            'waktu' => 'nullable|date|before_or_equal:now',
+            'rating' => 'nullable|integer|min:1|max:5',
+            'status' => 'nullable|string',
+            'komentar' => 'nullable|string',
+            'pengguna_id' => 'nullable|exits:pengguna,pengguna_id',
+        ]);
+
+        // Buat nomor resi unik
+        $noResi = 'ABC-' . strtoupper(uniqid());
+
+        // Cari pengguna berdasarkan user ID
         $pengguna = Pengguna::where('user_id', $request->id)->first();
         if (!$pengguna) {
-            // Jika pengguna tidak ditemukan, kembalikan response error
             return response()->json(['message' => 'Pengguna tidak ditemukan'], 404);
         }
 
-    // Log::info($pengguna_id);
+        // Simpan transaksi ke database
+        $transaksii = Transaksii::create([
+            'no_resi' => $noResi,
+            'nama_barang' => $validated['nama_barang'],
+            'berat_barang' => $validated['berat_barang'],
+            'alamat_asal' => $validated['alamat_asal'],
+            'alamat_tujuan' => $validated['alamat_tujuan'],
+            'penerima' => $validated['penerima'],
+            'no_hp_penerima' => $validated['no_hp_penerima'],
+            'no_hp_pengirim' => $validated['no_hp_pengirim'],
+            'status' => $validated['status'] ?? 'diproses',
+            'ekspedisi' => $validated['ekspedisi'],
+            'layanan' => $validated['layanan'],
+            'biaya' => $validated['biaya'],
+            'rating' => $validated['rating'] ?? null,
+            'komentar' => $validated['komentar'] ?? null,
+            'waktu' => now(),
+            'asal_provinsi_id' => $validated['asal_provinsi_id'],
+            'asal_kota_id' => $validated['asal_kota_id'],
+            'tujuan_provinsi_id' => $validated['tujuan_provinsi_id'],
+            'tujuan_kota_id' => $validated['tujuan_kota_id'],
+            'status_pembayaran' => 'pending',
+            'pengguna_id' => $pengguna->pengguna_id
+        ]);
 
-    // Simpan transaksi ke database
-    $transaksii = Transaksii::create([
-        'no_resi' => $noResi,
-        'nama_barang' => $validated['nama_barang'],
-        'berat_barang' => $validated['berat_barang'],
-        'alamat_asal' => $validated['alamat_asal'],
-        'alamat_tujuan' => $validated['alamat_tujuan'],
-        'penerima' => $validated['penerima'],
-        // 'pengirim' => $validated['pengirim'],
-        'no_hp_penerima' => $validated['no_hp_penerima'],
-        'status' => $validated['status'] ?? 'diproses',
-        'ekspedisi' => $validated['ekspedisi'],
-        'layanan' => $validated['layanan'],
-        'biaya' => $validated['biaya'],
-        'rating' => $validated['rating'] ?? null,
-        'komentar' => $validated['komentar'] ?? null,
-        'waktu' => now(),
-        'asal_provinsi_id' => $validated['asal_provinsi_id'],
-        'asal_kota_id' => $validated['asal_kota_id'],
-        'tujuan_provinsi_id' => $validated['tujuan_provinsi_id'],
-        'tujuan_kota_id' => $validated['tujuan_kota_id'],
-        'status_pembayaran' => 'belum dibayar',
-        // 'kurir_id' => $validated['kurir_id'] ?? null,
-        // 'pengguna_id' => $validated['pengguna_id'],
-        // 'pengguna_id' => $pengguna_id->pengguna_id, // ✅ ambil dari user yang login
-        'pengguna_id' => $pengguna->pengguna_id // Mengaitkan transaksi dengan pengguna yang terkait
-
-    ]);
-    
-    $transaksii->save();
-
-
-    return response()->json([
-        'message' => 'Transaksi berhasil dibuat',
-        'data' => $transaksii,
-    ]);
+        return response()->json([
+            'message' => 'Transaksi berhasil dibuat',
+            'data' => $transaksii,
+        ]);
     }
 
-    // public function storePenilaian(Request $request)
-    // {
-    //     // Validasi input dari request
-    //     // - 'id' bersifat nullable, harus berupa integer dan ada di tabel transaksi
-    //     // - 'rating' wajib diisi dan harus berupa string
-    //     // - 'komentar' bersifat nullable dan harus berupa string jika ada
-    //     $request->validate([
-    //         'id' => 'nullable|integer|exists:transaksii,id', // Validasi id transaksi, integer dan harus ada di database
-    //         'rating' => 'required|string', // Penilaian wajib diisi dan berupa string
-    //         'komentar' => 'nullable|string', // Komentar opsional, jika ada harus berupa string
-    //     ]);
-    
-    //     // Mencari transaksi berdasarkan ID yang diterima dari request
-    //     $transaksii = Transaksii::find($request->id);
-    //     // Jika transaksii tidak ditemukan, mengembalikan response 404 dengan pesan error
-    //     if (!$transaksii) {
-    //         return response()->json(['message' => 'Transaksi tidak ditemukan'], 404);
-    //     }
-    
-    //     // Menyimpan rating dan komentar yang diterima dari request ke dalam transaksii
-    //     $transaksii->rating = $request->rating;
-    //     $transaksii->komentar = $request->komentar;
-        
-    //     // Menyimpan perubahan ke dalam database
-    //     $transaksii->save();
+    public function ambil(Request $request, $id)
+    {
+        $request->validate([
+            'status' => 'required|string',
+        ]);
 
-    //     // Update rating kurir
-    //     app(KurirController::class)->updateRating($transaksii->kurir_id);
-    
-    //     // Mengembalikan response sukses setelah rating berhasil disimpan
-    //     return response()->json(['message' => 'Penilaian disimpan.']);
-    // }
-    
-public function storePenilaian(Request $request)
-{
-    $request->validate([
-        'id' => 'required|integer|exists:transaksii,id',
-        'rating' => 'required|numeric|min:1|max:5',
-        'komentar' => 'nullable|string',
-    ]);
+        $transaksii = Transaksii::find($id);
+        if (!$transaksii) {
+            return response()->json(['message' => 'Transaksi tidak ditemukan'], 404);
+        }
 
-    // Cari transaksi berdasarkan ID (id transaksi, bukan id pengiriman)
-    $transaksii = Transaksii::find($request->id);
-    if (!$transaksii) {
-        return response()->json(['message' => 'Transaksi tidak ditemukan'], 404);
+        // Ambil kurir dari user yang login
+        $user = auth()->user();
+        $kurir = $user->kurir;
+
+        if (!$kurir) {
+            return response()->json(['message' => 'Kurir belum terdaftar atau tidak punya relasi.'], 403);
+        }
+
+        // Update status transaksi ke 'diambil kurir'
+        $transaksii->kurir_id = $kurir->kurir_id;
+        $transaksii->status = 'diambil kurir';
+        $transaksii->waktu_diambil = now();
+        $transaksii->save();
+
+        $statusBaru = $request->status;
+
+        // Tindakan berdasarkan status
+        switch ($statusBaru) {
+            case 'diambil kurir':
+                $transaksii->waktu_diambil = now();
+                Pengiriman::create([
+                    'kurir_id' => $kurir->kurir_id,
+                    'transaksii_id' => $transaksii->id,
+                ]);
+                break;
+
+            case 'dikurir':
+                $transaksii->waktu_dikurir = now();
+                break;
+
+            case 'digudang':
+                $transaksii->waktu_digudang = now();
+                Pengiriman::create([
+                    // 'kurir_id' => $kurir->kurir_id,
+                    'transaksii_id' => $transaksii->id,
+                    'status' => 'gudang'
+                ]);
+                $transaksii->pernah_digudang = true;
+                $transaksii->kurir_id = null;
+                break;
+        }
+
+        $transaksii->status = $statusBaru;
+        $transaksii->save();
+
+        return response()->json([
+            'message' => 'Status berhasil diubah.',
+            'status' => $transaksii->status,
+            'kurir' => $transaksii->kurir,
+        ]);
     }
-
-    // Simpan rating & komentar di transaksi (opsional, kalau kamu memang mau simpan di Transaksii juga)
-    $transaksii->rating = $request->rating;
-    $transaksii->komentar = $request->komentar;
-    $transaksii->save();
-
-    // Ambil semua pengiriman yg terkait transaksi ini
-    $pengirimanList = Pengiriman::where('transaksii_id', $transaksii->id)->get();
-
-    foreach ($pengirimanList as $pengiriman) {
-        $pengiriman->rating = $request->rating;
-        $pengiriman->komentar = $request->komentar;
-        $pengiriman->save();
-
-        // Update rata-rata rating kurir
-        app(KurirController::class)->updateRating($pengiriman->kurir_id);
-    }
-
-    return response()->json(['message' => 'Penilaian disimpan untuk semua kurir yang terkait.']);
-}
-
-
-    
-    // TransaksiController.php
-//   use App\Models\Pengiriman;
 
     public function antar(Request $request, $id)
     {
@@ -497,12 +322,10 @@ public function storePenilaian(Request $request)
         $kurir = $user->kurir;
 
         if (!$kurir) {
-            return response()->json([
-                'message' => 'Kurir belum terdaftar atau tidak punya relasi.',
-            ], 403);
+            return response()->json(['message' => 'Kurir belum terdaftar atau tidak punya relasi.'], 403);
         }
 
-        // Update transaksi
+        // Update status ke 'dikirim'
         $transaksii->kurir_id = $kurir->kurir_id;
         $transaksii->status = 'dikirim';
         $transaksii->waktu_kirim = now();
@@ -510,33 +333,23 @@ public function storePenilaian(Request $request)
 
         $statusBaru = $request->status;
 
-        Log::info('Status Update:', [$request->status]);
+        // Jika statusnya 'dikirim', catat pengiriman
+        if ($statusBaru === 'dikirim') {
+            Pengiriman::create([
+                'kurir_id' => $kurir->kurir_id,
+                'transaksii_id' => $transaksii->id,
+                'status' => 'antar'
+            ]);
+        }
 
-        switch ($statusBaru) {
-            case 'dikirim':
-                $transaksii->waktu_kirim = now();
-                Pengiriman::create([
-                    'kurir_id' => $kurir->kurir_id,
-                    'transaksii_id' => $transaksii->id,
-                    // 'deskripsi' => 'Paket menuju ke alamat tujuan ' . ($transaksii->alamat_tujuan ?? '-'),
-                    'status' => 'antar'
-                ]);
-                break;
-            case 'selesai':
-                $transaksii->waktu_selesai = now();
-                // Pengiriman::create([
-                //     'kurir_id' => $kurir->kurir_id,
-                //     'transaksii_id' => $transaksii->id,
-                //     'deskripsi' => 'Paket telah sampai ke tujuan',
-                //     'status' => 'antar'
-                // ]);
-                break;
+        if ($statusBaru === 'selesai') {
+            $transaksii->waktu_selesai = now();
         }
 
         $transaksii->status = $statusBaru;
         $transaksii->save();
 
-        // Muat ulang relasi kurir
+        // Reload data relasi kurir
         $transaksii->load('kurir');
 
         return response()->json([
@@ -545,169 +358,48 @@ public function storePenilaian(Request $request)
             'kurir' => $transaksii->kurir,
         ]);
     }
-
-
-
-    // public function ambil(Request $request, $id)
+    
+    // public function gudang(Request $request, $id)
     // {
     //     $request->validate([
     //         'status' => 'required|string',
     //     ]);
-        
 
-    //     $transaksii = Transaksii::findOrFail($id);//
-    //     $statusBaru = $request->status;
+    //     // Ambil data transaksi berdasarkan ID
+    //     $transaksii = Transaksii::find($id);
+    //     if (!$transaksii) {
+    //         return response()->json(['message' => 'Transaksi tidak ditemukan'], 404);
+    //     }
 
-    //     // Update status
-    //     $transaksii->status = $statusBaru;
+    //     // Ambil data kurir dari user yang login
+    //     // $user = auth()->user();
+    //     // $kurir = $user->kurir;
 
-    //     // Jika statusnya digudang, set kolom pernah_digudang = true
-    //     if ($statusBaru === 'digudang') {
-    //         $transaksii->pernah_digudang = true;
-    //     }
-        
-    //     
-    //     }
-        
-    //     if ($transaksii->status !== 'digudang' && $request->status === 'digudang') {
-    //         $transaksii->pernah_digudang = true;
-    //     }
-    //     $transaksii->status = $request->status;//
-    //     $transaksii->save();//
+    //     // if (!$kurir) {
+    //     //     return response()->json(['message' => 'Kurir belum terdaftar atau tidak punya relasi.'], 403);
+    //     // }
+
+    //     // Update data transaksi: waktu masuk gudang dan status
+    //     // $transaksii->kurir_id = $kurir->kurir_id;
+    //     $transaksii->waktu_digudang = now();
+    //     $transaksii->status = $request->status;
+    //     $transaksii->pernah_digudang = true;
+    //     $transaksii->save();
+
+    //     // Simpan data pengiriman dengan status gudang
+    //     Pengiriman::create([
+    //         // 'kurir_id' => $kurir->kurir_id,
+    //         'transaksii_id' => $transaksii->id,
+    //         'status' => 'gudang'
+    //     ]);
 
     //     return response()->json([
-    //         'message' => 'Status berhasil diubah',
+    //         'message' => 'Barang telah masuk ke gudang.',
     //         'status' => $transaksii->status,
+    //         // 'kurir' => $transaksii->kurir,
     //     ]);
     // }
 
-    public function ambil(Request $request, $id)
-    {
-        $request->validate([
-            'status' => 'required|string',
-            // 'kurir_id' => 'required|string',
-        ]);
-        $transaksii = Transaksii::find($id);
-        if (!$transaksii) {
-            return response()->json(['message' => 'Transaksi tidak ditemukan'], 404);
-        }
-
-
-        // $transaksii = Transaksii::with('kurir')->findOrFail($id);
-        $statusBaru = $request->status;
-
-        $user = auth()->user();
-        $kurir = $user->kurir;
-
-        if (!$kurir) {
-            return response()->json([
-                'message' => 'Kurir belum terdaftar atau tidak punya relasi.',
-            ], 403);
-        }
-
-        // Update transaksi
-        $transaksii->kurir_id = $kurir->kurir_id;
-        $transaksii->status = 'diambil kurir';
-        $transaksii->waktu_diambil = now();
-        $transaksii->save();
-
-
-        Log::info('Status Update:', [$request->status]);
-
-        switch ($request->status) {
-            case 'diambil kurir':
-                $transaksii->waktu_diambil = now();
-                Pengiriman::create([
-                    'kurir_id' => $kurir->kurir_id,
-                    'transaksii_id' => $transaksii->id,
-                    // 'deskripsi' => 'Kurir sedang menuju rumahmu untuk mengambil barang'
-                ]);
-                break;
-
-            case 'dikurir':
-                $transaksii->waktu_dikurir = now();
-                // Pengiriman::create([
-                //     'kurir_id' => $kurir->kurir_id,
-                //     'transaksii_id' => $transaksii->id,
-                //     'deskripsi' => 'Kurir menuju gudang penempatan paket'
-                // ]);
-                break;
-
-            case 'digudang':
-                $transaksii->waktu_digudang = now();
-                // Pengiriman::create([
-                //     'kurir_id' => $kurir->kurir_id,
-                //     'transaksii_id' => $transaksii->id,
-                //     'deskripsi' => 'Paket telah sampai di gudang'
-                // ]);
-                break;
-        }
-
-        $transaksii->status = $request->status;
-        $transaksii->save();
-
-
-
-        // Update field waktu jika sesuai
-        // if (isset($waktuMap[$statusBaru])) {
-        //     $field = $waktuMap[$statusBaru];
-        //     $transaksii->$field = now();
-        // }
-
-        // Tandai pernah masuk gudang
-        if ($statusBaru === 'digudang') {
-            $transaksii->pernah_digudang = true;
-        }
-        
-        // // Update status transaksii
-        // $transaksii->status = $statusBaru;
-        // $transaksii->save();
-
-        // Ambil ulang data kurir agar sinkron
-        $transaksii->load('kurir');
-
-        return response()->json([
-            'message' => 'Status berhasil diubah.',
-            'status' => $transaksii->status,
-            'kurir' => $transaksii->kurir,
-        ]);
-    }
-
-//     public function ambil(Request $request, $id)
-// {
-//     $transaksii = Transaksii::find($id);
-
-//     if (!$transaksii) {
-//         return response()->json(['message' => 'Transaksi tidak ditemukan'], 404);
-//     }
-
-//     $user = auth()->user();
-//     $kurir = $user->kurir;
-
-//     if (!$kurir) {
-//         return response()->json([
-//             'message' => 'Kurir belum terdaftar atau tidak punya relasi.',
-//         ], 403);
-//     }
-
-//     // Update transaksi
-//     $transaksii->kurir_id = $kurir->kurir_id;
-//     $transaksii->status = 'diambil kurir';
-//     $transaksii->waktu_diambil = now();
-//     $transaksii->save();
-
-//     // Tambahkan deskripsi pengiriman
-//     Pengiriman::create([
-//         'kurir_id' => $kurir->kurir_id,
-//         'transaksii_id' => $transaksii->id,
-//         'deskripsi' => 'Kurir sedang menuju rumahmu untuk mengambil barang'
-//     ]);
-
-//     return response()->json([
-//         'message' => 'Barang berhasil diambil oleh kurir.',
-//         'data' => $transaksii->load('kurir')
-//     ]);
-// }
 
     public function gudang(Request $request, $id)
     {
@@ -728,17 +420,17 @@ public function storePenilaian(Request $request)
 
         // Update waktu dan input pengiriman sesuai status
         switch ($statusBaru) {
-            // case 'digudang':
-            //     $transaksii->waktu_digudang = now();
-            //     break;
+            case 'digudang':
+                $transaksii->waktu_digudang = now();
+                break;
                 
                 case 'diproses':
                     $transaksii->waktu_proses = now();
-                    $transaksii->pernah_digudang = true; // Pastikan nilainya tidak null
-                    Pengiriman::create([
-                        'transaksii_id' => $transaksii->id,
-                        'status' => 'gudang'
-                    ]);
+                    // $transaksii->pernah_digudang = true; // Pastikan nilainya tidak null
+                    // Pengiriman::create([
+                    //     'transaksii_id' => $transaksii->id,
+                    //     'status' => 'gudang'
+                    // ]);
                 break;
 
             case 'tiba digudang':
@@ -764,6 +456,39 @@ public function storePenilaian(Request $request)
         ]);
     }
 
+    public function storePenilaian(Request $request)
+    {
+        $request->validate([
+            'id' => 'required|integer|exists:transaksii,id',
+            'rating' => 'required|numeric|min:1|max:5',
+            'komentar' => 'nullable|string',
+        ]);
+
+        // Cari transaksi berdasarkan ID (id transaksi, bukan id pengiriman)
+        $transaksii = Transaksii::find($request->id);
+        if (!$transaksii) {
+            return response()->json(['message' => 'Transaksi tidak ditemukan'], 404);
+        }
+
+        // Simpan rating & komentar di transaksi (opsional, kalau kamu memang mau simpan di Transaksii juga)
+        $transaksii->rating = $request->rating;
+        $transaksii->komentar = $request->komentar;
+        $transaksii->save();
+
+        // Ambil semua pengiriman yg terkait transaksi ini
+        $pengirimanList = Pengiriman::where('transaksii_id', $transaksii->id)->get();
+
+        foreach ($pengirimanList as $pengiriman) {
+            $pengiriman->rating = $request->rating;
+            $pengiriman->komentar = $request->komentar;
+            $pengiriman->save();
+
+            // Update rata-rata rating kurir
+            app(KurirController::class)->updateRating($pengiriman->kurir_id);
+        }
+
+        return response()->json(['message' => 'Penilaian disimpan untuk semua kurir yang terkait.']);
+    }
 
         public function riwayat()
     {

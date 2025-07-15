@@ -30,7 +30,7 @@ class Pengiriman extends Model
     {
         return $this->belongsTo(Kurir::class,'kurir_id');
     }
-        public function transaksi()
+        public function transaksii()
     {
         return $this->belongsTo(Transaksii::class, 'transaksii_id', 'id');
     }

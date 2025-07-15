@@ -32,7 +32,8 @@
             <div class="dot"></div>
             <div class="content">
               <div class="time">{{ data.waktu.slice(11, 16) }}</div>
-              <div class="desc">Paket dibuat oleh {{ data.pengirim?.name || 'pengirim' }}</div>
+              <!-- <div class="desc">Paket dibuat oleh {{ data.pengguna?.name || 'pengirim' }}</div> -->
+               <div class="desc">Paket dibuat oleh {{ namaPengguna }}</div>
             </div>
           </div>
         </div>
@@ -150,28 +151,50 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import axios from 'axios'
+import { useAuthStore } from '@/stores/auth' // Import store autentikasi (misal pakai Pinia)
 
+// ===============================
+// State & Reference
+// ===============================
+
+// Input no resi dari pengguna
 const noResi = ref('')
+
+// Data hasil tracking
 const data = ref<any>(null)
+
+// Error dan loading state
 const error = ref('')
 const loading = ref(false)
 
+// ===============================
+// Fungsi utilitas untuk format tanggal
+// ===============================
 function formatDate(dateString: string): string {
   const date = new Date(dateString)
-  return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
+  return date.toLocaleDateString('id-ID', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  })
 }
 
+// ===============================
+// Fungsi utama untuk tracking no resi
+// ===============================
 const trackResi = async () => {
+  // Reset data dan error
   error.value = ''
   data.value = null
   loading.value = true
 
   try {
+    // Ambil data transaksi berdasarkan no resi
     const response = await axios.get(`/tracking/${noResi.value}`)
     data.value = response.data.data
     console.log("Sudah dapat Data :", data.value)
 
-    // Ambil data kurir jika ada
+    // Jika ada kurir_id, ambil data kurir-nya juga
     if (data.value.kurir_id) {
       try {
         const resKurir = await axios.get(`/kurir/${data.value.kurir_id}`)
@@ -181,21 +204,46 @@ const trackResi = async () => {
       }
     }
   } catch (err: any) {
+    // Tampilkan error dari server jika ada
     error.value = err.response?.data?.message || 'Terjadi kesalahan saat melacak resi.'
   } finally {
     loading.value = false
   }
 }
+
+// ===============================
+// Kurir yang mengambil barang (status: "ambil")
+// ===============================
 const kurirAmbil = computed(() =>
   data.value?.pengiriman?.find(p => p.status?.toLowerCase() === 'ambil')?.kurir
 )
 
-
+// ===============================
+// Kurir yang mengantar barang (status: "antar")
+// ===============================
 const kurirKirim = computed(() =>
   data.value?.pengiriman?.find(p => p.status?.toLowerCase() === 'antar')?.kurir
 )
 
+// ===============================
+// Data pengguna login (dari store)
+// ===============================
+const auth = useAuthStore()
+const user = computed(() => auth.user)
 
+// ===============================
+// Cek apakah user login adalah pengirim
+// ===============================
+const isPenggunaLogin = computed(() => {
+  return user.value?.id === data.value?.pengirim?.id
+})
+
+// ===============================
+// Nama pengguna (fallback ke data pengirim jika belum login)
+// ===============================
+const namaPengguna = computed(() => {
+  return user.value?.name || data.value?.pengirim?.name || 'pengirim'
+})
 </script>
 
 

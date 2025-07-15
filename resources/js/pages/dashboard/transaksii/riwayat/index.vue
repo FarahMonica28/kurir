@@ -200,6 +200,7 @@ watch(openForm, (val) => {
                                 <!-- <h2>Informasi Pengirim</h2> -->
                                 <p><strong>Pengirim:</strong> {{ detailData.pengguna?.user.name || '-' }}</p>
                                 <!-- <p><strong>Pengirim:</strong> {{ detailData.pengirim || '-' }}</p> -->
+                                <p><strong>No HP Pengirim:</strong> {{ detailData.no_hp_pengirim }}</p>
                                 <p><strong>Nama Barang:</strong> {{ detailData.nama_barang }}</p>
                                 <p><strong>Berat Barang:</strong> {{ detailData.berat_barang }} kg</p>
                                 <p><strong>Provinsi Asal:</strong> {{ detailData.asal_provinsi.name || '-' }}</p>

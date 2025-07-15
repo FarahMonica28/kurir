@@ -48,20 +48,20 @@ const kurirKirim = computed(() =>
 );
 
 function showPenggunaDetail(pengguna) {
-  if (!pengguna || !pengguna.user) {
-    Swal.fire('Data tidak tersedia', 'pengguna tidak ditemukan', 'warning');
-    return;
-  }
+    if (!pengguna || !pengguna.user) {
+        Swal.fire('Data tidak tersedia', 'pengguna tidak ditemukan', 'warning');
+        return;
+    }
 
-  Swal.fire({
-    title: pengguna.user.name,
-    html: `
+    Swal.fire({
+        title: pengguna.user.name,
+        html: `
       <img src="${pengguna.user.photo ? "/storage/" + pengguna.user.photo : "/default-avatar.png"}" alt="Foto Kurir" class="rounded-circle" width="110" height="110">
      <div style="margin-top: 15px;">
       <p><strong>Email:</strong> ${pengguna.user.email}</p>
       <p><strong>Telepon:</strong> ${pengguna.user.phone}</p>`,
-    showCloseButton: true,
-  });
+        showCloseButton: true,
+    });
 }
 
 const columns = [
@@ -191,6 +191,7 @@ watch(openForm, (val) => {
                                     </span>
                                 </p>
                                 <p><strong>Nama Barang:</strong> {{ detailData.nama_barang }}</p>
+                                <p><strong>No HP Pengirim:</strong> {{ detailData.no_hp_pengirim }}</p>
                                 <p><strong>Berat Barang:</strong> {{ detailData.berat_barang }} kg</p>
                                 <p><strong>Provinsi Asal:</strong> {{ detailData.asal_provinsi.name || '-' }}</p>
                                 <p><strong>Kota Asal:</strong> {{ detailData.asal_kota.name || '-' }}</p>
@@ -222,8 +223,8 @@ watch(openForm, (val) => {
                                             detailData.status_pembayaran === 'pending' ? 'Pending' :
                                                 detailData.status_pembayaran === 'cancel' ? 'Cancel' :
                                                     detailData.status_pembayaran === 'expire' ? 'Expire' :
-                                                    detailData.status_pembayaran === 'belum dibayar' ? 'belum dibayar' :
-                                                        '-'
+                                                        detailData.status_pembayaran === 'belum dibayar' ? 'belum dibayar' :
+                                                            '-'
                                     }}
                                 </span>
                             </p>

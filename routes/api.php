@@ -199,7 +199,7 @@ Route::middleware(['auth', 'verified', 'json'])->group(function () {
         Route::get('pengiriman', [PengirimanController::class, 'get'])->withoutMiddleware('can:pengiriman');
         Route::get('pengiriman/create', [PengirimanController::class, 'create'])->name('pengiriman.create');
         Route::post('pengiriman/store', [PengirimanController::class, 'store']);
-        Route::post('pengiriman', [PengirimanController::class, 'index']);
+        Route::post('pengiriman', [PengirimanController::class, 'index'])->withoutMiddleware('can:pengiriman');
         Route::apiResource('pengiriman', PengirimanController::class)
         ->except(['index', 'store']);
     });

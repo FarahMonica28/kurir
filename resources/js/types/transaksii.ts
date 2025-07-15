@@ -16,6 +16,8 @@ export interface transaksii {
     komentar?: string | null;   // Komentar opsional
     pernah_digudang: number;
     status_pembayaran: string;
+    no_hp_pengirim: string,
+    no_hp_penerima: string,
     
     asal_provinsi_id: {
         id: number;

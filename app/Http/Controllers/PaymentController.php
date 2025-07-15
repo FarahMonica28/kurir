@@ -51,105 +51,6 @@ class PaymentController extends Controller
         return response()->json(['message' => 'Webhook processed']);
     }
 
-
-// MidtransController.php
-// public function handleNotification(Request $request)
-//     {
-//         $payload = $request->all();
-//         Log::info('Midtrans Webhook:', $payload); // Logging untuk debug
-
-//         $orderId = $payload['order_id'] ?? null;
-//         $transactionStatus = $payload['transaction_status'] ?? null;
-//         $fraudStatus = $payload['fraud_status'] ?? null;
-
-//         if (!$orderId || !$transactionStatus) {
-//             return response()->json(['message' => 'Invalid payload'], 400);
-//         }
-
-//         // Cari transaksi berdasarkan no_resi
-//         $transaksi = Transaksii::where('no_resi', $orderId)->first();
-
-//         if (!$transaksi) {
-//             return response()->json(['message' => 'Transaksi tidak ditemukan'], 404);
-//         }
-
-//         // Logika update status pembayaran
-//         switch ($transactionStatus) {
-//             case 'capture':
-//                 if ($fraudStatus === 'challenge') {
-//                     $transaksi->status_pembayaran = 'challenge';
-//                 } else {
-//                     $transaksi->status_pembayaran = 'success';
-//                 }
-//                 break;
-
-//             case 'settlement':
-//                 $transaksi->status_pembayaran = 'success';
-//                 break;
-
-//             case 'pending':
-//                 $transaksi->status_pembayaran = 'pending';
-//                 break;
-
-//             case 'deny':
-//             case 'expire':
-//             case 'cancel':
-//                 $transaksi->status_pembayaran = $transactionStatus;
-//                 break;
-//         }
-
-//         $transaksi->save();
-
-//         return response()->json(['message' => 'Notifikasi diproses'], 200);
-//     }
-
-
-// public function callback(Request $request)
-//     {
-//         $serverKey = config('midtrans.server_key');
-//         $signatureKey = hash('sha512',
-//             $request->order_id .
-//             $request->status_code .
-//             $request->gross_amount .
-//             $serverKey
-//         );
-
-//         if ($signatureKey !== $request->signature_key) {
-//             return response(['message' => 'Invalid signature'], 403);
-//         }
-
-//         $transaksii = Transaksii::find($request->order_id);
-
-//         if (!$transaksii) {
-//             return response(['message' => 'Transaksi tidak ditemukan'], 404);
-//         }
-
-//         // Update status pembayaran
-//        $status = $request->transaction_status;
-
-//         switch ($status) {
-//             case 'settlement':
-//             case 'capture':
-//                 $transaksii->status_pembayaran = 'lunas';
-//                 break;
-//             case 'pending':
-//                 $transaksii->status_pembayaran = 'pending';
-//                 break;
-//             case 'deny':
-//             case 'expire':
-//             case 'cancel':
-//                 $transaksii->status_pembayaran = 'gagal';
-//                 break;
-//             default:
-//                 $transaksii->status_pembayaran = 'unknown';
-//         }
-
-
-//         $transaksii->save();
-
-//         return response(['message' => 'Callback diterima'], 200);
-//     }
-
     public function callback(Request $request)
     {
         $notif = new Notification();
@@ -179,99 +80,98 @@ class PaymentController extends Controller
         return response()->json(['message' => 'Callback handled successfully']);
     }
 
-// public function callback(Request $request)
-// {
-//     $serverKey = config('midtrans.server_key');
-//     $hashed = hash('sha512', 
-//         $request->order_id .
-//         $request->status_code .
-//         $request->gross_amount .
-//         $serverKey
-//     );
-
-//     if ($hashed != $request->signature_key) {
-//         return response(['message' => 'Invalid signature'], 403);
-//     }
-
-//     $transaction = Transaksii::where('order_id', $request->order_id)->first();
-//     if (!$transaction) return response(['message' => 'Order not found'], 404);
-
-//     if ($request->transaction_status === 'settlement') {
-//         $transaction->status_pembayaran = 'settlement';
-//         $transaction->save();
-//     }
-//     // Tambahkan else if untuk 'pending', 'expire', dll jika perlu
-
-//     return response(['message' => 'Callback processed'], 200);
-// }
-
-
-// 1. Buat Snap Token (status awal pending)
-
-
+    // Mendapatkan Snap Token dari Midtrans berdasarkan transaksi
     public function getSnapToken($id)
     {
+        // Ambil data transaksi beserta relasi pengguna berdasarkan ID
         $transaksii = Transaksii::with(['pengguna'])->findOrFail($id);
-        $transaksii->status_pembayaran = 'pending';
-        $transaksii->save();
 
-        Config::$serverKey = env('MIDTRANS_SERVER_KEY');
-        Config::$isProduction = false;
-        Config::$isSanitized = true;
-        Config::$is3ds = true;
+        // Jika status pembayaran masih pending dan sudah punya token, kembalikan token lama
+        if ($transaksii->status_pembayaran === 'pending' && $transaksii->snap_token) {
+            return response()->json([
+                'snap_token' => $transaksii->snap_token
+            ]);
+        }
 
-        $params = [
+        // Konfigurasi kredensial Midtrans dari file konfigurasi
+        Config::$serverKey = config('midtrans.server_key');
+        Config::$isProduction = config('midtrans.is_production');
+        Config::$is3ds = true; // Aktifkan 3D Secure untuk transaksi kartu kredit
+
+        // Payload permintaan Snap Midtrans
+        $payload = [
             'transaction_details' => [
-                'order_id' => $transaksii->id,
-                'gross_amount' => (int) $transaksii->biaya,
+                'order_id' => $transaksii->id,            // Gunakan ID transaksi sebagai order_id
+                'gross_amount' => $transaksii->biaya,     // Total biaya transaksi
             ],
             'customer_details' => [
-                'first_name' => $transaksii->pengirim,
-                // 'email' => $transaksii->pengguna->email ?? 'user@gmail.com',
-                // 'email' => $transaksii->pengguna_id ? ($transaksii->pengguna->email ?? 'user@gmail.com') : 'user@gmail.com',
-                'email' => optional($transaksii->pengguna)->email ?: 'user@gmail.com',
-
-
-            ]
+                'first_name' => $transaksii->pengirim,     // Nama pengirim
+                'email' => $transaksii->pengguna->email ?: 'user@gmail.com', // Gunakan email pengguna, fallback ke default
+            ],
         ];
 
-        $snapToken = Snap::getSnapToken($params);
-        return response()->json(['snap_token' => $snapToken]);
+        // Dapatkan Snap Token dari Midtrans
+        $snapToken = Snap::getSnapToken($payload);
+
+        // Simpan Snap Token ke database agar bisa digunakan kembali nanti
+        $transaksii->snap_token = $snapToken;
+            $transaksii->save();
+
+        // Kembalikan token sebagai respons
+        return response()->json([
+            'snap_token' => $snapToken
+        ]);
     }
 
-// 2. Terima notifikasi dari Midtrans dan update status_pembayaran
-public function handleNotification(Request $request)
-{
-    $notification = new Notification();
 
-    $transactionStatus = $notification->transaction_status;
-    $orderId = $notification->order_id;
+    // Fungsi untuk menangani notifikasi otomatis dari Midtrans (webhook)
+    public function handleNotification(Request $request)
+    {
+        // Ambil objek notifikasi dari Midtrans
+        $notification = new Notification();
 
-    $transaksi = Transaksii::find($orderId);
-    if (!$transaksi) {
+        // Ambil status transaksi dan order_id dari notifikasi
+        $transactionStatus = $notification->transaction_status;
+        $orderId = $notification->order_id;
+
+        // Cari transaksi berdasarkan order_id
+        $transaksi = Transaksii::find($orderId);
+        if (!$transaksi) {
+            return response()->json(['message' => 'Transaksi tidak ditemukan'], 404);
+        }
+
+        // Update status pembayaran transaksi sesuai notifikasi Midtrans
+        $transaksi->status_pembayaran = $transactionStatus;
+        $transaksi->save();
+
+        // Kembalikan respons berhasil
+        return response()->json(['message' => 'Notifikasi diproses']);
+    }
+
+
+// Fungsi untuk update manual status pembayaran (bisa digunakan untuk testing atau admin)
+    public function manualUpdateStatus(Request $request)
+    {
+        // Cari transaksi berdasarkan order_id yang dikirimkan
+        $transaksi = Transaksii::find($request->order_id);
+        if ($transaksi) {
+            // Update status pembayaran, gunakan 'settlement' jika tidak disediakan
+            $transaksi->status_pembayaran = $request->transaction_status ?? 'settlement';
+
+            // Catat log perubahan (untuk debug/admin)
+            \Log::info("Manual update: order_id={$request->order_id}, status={$transaksi->status_pembayaran}");
+
+            // Simpan perubahan
+            $transaksi->save();
+
+            // Kembalikan respons berhasil
+            return response()->json(['message' => 'Status pembayaran berhasil diperbarui']);
+        }
+
+        // Jika transaksi tidak ditemukan
         return response()->json(['message' => 'Transaksi tidak ditemukan'], 404);
     }
 
-    $transaksi->status_pembayaran = $transactionStatus;
-    $transaksi->save();
-
-    return response()->json(['message' => 'Notifikasi diproses']);
-}
-
-public function manualUpdateStatus(Request $request)
-{
-    $transaksi = Transaksii::find($request->order_id);
-    if ($transaksi) {
-        $transaksi->status_pembayaran = $request->transaction_status ?? 'settlement';
-        // $transaksi->payment_type = $request->payment_type ?? 'manual';
-        $transaksi->save();
-
-        \Log::info("Manual update: order_id={$request->order_id}, status={$transaksi->status_pembayaran}");
-        return response()->json(['message' => 'Status pembayaran berhasil diperbarui']);
-    }
-
-    return response()->json(['message' => 'Transaksi tidak ditemukan'], 404);
-}
 
 
 
@@ -418,7 +318,8 @@ public function show($id)
     }
 
 
-public function redirectToMidtrans(Request $request)
+
+    public function redirectToMidtrans(Request $request)
 {
     $transaksiiId = $request->input('id');
 
@@ -467,16 +368,7 @@ public function redirectToMidtrans(Request $request)
             'error' => $e->getMessage(),
         ], 500);
     }
-}
-
-
-
-
-
-
-
-
-
+    }
 
 
     public function create (Request $request)
@@ -531,8 +423,6 @@ public function redirectToMidtrans(Request $request)
 
         return response()->json($response);
     }
-
-
     
     public function pay(Request $request)
     {
@@ -563,4 +453,5 @@ public function redirectToMidtrans(Request $request)
             'redirect_url' => "https://app.sandbox.midtrans.com/snap/v2/vtweb/{$snapToken}",
         ]);
     }
+
 }

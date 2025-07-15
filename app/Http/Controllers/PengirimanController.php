@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Builder;
 use App\Models\Pengiriman;
+use Illuminate\Support\Facades\Log;
 
 class PengirimanController extends Controller
 {
@@ -28,21 +29,27 @@ class PengirimanController extends Controller
         DB::statement(query: 'set @no=0+' . $page * $per);
         // $pengiriman = Pengiriman::with('user')
         // Pengiriman::with('kurir.user');
-       $data = Pengiriman::with('transaksii')->with('kurir.user')// tambahkan ini
-        // ->join('kurir','kurir.kurir_id', '=','pengiriman.kurir_id')
-        // ->join('users','users.id','=','kurir.user_id')
+       $data = Pengiriman::with('transaksii.pengguna.user')->with('kurir.user', )// tambahkan ini
         ->when($request->search, function (Builder $query, string $search) {
             $query->where('kurir_id', 'like', "%$search%")
                 ->orWhere('deskripsi', 'like', "%$search%")
                 ->orWhere('transaksii_id', 'like', "%$search%");
         })
-        ->select('pengiriman.*', 'users.name as name')
+        ->when($request->status, function ($query, $status) {  
+                Log::info($status); 
+                $query->where('status', $status);
+            })
+        ->select('pengiriman.*')
         ->latest()->paginate($per);
 
             $no = ($data->currentPage()-1) * $per + 1;
-        foreach($data as $item){
-            $item->no = $no++;
-        }
+
+            // ini kalau mau manggil colom accesor secara langsung no_resi tdk kayak gini transaksii.no_resi
+            // ini dikeluarkan dari transaksii 
+            foreach($data as $item){
+                $item->no = $no++;
+                // $item->no_resi = $item->transaksii->no_resi ?? null;    
+            }
 
 
 

@@ -1,28 +1,40 @@
 <script setup lang="ts">
+/* Import dependency Vue & TanStack Table */
 import { h, ref, watch, computed } from "vue";
 import { createColumnHelper } from "@tanstack/vue-table";
 import type { transaksii } from "@/types";
 import axios from "axios";
 import Swal from "sweetalert2";
 
+/* Import store autentikasi dan ambil data kurir yang sedang login */
 import { useAuthStore } from "@/stores/auth";
 const authStore = useAuthStore();
 const currentKurir = computed(() => authStore.user);
 
+/* Inisialisasi helper kolom untuk TanStack Table */
 const column = createColumnHelper<transaksii>();
+
+/* Refs untuk referensi pagination, form toggle, dan selected ID */
 const paginateRef = ref<any>(null);
 const selected = ref<string>("");
 const openForm = ref<boolean>(false);
 
-// ===[2]=== DETAIL DATA
+/* ===[2]=== DETAIL DATA */
+/* Ref untuk menyimpan data transaksi saat ingin melihat detail */
 const detailData = ref<transaksii | null>(null);
+
+/* Fungsi untuk menampilkan detail transaksi */
 const showRincian = (data: transaksii) => {
     console.log("rincian");
     detailData.value = data;
 };
+
+/* Fungsi untuk menutup detail transaksi */
 const closeDetail = () => {
     detailData.value = null;
 };
+
+/* Fungsi untuk menampilkan informasi pengguna dengan SweetAlert */
 function showPenggunaDetail(pengguna) {
     if (!pengguna || !pengguna.user) {
         Swal.fire('Data tidak tersedia', 'pengguna tidak ditemukan', 'warning');
@@ -32,13 +44,15 @@ function showPenggunaDetail(pengguna) {
     Swal.fire({
         title: pengguna.user.name,
         html: `
-      <img src="${pengguna.user.photo ? "/storage/" + pengguna.user.photo : "/default-avatar.png"}" alt="Foto Kurir" class="rounded-circle" width="110" height="110">
-     <div style="margin-top: 15px;">
-      <p><strong>Email:</strong> ${pengguna.user.email}</p>
-      <p><strong>Telepon:</strong> ${pengguna.user.phone}</p>`,
+            <img src="${pengguna.user.photo ? "/storage/" + pengguna.user.photo : "/default-avatar.png"}" alt="Foto Kurir" class="rounded-circle" width="110" height="110">
+            <div style="margin-top: 15px;">
+            <p><strong>Email:</strong> ${pengguna.user.email}</p>
+            <p><strong>Telepon:</strong> ${pengguna.user.phone}</p>`,
         showCloseButton: true,
     });
 }
+
+/* Fungsi untuk mengatur class badge berdasarkan status pembayaran */
 const getPembayaranBadgeClass = (status: string | undefined) => {
     const statusMap: Record<string, string> = {
         settlement: "badge bg-success fw-bold",
@@ -54,22 +68,18 @@ const getPembayaranBadgeClass = (status: string | undefined) => {
     return statusMap[status?.toLowerCase() ?? ""] || "badge bg-secondary fw-bold";
 };
 
-// ===[✅ TAMBAHAN: KOMPUTED UNTUK KURIR AMBIL DAN KIRIM]===
-const kurirAmbil = computed(() =>
-    detailData.value?.ambil
-);
+/* ===[✅ TAMBAHAN: KOMPUTED UNTUK KURIR AMBIL DAN KIRIM]=== */
+/* Ambil data kurir yang mengambil atau mengantar dari detail transaksi */
+const kurirAmbil = computed(() => detailData.value?.ambil);
+const kurirKirim = computed(() => detailData.value?.antar);
 
-const kurirKirim = computed(() =>
-    detailData.value?.antar
-);
-
+/* Fungsi untuk memperbarui status transaksi (tiba digudang → dikirim → selesai) */
 const handleUpdateStatus = async (id: string, currentStatus: string) => {
     const nextStatus = currentStatus === "tiba digudang" ? "dikirim" : "selesai";
     const label = nextStatus === "dikirim" ? "Apakah Anda Akan Mengantar Paket ini?" : "Konfirmasi selesai mengantar paket?";
 
     const result = await Swal.fire({
         title: label,
-        // text: `Apakah kamu yakin ingin mengubah status menjadi "${nextStatus}"?`,
         icon: "question",
         showCancelButton: true,
         confirmButtonText: "Ya ",
@@ -93,18 +103,18 @@ const handleUpdateStatus = async (id: string, currentStatus: string) => {
         }
     }
 };
+
+/* Membuat URL API dengan filter status dan pembayaran settlement */
 const url = computed(() => {
     const params = new URLSearchParams();
-    ['menunggu', 'diambil kurir', 'digudang', 'selesai'].forEach(status => {
+    ['menunggu', 'diambil kurir', 'diproses', 'digudang', 'selesai'].forEach(status => {
         params.append('exclude_status[]', status);
-
-
-        // Tambahkan filter status_pembayaran
         params.append('status_pembayaran', 'settlement');
     });
     return `/transaksii?${params.toString()}`;
 });
 
+/* Definisi kolom untuk tabel */
 const columns = [
     column.accessor("no", { header: "#" }),
     column.accessor("no_resi", { header: "No Resi" }),
@@ -112,7 +122,8 @@ const columns = [
     column.accessor("penerima", { header: "Nama Penerima" }),
     column.accessor("no_hp_penerima", { header: "No Hp Penerima" }),
     column.accessor("alamat_tujuan", { header: "Alamat Tujuan" }),
-    // column.accessor("kurir.user.name", { header: "Nama Kurir" }),
+
+    /* Kolom Status dengan Badge berwarna berdasarkan status transaksi */
     column.accessor("status", {
         header: "Status",
         cell: (cell) => {
@@ -134,16 +145,18 @@ const columns = [
                                             ? "badge bg-secondary text-light fw-bold"
                                             : "badge bg-secondary fw-bold";
 
-
             return h("span", { class: statusClass }, status);
         },
     }),
+
+    /* Kolom Aksi: Tombol untuk update status dan lihat detail */
     column.accessor("id", {
         header: "Aksi",
         cell: (cell) => {
             const row = cell.row.original;
             const status = row.status;
 
+            // Tampilkan tombol hanya untuk status tertentu
             if (status !== "tiba digudang" && status !== "dikirim") return null;
 
             const buttonLabel = status === "tiba digudang" ? "Antar" : "Selesai";
@@ -173,11 +186,12 @@ const columns = [
             ]);
         },
     }),
-
 ];
 
+/* Fungsi untuk memuat ulang data (dipanggil setelah update) */
 const refresh = () => paginateRef.value?.refetch();
 
+/* Watcher: jika form ditutup, kosongkan selected dan scroll ke atas */
 watch(openForm, (val) => {
     if (!val) {
         selected.value = "";
@@ -225,6 +239,7 @@ watch(openForm, (val) => {
                                         {{ detailData.pengguna?.user.name || 'Tidak ada pengguna' }}
                                     </span>
                                 </p>
+                                <p><strong>No HP Pengirim:</strong> {{ detailData.no_hp_pengirim }}</p>
                                 <p><strong>Nama Barang:</strong> {{ detailData.nama_barang }}</p>
                                 <p><strong>Berat Barang:</strong> {{ detailData.berat_barang }} kg</p>
                                 <p><strong>Provinsi Asal:</strong> {{ detailData.asal_provinsi.name || '-' }}</p>
@@ -248,7 +263,7 @@ watch(openForm, (val) => {
                             <p><strong>Status:</strong> {{ detailData.status }}</p>
                             <p><strong>Layanan:</strong> {{ detailData.layanan || '-' }}</p>
                             <p><strong>Biaya:</strong> Rp. {{ detailData.biaya || '-' }}</p>
-                        </div>
+                        </div> 
                         <div class="col-md-6">
                             <p><strong>Status Pembayaran: </strong>
                                 <span :class="getPembayaranBadgeClass(detailData.status_pembayaran)">
@@ -257,8 +272,8 @@ watch(openForm, (val) => {
                                             detailData.status_pembayaran === 'pending' ? 'Pending' :
                                                 detailData.status_pembayaran === 'cancel' ? 'Cancel' :
                                                     detailData.status_pembayaran === 'expire' ? 'Expire' :
-                                                    detailData.status_pembayaran === 'belum dibayar' ? 'belum dibayar' :
-                                                        '-'
+                                                        detailData.status_pembayaran === 'belum dibayar' ? 'belum dibayar' :
+                                                            '-'
                                     }}
                                 </span>
                             </p>

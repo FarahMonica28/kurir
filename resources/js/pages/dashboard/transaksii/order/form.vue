@@ -8,17 +8,27 @@ import { useAuthStore } from "@/stores/auth";
 import { useForm } from "vee-validate";
 import type { transaksii } from "@/types";
 
-// Store dan auth
+// ==========================
+// Auth Store
+// ==========================
 const authStore = useAuthStore();
 const currentPengguna = computed(() => authStore.user);
 
-// Form dan props
-const formRef = ref();
-const transaksi = ref<transaksii>({} as transaksii);
+// ==========================
+// Props dan Emits
+// ==========================
 const props = defineProps({ selected: { type: String, default: null } });
 const emit = defineEmits(["close", "refresh"]);
 
-// Lokasi
+// ==========================
+// Form State
+// ==========================
+const formRef = ref();
+const transaksi = ref<transaksii>({} as transaksii);
+
+// ==========================
+// Lokasi dan Alamat
+// ==========================
 const provinces = ref<Record<string, string>>({});
 const citiesOrigin = ref<Record<string, string>>({});
 const citiesDestination = ref<Record<string, string>>({});
@@ -27,14 +37,19 @@ const cityOrigin = ref("");
 const provinceDestination = ref("0");
 const cityDestination = ref("");
 
-// Input pengguna
+// ==========================
+// Input Pengguna
+// ==========================
+const nama_barang = ref("");
 const penerima = ref("");
-const pengirim = ref("");
+const pengirim = ref(""); // Optional
 const alamat_tujuan = ref("");
 const no_hp_penerima = ref("");
-const nama_barang = ref("");
+const no_hp_pengirim = ref("");
 
-// Ekspedisi dan layanan
+// ==========================
+// Ekspedisi dan Layanan
+// ==========================
 const couriers = ref([
   { code: "jne", name: "JNE" },
   { code: "tiki", name: "TIKI" },
@@ -46,18 +61,22 @@ const selectedService = ref("");
 const berat_barang = ref<number | null>(null);
 const biaya = ref<number>(0);
 
-// Pembayaran
+// ==========================
+// Status dan Pembayaran
+// ==========================
 const sudahBayar = ref(false);
 const metodePembayaran = ref("");
 const invoiceUrl = ref("");
 
-// Validasi
+// ==========================
+// Validasi dengan Yup
+// ==========================
 const formSchema = Yup.object({
   nama_barang: Yup.string().required(),
   penerima: Yup.string().required(),
   alamat_tujuan: Yup.string().required(),
   no_hp_penerima: Yup.string().required(),
-  // pengirim: Yup.string().required(),
+  no_hp_pengirim: Yup.string().required(),
   provinceOrigin: Yup.string().required().notOneOf(["0"]),
   cityOrigin: Yup.string().required(),
   provinceDestination: Yup.string().required().notOneOf(["0"]),
@@ -74,6 +93,7 @@ const { handleSubmit, errors, resetForm } = useForm({
     penerima: "",
     alamat_tujuan: "",
     no_hp_penerima: "",
+    no_hp_pengirim: "",
     provinceOrigin: "0",
     cityOrigin: "",
     provinceDestination: "0",
@@ -81,11 +101,12 @@ const { handleSubmit, errors, resetForm } = useForm({
     kurir: "",
     layanan: "",
     berat_barang: 0,
-    // pengirim: "",
   },
 });
 
+// ==========================
 // API Lokasi
+// ==========================
 const fetchProvinces = async () => {
   try {
     const res = await axios.get("/provinces");
@@ -112,13 +133,16 @@ const fetchCities = async (type: "origin" | "destination") => {
   }
 };
 
-// Ongkir
+// ==========================
+// Ongkir & Layanan
+// ==========================
 const getSelectedCost = () => {
   const service = services.value.find(s => s.service === selectedService.value);
   biaya.value = service?.cost ?? 0;
 };
 
 const fetchOngkir = async () => {
+  // Validasi input ongkir
   if (
     provinceOrigin.value === "0" || !cityOrigin.value ||
     provinceDestination.value === "0" || !cityDestination.value ||
@@ -155,10 +179,15 @@ const fetchOngkir = async () => {
   }
 };
 
-// Watch lokasi/ekspedisi
+// ==========================
+// Watchers
+// ==========================
 watch([provinceOrigin, cityOrigin, provinceDestination, cityDestination, selectedCourier, berat_barang], fetchOngkir);
 watch(selectedService, getSelectedCost);
 
+// ==========================
+// Label Status Pembayaran
+// ==========================
 const statusLabel = (status: string) => {
   if (status === 'lunas') return 'Lunas';
   if (status === 'pending') return 'Menunggu Pembayaran';
@@ -166,44 +195,9 @@ const statusLabel = (status: string) => {
   return status;
 };
 
-// Pembayaran via Midtrans
-// const bayarOngkir = async () => {
-//   const draft = {
-//     penerima: penerima.value,
-//     no_hp_penerima: no_hp_penerima.value,
-//     provinceDestination: provinceDestination.value,
-//     cityDestination: cityDestination.value,
-//     alamat_tujuan: alamat_tujuan.value,
-//     pengirim: pengirim.value,
-//     nama_barang: nama_barang.value,
-//     provinceOrigin: provinceOrigin.value,
-//     cityOrigin: cityOrigin.value,
-//     alamat_asal: transaksi.value.alamat_asal || "",
-//     selectedCourier: selectedCourier.value,
-//     selectedService: selectedService.value,
-//     berat_barang: berat_barang.value,
-//     biaya: biaya.value,
-//   };
-
-
-//   sessionStorage.setItem("draftTransaksi", JSON.stringify(draft));
-
-//   try {
-//     const res = await axios.post("/payment", draft);
-//     // const res = await axios.post("/payment", draft);
-//     const { redirect_url, order_id } = res.data;
-//     if (redirect_url) {
-//     sessionStorage.setItem("midtrans_order_id", order_id); // simpan untuk post-redirect
-//     window.location.href = redirect_url;
-//   } else {
-//       toast.error("URL pembayaran tidak ditemukan.");
-//     }
-//   } catch (err: any) {
-//     toast.error(err?.response?.data?.message || "Gagal membuat pembayaran.");
-//   }
-// };
-
-// Submit transaksi
+// ==========================
+// Submit Form
+// ==========================
 const onSubmit = () => {
   const formData = new FormData();
 
@@ -213,7 +207,7 @@ const onSubmit = () => {
   formData.append("tujuan_kota_id", cityDestination.value);
   formData.append("alamat_tujuan", alamat_tujuan.value);
   formData.append("no_hp_penerima", no_hp_penerima.value);
-  // formData.append("pengirim", pengirim.value);
+  formData.append("no_hp_pengirim", no_hp_pengirim.value);
   formData.append("nama_barang", nama_barang.value);
   formData.append("asal_provinsi_id", provinceOrigin.value);
   formData.append("asal_kota_id", cityOrigin.value);
@@ -252,34 +246,12 @@ const onSubmit = () => {
     });
 };
 
-// Setelah redirect dari Midtrans
-// onMounted(() => {
-//   const draft = JSON.parse(sessionStorage.getItem("draftTransaksi") || "{}");
-//   const orderId = sessionStorage.getItem("midtrans_order_id");
-//   if (!draft || !orderId) return;
-
-//   draft.order_id = orderId;
-//   draft.status = "diproses";
-
-//   const formData = new FormData();
-//   Object.entries(draft).forEach(([key, val]) => formData.append(key, val as string));
-
-//   axios.post("/transaksii/store", formData, {
-//     headers: { "Content-Type": "multipart/form-data" },
-//   })
-//     .then(() => {
-//       toast.success("Transaksi berhasil disimpan.");
-//       sessionStorage.removeItem("draftTransaksi");
-//       sessionStorage.removeItem("midtrans_order_id");
-//     })
-//     .catch(() => {
-//       toast.error("Gagal menyimpan transaksi.");
-//     });
-// });
-
-// Inisialisasi
+// ==========================
+// Lifecycle
+// ==========================
 onMounted(fetchProvinces);
 </script>
+
 
 
 
@@ -308,12 +280,12 @@ onMounted(fetchProvinces);
 
         <!-- No Hp Penerima -->
         <div class="col-md-4 mb-7 mt-4">
-          <label class="form-label required fw-bold">No Hp Penerima</label>
+          <label class="form-label required fw-bold">No Hp Pengirim</label>
           <Field class="form-control" name="no_hp_penerima" v-model="no_hp_penerima"
-            placeholder="Masukan no hp penerima" />
+            placeholder="Masukan no hp pengirim" />
           <ErrorMessage name="no_hp_penerima" class="text-danger small" />
         </div>
-
+        
         <!-- Provinsi Tujuan -->
         <div class="col-md-4 mb-7 mt-4">
           <label class="form-label required fw-bold">Provinsi Tujuan</label>
@@ -362,6 +334,12 @@ onMounted(fetchProvinces);
           </Field>
           <ErrorMessage name="pengirim" class="text-danger small" />
         </div> -->
+        <div class="col-md-4 mb-7 mt-4">
+          <label class="form-label required fw-bold">No Hp Penerima</label>
+          <Field class="form-control" name="no_hp_pengirim" v-model="no_hp_pengirim"
+            placeholder="Masukan no hp penerima" />
+          <ErrorMessage name="no_hp_pengirim" class="text-danger small" />
+        </div>
 
         <!-- Nama Barang -->
         <div class="col-md-4 mb-7 mt-4">
@@ -371,7 +349,7 @@ onMounted(fetchProvinces);
         </div>
 
         <!-- Berat Barang -->
-        <div class="col-md-4 mb-7 mt-4">
+        <div class="col-md-4 mb-7 ">
           <label class="form-label required fw-bold">Berat Barang (Kg)</label>
           <Field type="number" v-model="berat_barang" class="form-control" placeholder="Contoh: 0.5" min="0.1"
             step="0.1" name="berat_barang" />
@@ -467,6 +445,7 @@ onMounted(fetchProvinces);
       <ErrorMessage name="penerima" class="text-danger small" />
       <ErrorMessage name="alamat_tujuan" class="text-danger small" />
       <ErrorMessage name="no_hp_penerima" class="text-danger small" />
+      <ErrorMessage name="no_hp_pengirim" class="text-danger small" />
       <ErrorMessage name="pengirim" class="text-danger small" />
       <ErrorMessage name="provinceOrigin" class="text-danger small" />
       <ErrorMessage name="cityOrigin" class="text-danger small" />

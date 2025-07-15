@@ -1,21 +1,32 @@
 <script setup lang="ts">
+/**
+ * Import library dan dependensi
+ */
 import { h, ref, watch, nextTick, computed } from "vue";
-import { useDelete } from "@/libs/hooks";
+import { useDelete } from "@/libs/hooks"; // (tidak digunakan di kode ini, bisa dihapus jika tidak dipakai)
 import { createColumnHelper } from "@tanstack/vue-table";
 import type { transaksii } from "@/types";
 import Swal from "sweetalert2";
 import html2pdf from "html2pdf.js";
 import axios from "axios";
 
-// Helpers
+/**
+ * Inisialisasi helper TanStack Table
+ */
 const column = createColumnHelper<transaksii>();
-const paginateRef = ref<any>(null);
-const selected = ref<string>("");
-const openForm = ref<boolean>(false);
-const detailData = ref<transaksii | null>(null);
-const printData = ref<transaksii | null>(null);
 
-// Cetak PDF
+/**
+ * State dan referensi komponen
+ */
+const paginateRef = ref<any>(null); // Referensi ke komponen pagination
+const selected = ref<string>(""); // Data yang dipilih
+const openForm = ref<boolean>(false); // Kontrol form tambah/edit
+const detailData = ref<transaksii | null>(null); // Data untuk modal detail
+const printData = ref<transaksii | null>(null); // Data yang akan dicetak sebagai resi
+
+/**
+ * Fungsi untuk mencetak resi dan update status transaksi menjadi 'diproses'
+ */
 const printResi = async (data: transaksii) => {
     const result = await Swal.fire({
         title: "Cetak Resi?",
@@ -29,15 +40,15 @@ const printResi = async (data: transaksii) => {
 
     if (result.isConfirmed) {
         try {
-            // Update status menjadi 'diproses'
+            // Update status transaksi ke 'diproses'
             await axios.put(`/transaksii/${data.id}/gudang`, { status: "diproses" });
 
-            // Refresh table agar status langsung terlihat berubah
+            // Refresh tabel agar status langsung terlihat berubah
             refresh();
 
-            // Lanjut cetak resi
+            // Tunggu hingga DOM selesai update, lalu cetak resi
             printData.value = data;
-            await nextTick(); // Tunggu DOM update
+            await nextTick();
 
             const element = document.getElementById("print-resi");
             if (element) {
@@ -53,7 +64,6 @@ const printResi = async (data: transaksii) => {
 
             Swal.fire({
                 title: "Berhasil",
-                // text: "Status diubah ke 'diproses' dan resi berhasil diunduh.",
                 text: "No resi berhasil diunduh.",
                 icon: "success",
                 timer: 1500,
@@ -71,6 +81,9 @@ const printResi = async (data: transaksii) => {
     }
 };
 
+/**
+ * Fungsi untuk menandai bahwa barang telah sampai di gudang tujuan
+ */
 const markAsArrived = async (data: transaksii) => {
     const result = await Swal.fire({
         title: "Barang sudah sampai di gudang tujuan?",
@@ -84,8 +97,10 @@ const markAsArrived = async (data: transaksii) => {
 
     if (result.isConfirmed) {
         try {
+            // Update status ke 'tiba digudang'
             await axios.put(`/transaksii/${data.id}/gudang`, { status: "tiba digudang" });
             refresh();
+
             Swal.fire({
                 title: "Berhasil",
                 text: "Barang telah tiba digudang.",
@@ -104,7 +119,9 @@ const markAsArrived = async (data: transaksii) => {
     }
 };
 
-
+/**
+ * Endpoint data transaksi, hanya menampilkan status tertentu (tidak termasuk selesai, dikirim, dll)
+ */
 const url = computed(() => {
     const params = new URLSearchParams();
     ['menunggu', 'dikurir', 'diambil kurir', 'dikirim', 'selesai'].forEach(status => {
@@ -113,22 +130,32 @@ const url = computed(() => {
     return `/transaksii?${params.toString()}`;
 });
 
+/**
+ * Fungsi untuk menampilkan modal/detail transaksi
+ */
 const showRincian = (data: transaksii) => {
     detailData.value = data;
 };
 
+/**
+ * Fungsi untuk menutup detail modal
+ */
 const closeDetail = () => {
     detailData.value = null;
 };
 
+/**
+ * Definisi kolom tabel
+ */
 const columns = [
     column.accessor("no", { header: "#" }),
     column.accessor("no_resi", { header: "No Resi" }),
-    column.accessor("tujuan_provinsi.name", { header: "Provinsi Tujuan", }),
-    column.accessor("tujuan_kota.name", { header: "Kota Tujuan", }),
-    // column.accessor("pengirim", { header: "Pengirim" }),
+    column.accessor("tujuan_provinsi.name", { header: "Provinsi Tujuan" }),
+    column.accessor("tujuan_kota.name", { header: "Kota Tujuan" }),
     column.accessor("pengguna.user.name", { header: "Pengirim" }),
     column.accessor("nama_barang", { header: "Nama Barang" }),
+
+    // Kolom status dengan badge warna dinamis
     column.accessor("status", {
         header: "Status",
         cell: (cell) => {
@@ -152,26 +179,32 @@ const columns = [
             return h("span", { class: statusClass }, status);
         },
     }),
+
+    // Kolom aksi (Detail, Tiba Digudang, Cetak Resi)
     column.display({
         id: "aksi",
         header: "Aksi",
         cell: (cell) => {
             const data = cell.row.original;
 
+            // Tombol "Tiba Digudang" hanya muncul jika status 'diproses' atau 'dikirim'
             const showTibaDigudang = data.status === "diproses" || data.status === "dikirim";
 
             return h("div", { class: "d-flex gap-2" }, [
+                // Tombol Detail
                 h("button", {
                     class: "btn btn-sm btn-info d-flex align-items-center gap-1",
                     onClick: () => showRincian(data),
                 }, [h("i", { class: "bi bi-eye" }), "Detail"]),
 
+                // Tombol Tiba Digudang
                 showTibaDigudang &&
                 h("button", {
                     class: "btn btn-sm btn-success d-flex align-items-center gap-1",
                     onClick: () => markAsArrived(data),
                 }, [h("i", { class: "bi bi-check2-circle" }), "Tiba Digudang"]),
 
+                // Tombol Cetak Resi (jika belum tiba di gudang)
                 data.status !== "tiba digudang" &&
                 h("button", {
                     class: "btn btn-sm btn-secondary d-flex align-items-center gap-1",
@@ -179,12 +212,17 @@ const columns = [
                 }, [h("i", { class: "bi bi-printer" })]),
             ]);
         }
-
     }),
 ];
 
+/**
+ * Fungsi untuk me-refresh table
+ */
 const refresh = () => paginateRef.value?.refetch();
 
+/**
+ * Reset selected jika form ditutup, dan scroll ke atas
+ */
 watch(openForm, (val) => {
     if (!val) selected.value = "";
     window.scrollTo(0, 0);
@@ -219,10 +257,11 @@ watch(openForm, (val) => {
                             <strong>
                                 <hr />
                             </strong>
-                            <div class="mt-4">
+                            <div class="mt-6">
                                 <strong>Informasi Pengirim:</strong>
-                                <!-- <p class="mt-4">Nama Pengirim : {{ printData.pengirim || '-' }}</p> -->
-                                <p><strong>Pengirim:</strong> {{ detailData.pengguna?.user.name || '-' }}</p>
+                                <!-- <p  -4">Nama Pengirim : {{ printData.pengirim || '-' }}</p> -->
+                                <!-- <p><strong>Pengirim:</strong> {{detailData.pengguna?.user.name  || '-' }}</p> -->
+                                <p class="mt-2">Nama Pengirim : {{ printData.pengguna?.user.name || '-' }}</p>
                                 <p>Asal Provinsi : {{ printData.asal_provinsi?.name }}</p>
                                 <p>Asal Kota : {{ printData.asal_kota?.name }}</p>
                                 <p>Alamat Asal : {{ printData.alamat_asal }} </p>
@@ -239,7 +278,7 @@ watch(openForm, (val) => {
                             </div>
                             <div class="mt-4">
                                 <strong>Informasi Penerima:</strong><br />
-                                <p class="mt-4">Nama Penerima : {{ printData.penerima }}</p>
+                                <p class="mt-2">Nama Penerima : {{ printData.penerima }}</p>
                                 <p>Tujuan Provinsi : {{ printData.tujuan_provinsi?.name }}</p>
                                 <p>Tujuan Kota : {{ printData.tujuan_kota?.name }}</p>
                                 <p>Alamat Tujuan : {{ printData.alamat_tujuan }}</p>

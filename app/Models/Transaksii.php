@@ -18,7 +18,7 @@ class Transaksii extends Model
         'berat_barang', 'ekspedisi', 'layanan', 'biaya', 'waktu',
         'status', 'rating', 'komentar',
         'asal_provinsi_id', 'asal_kota_id', 'tujuan_provinsi_id', 'tujuan_kota_id',
-        'pengguna_id', 'pernah_digudang', 'status_pembayaran',
+        'pengguna_id', 'pernah_digudang', 'status_pembayaran', 'no_hp_pengirim',
     ];
 
     protected static function generateNoResi()
