@@ -400,19 +400,40 @@ class KurirController extends Controller
     //     ]);
     // }
 
-
     public function updateRating($kurirId)
     {
-        $avgRating = Pengiriman::where('kurir_id', $kurirId)
+        // Cari kurir, kalau tidak ditemukan akan otomatis throw 404
+        $kurir = Kurir::findOrFail($kurirId);
+
+        // Hitung rata-rata rating dari pengiriman yang memiliki rating (tidak null)
+        $averageRating = Pengiriman::where('kurir_id', $kurirId)
             ->whereNotNull('rating')
             ->avg('rating');
 
-        $kurir = Kurir::find($kurirId);
-        if ($kurir) {
-            $kurir->rating = $avgRating;
-            $kurir->save();
-        }
+        // Update rating kurir, dibulatkan ke 2 angka di belakang koma
+        $kurir->rating = round($averageRating, 2);
+        $kurir->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Rating kurir berhasil diperbarui',
+            'rating' => $kurir->rating
+        ]);
     }
+
+
+    // public function updateRating($kurirId)
+    // {
+    //     $avgRating = Pengiriman::where('kurir_id', $kurirId)
+    //         ->whereNotNull('rating')
+    //         ->avg('rating');
+
+    //     $kurir = Kurir::find($kurirId);
+    //     if ($kurir) {
+    //         $kurir->rating = $avgRating;
+    //         $kurir->save();
+    //     }
+    // }
 
 
     // public function destroy(Kurir $kurir)

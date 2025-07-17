@@ -331,7 +331,7 @@ watch(openForm, (val) => {
                         </div>
                         <hr />
                     </div>
-                    <hr />
+                    <!-- <hr /> -->
                 </div>
             </div>
         </div>

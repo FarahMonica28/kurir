@@ -301,9 +301,16 @@ onMounted(() => {
                 </div>
                 <div class="card-body">
                     <div class="row">
-                        <div class="col-md-6">
-                            <p><strong>No Order:</strong> {{ detailData.id }}</p>
-                            <p><strong>No Resi:</strong> {{ detailData.no_resi }}</p>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>No Order:</strong> {{ detailData.id }}</p>
+                                <p><strong>No Resi:</strong> {{ detailData.no_resi }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Ekspedisi:</strong> {{ detailData.ekspedisi || '-' }}</p>
+                                <p><strong>Layanan:</strong> {{ detailData.layanan || '-' }}</p>
+
+                            </div>
                         </div>
                         <hr />
                         <div class="row">
@@ -333,10 +340,6 @@ onMounted(() => {
                     <div class="row">
                         <div class="col-md-6">
                             <p><strong>Status:</strong> {{ detailData.status }}</p>
-                            <p><strong>Layanan:</strong> {{ detailData.layanan || '-' }}</p>
-                            <p><strong>Biaya:</strong> Rp. {{ detailData.biaya || '-' }}</p>
-                        </div>
-                        <div class="col-md-6">
                             <p><strong>Status Pembayaran: </strong>
                                 <span :class="getPembayaranBadgeClass(detailData.status_pembayaran)">
                                     {{
@@ -349,6 +352,9 @@ onMounted(() => {
                                     }}
                                 </span>
                             </p>
+                            <p><strong>Biaya:</strong> Rp. {{ detailData.biaya || '-' }}</p>
+                        </div>
+                        <div class="col-md-6">
                             <!-- <p><strong>Estimasi:</strong> {{ detailData.estimasi || '-' }}</p> -->
                             <!-- <p><strong>Kurir : </strong>
                                 <span @click="showKurirDetail(detailData.kurir)"
@@ -381,20 +387,10 @@ onMounted(() => {
                         <div class="col-md-6">
                             <p><strong>Waktu Dibuat:</strong> {{ detailData.waktu || '-' }}</p>
                             <!-- <p><strong>Waktu Penjemputan:</strong> {{ detailData.waktu_penjemputan || '-' }}</p> -->
+                            <p><strong>Waktu Terkirim:</strong> {{ detailData.waktu_kirim || '-' }}</p>
                         </div>
                         <div class="col-md-6">
                             <!-- <p><strong>Waktu Proses Pengiriman:</strong> {{ detailData.waktu_proses || '-' }}
-                            </p> -->
-                            <p><strong>Waktu Terkirim:</strong> {{ detailData.waktu_kirim || '-' }}</p>
-                        </div>
-                    </div>
-
-                    <hr />
-
-                    <div class="row">
-
-                        <div class="col-md-12">
-                            <!-- <p><strong>Penilaian:</strong> {{ detailData.rating || 'Belum ada rating' }}
                             </p> -->
                             <p><strong>Penilaian:</strong>
                                 <span v-if="detailData.rating" class="rating-stars">
@@ -406,6 +402,16 @@ onMounted(() => {
                             <p><strong>Komentar:</strong> {{ detailData.komentar || 'Belum ada komentar' }}</p>
                         </div>
                     </div>
+
+                    <!-- <hr />
+
+                    <div class="row">
+
+                        <div class="col-md-12">
+                            <!-- <p><strong>Penilaian:</strong> {{ detailData.rating || 'Belum ada rating' }}
+                            </p> -
+                        </div>
+                    </div> -->
 
                 </div>
             </div>

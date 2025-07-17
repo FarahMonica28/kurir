@@ -106,7 +106,9 @@ class PaymentController extends Controller
             ],
             'customer_details' => [
                 'first_name' => $transaksii->pengirim,     // Nama pengirim
-                'email' => $transaksii->pengguna->email ?: 'user@gmail.com', // Gunakan email pengguna, fallback ke default
+                // 'email' => $transaksii->pengguna->email ?: 'user@gmail.com', // Gunakan email pengguna, fallback ke default
+                'email' => $transaksii->pengguna ->email ?: 'user@gmail.com',
+
             ],
         ];
 

@@ -135,8 +135,53 @@ watch(openForm, (val) => {
             <!-- <paginate ref="paginateRef" id="table-riwayat" url="/transaksii?status=digudang" :columns="columns" /> -->
             <paginate ref="paginateRef" id="table-riwayat" url="/transaksii?pernah_digudang=true" :columns="columns" />
 
-            <!-- DETAIL -->
             <div v-if="detailData" class="card mt-5">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h3 class="mb-0">Detail Transaksi</h3>
+                    <button class="btn btn-sm btn-danger" @click="closeDetail">
+                        Tutup <i class="bi bi-x-circle"></i>
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>No Resi:</strong> {{ detailData.no_resi }}</p>
+                            </div>
+
+                            <div class="col-md-6">
+                                <p><strong>Status Pembayaran:</strong> {{ detailData.status_pembayaran }}</p>
+
+                            </div>
+                        </div>
+                        <hr class="mt-4" />
+                        <div class="row">
+                            <div class="col-md-6">
+                                <!-- <p><strong>Pengirim:</strong> {{ detailData.pengirim || '-' }}</p> -->
+                                <p><strong>Pengirim:</strong> {{ detailData.pengguna?.user.name || '-' }}</p>
+                                <p><strong>Nama Barang:</strong> {{ detailData.nama_barang }}</p>
+                                <p><strong>Berat Barang:</strong> {{ detailData.berat_barang }} kg</p>
+                                <p><strong>Provinsi Asal:</strong> {{ detailData.asal_provinsi?.name || '-' }}</p>
+                                <p><strong>Kota Asal:</strong> {{ detailData.asal_kota?.name || '-' }}</p>
+                                <p><strong>Alamat Asal:</strong> {{ detailData.alamat_asal }}</p>
+                            </div>
+
+                            <div class="col-md-6">
+                                <p><strong>Penerima:</strong> {{ detailData.penerima || '-' }}</p>
+                                <p><strong>No HP Penerima:</strong> {{ detailData.no_hp_penerima }}</p>
+                                <p><strong>Provinsi Tujuan:</strong> {{ detailData.tujuan_provinsi?.name || '-' }}</p>
+                                <p><strong>Kota Tujuan:</strong> {{ detailData.tujuan_kota?.name || '-' }}</p>
+                                <p><strong>Alamat Tujuan:</strong> {{ detailData.alamat_tujuan }}</p>
+                            </div>
+                        </div>
+                        <hr />
+                    </div>
+                    <!-- <hr /> -->
+                </div>
+            </div>
+
+            <!-- DETAIL -->
+            <!-- <div v-if="detailData" class="card mt-5">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h3 class="mb-0">Detail Transaksi</h3>
                     <button class="btn btn-sm btn-danger" @click="closeDetail">
@@ -153,7 +198,7 @@ watch(openForm, (val) => {
                         <div class="row">
                             <div class="col-md-6">
                                 <!-- <h2>Informasi Pengirim</h2> -->
-                                <!-- <p><strong>Pengirim:</strong> {{ detailData.pengirim || '-' }}</p> -->
+                                <!-- <p><strong>Pengirim:</strong> {{ detailData.pengirim || '-' }}</p> --
                                 <p><strong>Pengirim:</strong> {{ detailData.pengguna?.user.name || '-' }}</p>
                                 <p><strong>Nama Barang:</strong> {{ detailData.nama_barang }}</p>
                                 <p><strong>Berat Barang:</strong> {{ detailData.berat_barang }} kg</p>
@@ -163,7 +208,7 @@ watch(openForm, (val) => {
                             </div>
 
                             <div class="col-md-6">
-                                <!-- <h2>Informasi Penerima</h2> -->
+                                <!-- <h2>Informasi Penerima</h2> --
                                 <p><strong>Penerima:</strong> {{ detailData.penerima || '-' }}</p>
                                 <p><strong>No HP Penerima:</strong> {{ detailData.no_hp_penerima }}</p>
                                 <p><strong>Provinsi Tujuan:</strong> {{ detailData.tujuan_provinsi.name || '-' }}</p>
@@ -198,19 +243,19 @@ watch(openForm, (val) => {
                                     style="cursor: pointer; color: blue; text-decoration: underline;">
                                     {{ detailData.kurir?.user.name || 'Tidak ada kurir' }}
                                 </span>
-                            </p> -->
+                            </p> --
                             <p><strong>Kurir Pengambil : </strong>
-                                <span >
+                                <span>
                                     {{ kurirAmbil.name }}
                                 </span>
-                                <!-- <span>Tidak ada kurir</span> -->
+                                <!-- <span>Tidak ada kurir</span> --
                             </p>
 
                             <p><strong>Kurir Pengantar : </strong>
                                 <span>
                                     {{ kurirKirim.name }}
                                 </span>
-                                <!-- <span>Tidak ada kurir</span> -->
+                                <!-- <span>Tidak ada kurir</span> --
                             </p>
 
 
@@ -221,11 +266,11 @@ watch(openForm, (val) => {
                     <div class="row">
                         <div class="col-md-6">
                             <p><strong>Waktu Dibuat:</strong> {{ detailData.waktu || '-' }}</p>
-                            <!-- <p><strong>Waktu Penjemputan:</strong> {{ detailData.waktu_penjemputan || '-' }}</p> -->
+                            <!-- <p><strong>Waktu Penjemputan:</strong> {{ detailData.waktu_penjemputan || '-' }}</p> --
                         </div>
                         <div class="col-md-6">
                             <!-- <p><strong>Waktu Proses Pengiriman:</strong> {{ detailData.waktu_proses || '-' }}
-                            </p> -->
+                            </p> --
                             <p><strong>Waktu Terkirim:</strong> {{ detailData.waktu_kirim || '-' }}</p>
                         </div>
                     </div>
@@ -236,7 +281,7 @@ watch(openForm, (val) => {
 
                         <div class="col-md-12">
                             <!-- <p><strong>Penilaian:</strong> {{ detailData.rating || 'Belum ada rating' }}
-                            </p> -->
+                            </p> --
                             <p><strong>Penilaian:</strong>
                                 <span v-if="detailData.rating" class="rating-stars">
                                     {{ "★".repeat(parseInt(detailData.rating)) + "☆".repeat(5 -
@@ -249,7 +294,7 @@ watch(openForm, (val) => {
                     </div>
 
                 </div>
-            </div>
+            </div> -->
         </div>
     </div>
 </template>

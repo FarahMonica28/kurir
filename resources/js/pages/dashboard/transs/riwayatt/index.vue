@@ -19,6 +19,7 @@ const detailData = ref<transaksii | null>(null);
 const showRincian = (data: transaksii) => {
     console.log("rincian");
     detailData.value = data;
+    console.log(detailData.value)
 };
 const closeDetail = () => {
     detailData.value = null;
@@ -94,32 +95,32 @@ const columns = [
         }
     }),
 
-    column.accessor("status", {
-        header: "Status",
-        cell: (cell) => {
-            const status = cell.getValue();
-            const statusClass =
-                status === "selesai"
-                    ? "badge bg-success fw-bold"
-                    : status === "dikirim"
-                        ? "badge bg-warning text-dark fw-bold"
-                        : status === "diproses"
-                            ? "badge bg-primary text-light fw-bold"
-                            : status === "digudang"
-                                ? "badge bg-secondary fw-bold"
-                                : status === "dikurir"
-                                    ? "badge bg-info text-light fw-bold"
-                                    : status === "diambil kurir"
-                                        ? "badge bg-info text-dark fw-bold"
-                                        : status === "menunggu"
-                                            ? "badge bg-secondary text-light fw-bold"
-                                            : "badge bg-secondary fw-bold";
+    // column.accessor("status", {
+    //     header: "Status",
+    //     cell: (cell) => {
+    //         const status = cell.getValue();
+    //         const statusClass =
+    //             status === "selesai"
+    //                 ? "badge bg-success fw-bold"
+    //                 : status === "dikirim"
+    //                     ? "badge bg-warning text-dark fw-bold"
+    //                     : status === "diproses"
+    //                         ? "badge bg-primary text-light fw-bold"
+    //                         : status === "digudang"
+    //                             ? "badge bg-secondary fw-bold"
+    //                             : status === "dikurir"
+    //                                 ? "badge bg-info text-light fw-bold"
+    //                                 : status === "diambil kurir"
+    //                                     ? "badge bg-info text-dark fw-bold"
+    //                                     : status === "menunggu"
+    //                                         ? "badge bg-secondary text-light fw-bold"
+    //                                         : "badge bg-secondary fw-bold";
 
 
 
-            return h("span", { class: statusClass }, status);
-        },
-    }),
+    //         return h("span", { class: statusClass }, status);
+    //     },
+    // }),
     column.display({
         id: "rincian",
         header: "Aksi",
@@ -155,7 +156,7 @@ watch(openForm, (val) => {
 
     <div class="card">
         <div class="card-header align-items-center">
-            <h2 class="mb-0">Riwayat Orderan</h2>
+            <h2 class="mb-0">Riwayat Ambil</h2>
         </div>
         <div class="card-body">
             <!-- <paginate
@@ -163,8 +164,8 @@ watch(openForm, (val) => {
                 id="table-transaksii"
                 :url="url"
                 :columns="columns"
-            /> -->
-            <paginate ref="paginateRef" id="table-pengiriman" url="/pengiriman?status=gudang" :columns="columns" />
+                /> -->
+            <paginate ref="paginateRef" id="table-pengiriman" url="/pengiriman?status=ambil" :columns="columns" />
             <div v-if="detailData" class="card mt-5">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h3 class="mb-0">Detail Transaksi</h3>
@@ -174,81 +175,90 @@ watch(openForm, (val) => {
                 </div>
                 <div class="card-body">
                     <div class="row">
-                        <div class="col-md-6">
-                            <p><strong>No Order:</strong> {{ detailData.id }}</p>
-                            <p><strong>No Resi:</strong> {{ detailData.no_resi }}</p>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>No Order:</strong> {{ detailData.transaksii.id }}</p>
+                                <p><strong>No Resi:</strong> {{ detailData.transaksii.no_resi }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Ekspedisi:</strong> {{ detailData.transaksii.ekspedisi || '-' }}</p>
+                                <p><strong>Layanan:</strong> {{ detailData.transaksii.layanan || '-' }}</p>
+                            </div>
                         </div>
                         <hr />
                         <div class="row">
                             <div class="col-md-6">
                                 <!-- <h2>Informasi Pengirim</h2> -->
-                                <!-- <p><strong>Pengirim:</strong> {{ detailData.pengirim || '-' }}</p> -->
-                                <!-- <p><strong>Pengirim:</strong> {{ detailData.pengguna?.user.name || '-' }}</p> -->
+                                <!-- <p><strong>Pengirim:</strong> {{ detailData.transaksii.pengirim || '-' }}</p> -->
+                                <!-- <p><strong>Pengirim:</strong> {{ detailData.transaksii.pengguna?.user.name || '-' }}</p> -->
                                 <p><strong>Pengirim : </strong>
-                                    <span @click="showPenggunaDetail(detailData.pengguna)"
+                                    <span @click="showPenggunaDetail(detailData.transaksii.pengguna)"
                                         style="cursor: pointer; color: blue; text-decoration: underline;">
-                                        {{ detailData.pengguna?.user.name || 'Tidak ada pengguna' }}
+                                        {{ detailData.transaksii.pengguna?.user.name || 'Tidak ada pengguna' }}
                                     </span>
                                 </p>
-                                <p><strong>No HP Pengirim:</strong> {{ detailData.no_hp_pengirim }}</p>
-                                <p><strong>Nama Barang:</strong> {{ detailData.nama_barang }}</p>
-                                <p><strong>Berat Barang:</strong> {{ detailData.berat_barang }} kg</p>
-                                <p><strong>Provinsi Asal:</strong> {{ detailData.asal_provinsi.name || '-' }}</p>
-                                <p><strong>Kota Asal:</strong> {{ detailData.asal_kota.name || '-' }}</p>
-                                <p><strong>Alamat Asal:</strong> {{ detailData.alamat_asal }}</p>
+                                <p><strong>No HP Pengirim:</strong> {{ detailData.transaksii.no_hp_pengirim }}</p>
+                                <p><strong>Nama Barang:</strong> {{ detailData.transaksii.nama_barang }}</p>
+                                <p><strong>Berat Barang:</strong> {{ detailData.transaksii.berat_barang }} kg</p>
+                                <p><strong>Provinsi Asal:</strong> {{ detailData.transaksii.asal_provinsi.name || '-' }}
+                                </p>
+                                <p><strong>Kota Asal:</strong> {{ detailData.transaksii.asal_kota.name || '-' }}</p>
+                                <p><strong>Alamat Asal:</strong> {{ detailData.transaksii.alamat_asal }}</p>
                             </div>
 
                             <div class="col-md-6">
                                 <!-- <h2>Informasi Penerima</h2> -->
-                                <p><strong>Penerima:</strong> {{ detailData.penerima || '-' }}</p>
-                                <p><strong>No HP Penerima:</strong> {{ detailData.no_hp_penerima }}</p>
-                                <p><strong>Provinsi Tujuan:</strong> {{ detailData.tujuan_provinsi.name || '-' }}</p>
-                                <p><strong>Kota Tujuan:</strong> {{ detailData.tujuan_kota.name || '-' }}</p>
-                                <p><strong>Alamat Tujuan:</strong> {{ detailData.alamat_tujuan }}</p>
+                                <p><strong>Penerima:</strong> {{ detailData.transaksii.penerima || '-' }}</p>
+                                <p><strong>No HP Penerima:</strong> {{ detailData.transaksii.no_hp_penerima }}</p>
+                                <p><strong>Provinsi Tujuan:</strong> {{ detailData.transaksii.tujuan_provinsi.name ||
+                                    '-' }}</p>
+                                <p><strong>Kota Tujuan:</strong> {{ detailData.transaksii.tujuan_kota.name || '-' }}</p>
+                                <p><strong>Alamat Tujuan:</strong> {{ detailData.transaksii.alamat_tujuan }}</p>
                             </div>
                         </div>
                     </div>
                     <hr />
                     <div class="row">
                         <div class="col-md-6">
-                            <p><strong>Status:</strong> {{ detailData.status }}</p>
-                            <p><strong>Layanan:</strong> {{ detailData.layanan || '-' }}</p>
-                            <p><strong>Biaya:</strong> Rp. {{ detailData.biaya || '-' }}</p>
-                        </div>
-                        <div class="col-md-6">
+                            <p><strong>Status:</strong> {{ detailData.transaksii.status }}</p>
                             <p><strong>Status Pembayaran: </strong>
-                                <span :class="getPembayaranBadgeClass(detailData.status_pembayaran)">
+                                <span :class="getPembayaranBadgeClass(detailData.transaksii.status_pembayaran)">
                                     {{
-                                        detailData.status_pembayaran === 'settlement' ? 'Settlement' :
-                                            detailData.status_pembayaran === 'pending' ? 'Pending' :
-                                                detailData.status_pembayaran === 'cancel' ? 'Cancel' :
-                                                    detailData.status_pembayaran === 'expire' ? 'Expire' :
-                                                        detailData.status_pembayaran === 'belum dibayar' ? 'belum dibayar' :
+                                        detailData.transaksii.status_pembayaran === 'settlement' ? 'Settlement' :
+                                            detailData.transaksii.status_pembayaran === 'pending' ? 'Pending' :
+                                                detailData.transaksii.status_pembayaran === 'cancel' ? 'Cancel' :
+                                                    detailData.transaksii.status_pembayaran === 'expire' ? 'Expire' :
+                                                        detailData.transaksii.status_pembayaran === 'belum dibayar' ? 'belum dibayar' :
                                                             '-'
                                     }}
                                 </span>
                             </p>
-                            <!-- <p><strong>Estimasi:</strong> {{ detailData.estimasi || '-' }}</p> -->
+                            <p><strong>Biaya:</strong> Rp. {{ detailData.transaksii.biaya || '-' }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <!-- <p><strong>Estimasi:</strong> {{ detailData.transaksii.estimasi || '-' }}</p> -->
                             <!-- <p><strong>Kurir : </strong>
-                                <span @click="showKurirDetail(detailData.kurir)"
+                                <span @click="showKurirDetail(detailData.transaksii.kurir)"
                                     style="cursor: pointer; color: blue; text-decoration: underline;">
-                                    {{ detailData.kurir?.user.name || 'Tidak ada kurir' }}
+                                    {{ detailData.transaksii.kurir?.user.name || 'Tidak ada kurir' }}
                                 </span>
                             </p> -->
                             <p><strong>Kurir Pengambil : </strong>
-                                <span v-if="kurirAmbil" @click="showKurirDetail(kurirAmbil)"
+                                <!-- <span v-if="kurirAmbil" @click="showKurirDetail(kurirAmbil)"
                                     style="cursor: pointer; color: yellow;">
-                                    {{ kurirAmbil.user.name }}
+                                    {{ kurirAmbil?.user?.name }}          
                                 </span>
-                                <span v-else>Tidak ada kurir</span>
+                                <span v-else>Tidak ada kurir</span> -->
+                                {{ transaksii.kurirAmbil.name }}       
                             </p>
 
                             <p><strong>Kurir Pengantar : </strong>
-                                <span v-if="kurirKirim" @click="showKurirDetail(kurirKirim)"
+                                <!-- <span v-if="kurirKirim" @click="showKurirDetail(kurirKirim)"
                                     style="cursor: pointer; color: green;">
                                     {{ kurirKirim.user.name }}
                                 </span>
-                                <span v-else>Tidak ada kurir</span>
+                                <span v-else>Tidak ada kurir</span> -->
+                                {{ transaksii.kurirKirim.name }}
                             </p>
 
 
@@ -258,32 +268,32 @@ watch(openForm, (val) => {
 
                     <div class="row">
                         <div class="col-md-6">
-                            <p><strong>Waktu Dibuat:</strong> {{ detailData.waktu || '-' }}</p>
-                            <!-- <p><strong>Waktu Penjemputan:</strong> {{ detailData.waktu_penjemputan || '-' }}</p> -->
+                            <p><strong>Waktu Dibuat:</strong> {{ detailData.transaksii.waktu || '-' }}</p>
+                            <!-- <p><strong>Waktu Penjemputan:</strong> {{ detailData.transaksii.waktu_penjemputan || '-' }}</p> -->
+                            <p><strong>Waktu Terkirim:</strong> {{ detailData.transaksii.waktu_kirim || '-' }}</p>
                         </div>
                         <div class="col-md-6">
-                            <!-- <p><strong>Waktu Proses Pengiriman:</strong> {{ detailData.waktu_proses || '-' }}
-                            </p> -->
-                            <p><strong>Waktu Terkirim:</strong> {{ detailData.waktu_kirim || '-' }}</p>
-                        </div>
-                    </div>
-
-                    <hr />
-
-                    <div class="row">
-                        <div class="col-md-12">
-                            <!-- <p><strong>Penilaian:</strong> {{ detailData.rating || 'Belum ada rating' }}
+                            <!-- <p><strong>Waktu Proses Pengiriman:</strong> {{ detailData.transaksii.waktu_proses || '-' }}
                             </p> -->
                             <p><strong>Penilaian:</strong>
-                                <span v-if="detailData.rating" class="rating-stars">
-                                    {{ "★".repeat(parseInt(detailData.rating)) + "☆".repeat(5 -
-                                        parseInt(detailData.rating)) }}
+                                <span v-if="detailData.transaksii.rating" class="rating-stars">
+                                    {{ "★".repeat(parseInt(detailData.transaksii.rating)) + "☆".repeat(5 -
+                                        parseInt(detailData.transaksii.rating)) }}
                                 </span>
                                 <span v-else>Belum ada rating</span>
                             </p>
-                            <p><strong>Komentar:</strong> {{ detailData.komentar || 'Belum ada komentar' }}</p>
+                            <p><strong>Komentar:</strong> {{ detailData.transaksii.komentar || 'Belum ada komentar' }}
+                            </p>
                         </div>
                     </div>
+                    <!-- <hr /> -->
+
+                    <!-- <div class="row">
+                        <div class="col-md-12">
+                            <!-- <p><strong>Penilaian:</strong> {{ detailData.transaksii.rating || 'Belum ada rating' }}
+                            </p> --
+                        </div>
+                    </div> -->
 
                 </div>
             </div>

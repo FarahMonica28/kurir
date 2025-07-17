@@ -242,7 +242,7 @@ watch(openForm, (val) => {
                             <p><strong>Kurir Pengambil : </strong>
                                 <span v-if="kurirAmbil" @click="showKurirDetail(kurirAmbil)"
                                     style="cursor: pointer; color: blue;">
-                                    {{ kurirAmbil.user.name }}
+                                    {{ kurirAmbil.name }}
                                 </span>
                                 <span v-else>Tidak ada kurir</span>
                             </p>
@@ -250,7 +250,7 @@ watch(openForm, (val) => {
                             <p><strong>Kurir Pengantar : </strong>
                                 <span v-if="kurirKirim" @click="showKurirDetail(kurirKirim)"
                                     style="cursor: pointer; color: blue;">
-                                    {{ kurirKirim.user.name }}
+                                    {{ kurirKirim.name }}
                                 </span>
                                 <span v-else>Tidak ada kurir</span>
                             </p>

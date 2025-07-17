@@ -120,7 +120,7 @@ class TransaksiiController extends Controller
             // Filter untuk mengecualikan status tertentu
             ->when($request->has('exclude_status'), function ($query) use ($request) {
                 Log::info("Exclude");
-                $excludeStatuses = $request->input('exclude_status');
+                $excludeStatuses = $request->input(key: 'exclude_status');
                 if (is_array($excludeStatuses)) {
                     $query->whereNotIn('status', $excludeStatuses);
                 } else {
@@ -250,7 +250,9 @@ class TransaksiiController extends Controller
             'status' => 'required|string',
         ]);
 
-        $transaksii = Transaksii::find($id);
+        // $transaksii = Transaksii::find($id);
+        $transaksii = Transaksii::with(['pengguna'])->findOrFail($id);
+
         if (!$transaksii) {
             return response()->json(['message' => 'Transaksi tidak ditemukan'], 404);
         }
@@ -292,7 +294,7 @@ class TransaksiiController extends Controller
                     'transaksii_id' => $transaksii->id,
                     'status' => 'gudang'
                 ]);
-                $transaksii->pernah_digudang = true;
+                // $transaksii->pernah_digudang = true;
                 $transaksii->kurir_id = null;
                 break;
         }
@@ -435,6 +437,7 @@ class TransaksiiController extends Controller
 
             case 'tiba digudang':
                 $transaksii->waktu_tiba = now();
+                $transaksii->pernah_digudang = true;
                 break;
         }
         

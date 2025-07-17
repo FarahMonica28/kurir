@@ -29,7 +29,7 @@ class PengirimanController extends Controller
         DB::statement(query: 'set @no=0+' . $page * $per);
         // $pengiriman = Pengiriman::with('user')
         // Pengiriman::with('kurir.user');
-       $data = Pengiriman::with('transaksii.pengguna.user')->with('kurir.user', )// tambahkan ini
+       $data = Pengiriman::with('transaksii.pengguna.user')->with('kurir.user')->with('transaksii.asalProvinsi', 'transaksii.asalKota', 'transaksii.tujuanProvinsi', 'transaksii.tujuanKota', )// tambahkan ini
         ->when($request->search, function (Builder $query, string $search) {
             $query->where('kurir_id', 'like', "%$search%")
                 ->orWhere('deskripsi', 'like', "%$search%")
@@ -38,6 +38,15 @@ class PengirimanController extends Controller
         ->when($request->status, function ($query, $status) {  
                 Log::info($status); 
                 $query->where('status', $status);
+            })
+            ->when(auth()->user()->role->name === 'kurir', function ($query) {
+                Log::info('b');
+                $query->where(function ($q) {
+                    Log::info('e');
+                    $kurirId = auth()->user()->kurir->kurir_id;
+                    $q->whereNull('kurir_id')
+                    ->orWhere('kurir_id', $kurirId);
+                });
             })
         ->select('pengiriman.*')
         ->latest()->paginate($per);
@@ -50,8 +59,6 @@ class PengirimanController extends Controller
                 $item->no = $no++;
                 // $item->no_resi = $item->transaksii->no_resi ?? null;    
             }
-
-
 
 
         return response()->json($data);

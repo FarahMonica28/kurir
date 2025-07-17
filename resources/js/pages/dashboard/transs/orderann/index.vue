@@ -27,6 +27,7 @@ const detailData = ref<transaksii | null>(null);
 const showRincian = (data: transaksii) => {
     console.log("rincian");
     detailData.value = data;
+    console.log(detailData.value)
 };
 
 /* Fungsi untuk menutup detail transaksi */
@@ -107,7 +108,7 @@ const handleUpdateStatus = async (id: string, currentStatus: string) => {
 /* Membuat URL API dengan filter status dan pembayaran settlement */
 const url = computed(() => {
     const params = new URLSearchParams();
-    ['menunggu', 'diambil kurir', 'diproses', 'digudang', 'selesai'].forEach(status => {
+    ['menunggu', 'diambil kurir', 'dikurir', 'diproses', 'digudang', 'selesai'].forEach(status => {
         params.append('exclude_status[]', status);
         params.append('status_pembayaran', 'settlement');
     });
@@ -263,7 +264,7 @@ watch(openForm, (val) => {
                             <p><strong>Status:</strong> {{ detailData.status }}</p>
                             <p><strong>Layanan:</strong> {{ detailData.layanan || '-' }}</p>
                             <p><strong>Biaya:</strong> Rp. {{ detailData.biaya || '-' }}</p>
-                        </div> 
+                        </div>
                         <div class="col-md-6">
                             <p><strong>Status Pembayaran: </strong>
                                 <span :class="getPembayaranBadgeClass(detailData.status_pembayaran)">
@@ -285,19 +286,21 @@ watch(openForm, (val) => {
                                 </span>
                             </p> -->
                             <p><strong>Kurir Pengambil : </strong>
-                                <span v-if="kurirAmbil" @click="showKurirDetail(kurirAmbil)"
+                                <!-- <span v-if="kurirAmbil" @click="showKurirDetail(kurirAmbil)"
                                     style="cursor: pointer; color: yellow;">
                                     {{ kurirAmbil.user.name }}
-                                </span>
-                                <span v-else>Tidak ada kurir</span>
+                                </span> -->
+                                <!-- <span v-else>Tidak ada kurir</span> -->
+                                {{ kurirAmbil.name }}
                             </p>
 
                             <p><strong>Kurir Pengantar : </strong>
-                                <span v-if="kurirKirim" @click="showKurirDetail(kurirKirim)"
+                                <!-- <span v-if="kurirKirim" @click="showKurirDetail(kurirKirim)"
                                     style="cursor: pointer; color: green;">
                                     {{ kurirKirim.user.name }}
                                 </span>
-                                <span v-else>Tidak ada kurir</span>
+                                <span v-else>Tidak ada kurir</span> -->
+                                {{ kurirKirim.name }}
                             </p>
 
 

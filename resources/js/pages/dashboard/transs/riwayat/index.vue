@@ -155,7 +155,7 @@ watch(openForm, (val) => {
 
     <div class="card">
         <div class="card-header align-items-center">
-            <h2 class="mb-0">Riwayat Orderan</h2>
+            <h2 class="mb-0">Riwayat Antar</h2>
         </div>
         <div class="card-body">
             <!-- <paginate
@@ -236,19 +236,22 @@ watch(openForm, (val) => {
                                 </span>
                             </p> -->
                             <p><strong>Kurir Pengambil : </strong>
-                                <span v-if="kurirAmbil" @click="showKurirDetail(kurirAmbil)"
-                                    style="cursor: pointer; color: yellow;">
-                                    {{ kurirAmbil.user.name }}
-                                </span>
-                                <span v-else>Tidak ada kurir</span>
+                                <!-- <span v-if="kurirAmbil" @click="showKurirDetail(kurirAmbil)"
+                                    style="cursor: pointer; color: purple;">
+                                    {{ kurirAmbil.name }}
+                                </span> -->
+                                {{ kurirAmbil.name }}
+                                <!-- <span v-else>Tidak ada kurir</span> -->
                             </p>
 
                             <p><strong>Kurir Pengantar : </strong>
-                                <span v-if="kurirKirim" @click="showKurirDetail(kurirKirim)"
-                                    style="cursor: pointer; color: green;">
-                                    {{ kurirKirim.user.name }}
+                                <span>
+                                    <!-- v-if="kurirKirim" @click="showKurirDetail(kurirKirim)"
+                                    style="cursor: pointer; color: blue;">
+                                    {{ kurirKirim.name }}  -->
+                                    {{ kurirKirim.name }} 
                                 </span>
-                                <span v-else>Tidak ada kurir</span>
+                                <!-- <span v-else>Tidak ada kurir</span> -->
                             </p>
 
 

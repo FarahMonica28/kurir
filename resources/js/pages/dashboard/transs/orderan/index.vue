@@ -8,6 +8,11 @@ import type { transaksii, Pengiriman } from "@/types"; // Tipe data transaksi
 import axios from "axios"; // Untuk request HTTP
 import Swal from "sweetalert2"; // Untuk tampilan modal alert
 
+/* Import store autentikasi dan ambil data kurir yang sedang login */
+import { useAuthStore } from "@/stores/auth";
+const authStore = useAuthStore();
+const currentKurir = computed(() => authStore.user);
+
 // Membuat column helper untuk tipe data transaksii
 const column = createColumnHelper<transaksii>();
 
@@ -23,6 +28,7 @@ const detailData = ref<transaksii | null>(null);
 const showRincian = (data: transaksii) => {
     console.log("rincian");
     detailData.value = data;
+    console.log(detailData.value)
 };
 
 // Menutup tampilan detail transaksi
@@ -335,19 +341,20 @@ watch(openForm, (val) => {
                                 </span>
                             </p> -->
                             <p><strong>Kurir Pengambil : </strong>
-                                <span v-if="kurirAmbil" @click="showKurirDetail(kurirAmbil)"
+                                <!-- <span v-if="kurirAmbil" @click="showKurirDetail(kurirAmbil)"
                                     style="cursor: pointer; color: yellow;">
-                                    {{ kurirAmbil.user.name }}
                                 </span>
-                                <span v-else>Tidak ada kurir</span>
+                                <span v-else>Tidak ada kurir</span> -->
+                                {{ kurirAmbil?.user?.name }}
                             </p>
 
                             <p><strong>Kurir Pengantar : </strong>
-                                <span v-if="kurirKirim" @click="showKurirDetail(kurirKirim)"
+                                <!-- <span v-if="kurirKirim" @click="showKurirDetail(kurirKirim)"
                                     style="cursor: pointer; color: green;">
                                     {{ kurirKirim.user.name }}
                                 </span>
-                                <span v-else>Tidak ada kurir</span>
+                                <span v-else>Tidak ada kurir</span> -->
+                                {{ kurirKirim?.user?.name }}
                             </p>
 
 
