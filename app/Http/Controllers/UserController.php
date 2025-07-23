@@ -1,17 +1,23 @@
 <?php
 
 namespace App\Http\Controllers;
+use App\Events\UserRegistered;
 
+use App\Mail\OtpMail;
 use App\Models\Kurir;
 use App\Models\Transaksi;
 use App\Models\User;
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
 use App\Models\Role;
+use Cache;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use App\Models\EmailVerification;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Mail;
 
 class UserController extends Controller
 {
@@ -84,7 +90,37 @@ class UserController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreUserRequest $request)
+
+    // public function store(StoreUserRequest $request)
+    // {
+    //     $validatedData = $request->validated();
+
+    //     if ($request->hasFile('photo')) {
+    //         $validatedData['photo'] = $request->file('photo')->store('photo', 'public');
+    //     }
+
+    //     $user = User::create($validatedData);
+    //     $role = Role::findById($validatedData['role_id']);
+    //             $user->assignRole($role);
+    //             $user->update($validatedData);
+    //     // $user->assignRole(Role::findById($validatedData['role_id']));
+
+    //     // Generate OTP
+    //     $otp = rand(100000, 999999);
+    //     EmailVerification::create([
+    //         'user_id' => $user->id,
+    //         'otp' => $otp,
+    //         'expires_at' => now()->addMinutes(10),
+    //     ]);
+
+    //     // Kirim OTP via Email
+    //     Mail::to($user->email)->send(new \App\Mail\OtpVerificationMail($otp));
+
+    //     return response()->json([
+    //         'message' => 'User created. OTP sent to email.',
+    //     ]);
+    // }
+        public function store(StoreUserRequest $request)
     {
         $validatedData = $request->validated();
 
@@ -105,6 +141,7 @@ class UserController extends Controller
 
         
     }
+
 
     /**
      * Display the specified resource.
@@ -148,6 +185,8 @@ class UserController extends Controller
         ]);
     }
 
+    
+
     /**
      * Remove the specified resource from storage.
      */
@@ -167,5 +206,89 @@ class UserController extends Controller
     {
         return $this->hasOne(Kurir::class);
     }
+
+    public function requestOtp(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string',
+            'email' => 'required|email',
+            'phone' => 'required|string',
+            'password' => 'nullable|string|min:8',
+            'role_id' => 'required',
+        ]);
+
+        // Generate OTP
+        $otp = rand(100000, 999999);
+        $key = 'otp_' . Str::uuid(); // unique key
+
+        // Simpan data sementara + OTP ke cache selama 5 menit
+        Cache::put($key, [
+            'data' => $request->all(),
+            'otp' => $otp,
+        ], now()->addMinutes(5));
+
+        // Kirim email OTP
+        Mail::to($request->email)->send(new OtpMail($otp));
+
+        return response()->json([
+            'message' => 'OTP telah dikirim ke email',
+            'key' => $key, // frontend simpan untuk submit OTP
+        ]);
+    }
+
+    public function verifyOtp(Request $request)
+    {
+        $request->validate([
+            'key' => 'required',
+            'otp' => 'required|numeric',
+        ]);
+
+        $cacheData = Cache::get($request->key);
+        if (!$cacheData) {
+            return response()->json(['message' => 'OTP tidak ditemukan atau kadaluarsa'], 422);
+        }
+
+        if ($cacheData['otp'] != $request->otp) {
+            return response()->json(['message' => 'OTP salah'], 422);
+        }
+
+        $data = $cacheData['data'];
+
+        // Simpan user ke database
+        $user = new User();
+        $user->name = $data['name'];
+        $user->email = $data['email'];
+        $user->phone = $data['phone'];
+        if (!empty($data['password'])) {
+            $user->password = Hash::make($data['password']);
+        }
+        $user->save();
+
+        // Assign role
+        $user->assignRole($data['role_id']);
+
+        // Hapus cache
+        Cache::forget($request->key);
+
+        return response()->json(['message' => 'User berhasil disimpan']);
+}
+
+    public function sendOtp(Request $request)
+    {
+        $otp = rand(100000, 999999); // kode 6 digit
+
+        $request->session()->put('otp_data', [
+            'otp' => $otp,  
+            'email' => $request->email,
+            'expires_at' => now()->addMinutes(5),
+            'data' => $request->all(), // simpan data form sementara
+        ]);
+
+        Mail::to($request->email)->send(new OtpMail($otp));
+
+        return response()->json(['message' => 'OTP berhasil dikirim ke email']);
+    }
+
+
 
 }

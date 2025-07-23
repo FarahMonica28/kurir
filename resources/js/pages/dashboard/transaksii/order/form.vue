@@ -34,7 +34,7 @@ const citiesOrigin = ref<Record<string, string>>({});
 const citiesDestination = ref<Record<string, string>>({});
 const provinceOrigin = ref("0");
 const cityOrigin = ref("");
-const provinceDestination = ref("0");
+// const provinceDestination = ref("0");
 const cityDestination = ref("");
 
 // ==========================
@@ -78,15 +78,15 @@ const formSchema = Yup.object({
   no_hp_penerima: Yup.string().required(),
   no_hp_pengirim: Yup.string().required(),
   provinceOrigin: Yup.string().required().notOneOf(["0"]),
-  cityOrigin: Yup.string().required(),
+  citiesOrigin: Yup.string().required(),
   provinceDestination: Yup.string().required().notOneOf(["0"]),
-  cityDestination: Yup.string().required(),
+  citiesDestination: Yup.string().required(),
   kurir: Yup.string().required(),
   layanan: Yup.string().required(),
   berat_barang: Yup.number().required().min(0.1),
 });
 
-const { handleSubmit, errors, resetForm } = useForm({
+const { handleSubmit, errors, resetForm, setFieldValue } = useForm({
   validationSchema: formSchema,
   initialValues: {
     nama_barang: "",
@@ -95,25 +95,147 @@ const { handleSubmit, errors, resetForm } = useForm({
     no_hp_penerima: "",
     no_hp_pengirim: "",
     provinceOrigin: "0",
-    cityOrigin: "",
+    citiesOrigin: "",
     provinceDestination: "0",
-    cityDestination: "",
+    citiesDestination: "",
     kurir: "",
     layanan: "",
     berat_barang: 0,
   },
 });
 
+// provinsi untuk tujuan
+const searchProvinceDestination = ref("");
+// const provinceDestination = ref("");
+const showDropdownDestination = ref(false);
+
+const filteredProvincesDestination = computed(() => {
+  return provinceDestination.value.filter((prov) =>
+    prov.name.toLowerCase().includes(searchProvinceDestination.value.toLowerCase())
+  );
+});
+
+const hideDropdownWithDelay = () => {
+  setTimeout(() => {
+    showDropdownDestination.value = false;
+  }, 200);
+};
+import { useField, } from "vee-validate";
+
+// const { setFieldValue } = useForm();
+
+const selectProvinceDestination = (prov: { id: string; name: string }) => {
+  searchProvinceDestination.value = prov.name;
+  provinceDestination.value = prov.id;
+  setFieldValue("provinceDestination", prov.id); // agar tersimpan di form
+  showDropdownDestination.value = false;
+  fetchCities("destination");
+};
+
 // ==========================
 // API Lokasi
 // ==========================
+// const fetchProvinces = async () => {
+//   try {
+//     const res = await axios.get("/provinces");
+//     provinces.value = res.data;
+//   } catch {
+//     toast.error("Gagal mengambil provinsi");
+//   }
+// };
+const provinceDestination = ref<{ id: string; name: string }[]>([])
+
 const fetchProvinces = async () => {
   try {
     const res = await axios.get("/provinces");
-    provinces.value = res.data;
+
+    // Jika hasilnya { "11": "Aceh", "12": "Bali", ... }
+    provinceDestination.value = Object.entries(res.data).map(([id, name]) => ({
+      id,
+      name,
+    }));
+    provinceOrigin.value = Object.entries(res.data).map(([id, name]) => ({
+      id,
+      name,
+    }));
+
   } catch {
     toast.error("Gagal mengambil provinsi");
   }
+};
+
+// ini untuk provinsi asal
+// const provinceOrigin = ref("");
+const searchProvinceOrigin = ref("");
+const showProvinceDropdownOrigin = ref(false);
+
+const filteredProvincesOrigin = computed(() => {
+  return provinceOrigin.value.filter((prov) =>
+    prov.name.toLowerCase().includes(searchProvinceOrigin.value.toLowerCase())
+  );
+});
+
+const selectProvinceOrigin = (prov: { id: string; name: string }) => {
+  searchProvinceOrigin.value = prov.name;
+  provinceOrigin.value = prov.id;
+  setFieldValue("provinceOrigin", prov.id); // sync ke VeeValidate
+  fetchCities("origin");
+  showProvinceDropdownOrigin.value = false;
+};
+
+const hideProvinceDropdownOriginWithDelay = () => {
+  setTimeout(() => {
+    showProvinceDropdownOrigin.value = false;
+  }, 200);
+};
+
+
+// kota untuk tujuan
+const searchCityDestination = ref("");
+// const cityDestination = ref("");
+const showCityDropdownDestination = ref(false);
+
+const filteredCitiesDestination = computed(() => {
+  return citiesDestination.value.filter((city) =>
+    city.name.toLowerCase().includes(searchCityDestination.value.toLowerCase())
+  );
+});
+
+const selectCityDestination = (city: { id: string; name: string }) => {
+  searchCityDestination.value = city.name;
+  cityDestination.value = city.id;
+  setFieldValue("cityDestination", city.id); // sync ke VeeValidate
+  showCityDropdownDestination.value = false;
+};
+
+const hideCityDropdownWithDelay = () => {
+  setTimeout(() => {
+    showCityDropdownDestination.value = false;
+  }, 200);
+};
+
+// kota untuk asal
+const searchCityOrigin = ref("");
+// const cityOrigin = ref("");
+const showCityDropdownOrigin = ref(false);
+
+const filteredCitiesOrigin = computed(() => {
+  return citiesOrigin.value.filter((city) =>
+    city.name.toLowerCase().includes(searchCityOrigin.value.toLowerCase())
+  );
+});
+
+const selectCityOrigin = (city: { id: string; name: string }) => {
+  searchCityOrigin.value = city.name;
+  cityOrigin.value = city.id;
+  setFieldValue("cityOrigin", city.id); // sync ke VeeValidate
+  showCityDropdownOrigin.value = false;
+};
+
+const hideCityDropdownOriginWithDelay = () => {
+  setTimeout(() => {
+    showCityDropdownOrigin.value = false;
+  }, 200);
 };
 
 const fetchCities = async (type: "origin" | "destination") => {
@@ -121,25 +243,33 @@ const fetchCities = async (type: "origin" | "destination") => {
   if (provId === "0") return;
   try {
     const res = await axios.get(`/cities/${provId}`);
+    // if (type === "origin") {
+    //   citiesOrigin.value = res.data;
+    //   cityOrigin.value = "";
+    // } else {
+    //   citiesDestination.value = res.data;
+    //   cityDestination.value = "";
+    // }
+    // Di fetchCities
     if (type === "origin") {
-      citiesOrigin.value = res.data;
-      cityOrigin.value = "";
+      citiesOrigin.value = Object.entries(res.data).map(([id, name]) => ({
+        id,
+        name,
+      }));
+
     } else {
-      citiesDestination.value = res.data;
-      cityDestination.value = "";
+      citiesDestination.value = Object.entries(res.data).map(([id, name]) => ({
+        id,
+        name,
+      }));
+
     }
+
   } catch {
     toast.error("Gagal mengambil kota");
   }
 };
 
-// ==========================
-// Ongkir & Layanan
-// ==========================
-const getSelectedCost = () => {
-  const service = services.value.find(s => s.service === selectedService.value);
-  biaya.value = service?.cost ?? 0;
-};
 
 const fetchOngkir = async () => {
   // Validasi input ongkir
@@ -179,6 +309,13 @@ const fetchOngkir = async () => {
   }
 };
 
+// ==========================
+// Ongkir & Layanan
+// ==========================
+const getSelectedCost = () => {
+  const service = services.value.find(s => s.service === selectedService.value);
+  biaya.value = service?.cost ?? 0;
+};
 // ==========================
 // Watchers
 // ==========================
@@ -280,34 +417,51 @@ onMounted(fetchProvinces);
 
         <!-- No Hp Penerima -->
         <div class="col-md-4 mb-7 mt-4">
-          <label class="form-label required fw-bold">No Hp Pengirim</label>
+          <label class="form-label required fw-bold">No Hp Penerima</label>
           <Field class="form-control" name="no_hp_penerima" v-model="no_hp_penerima"
             placeholder="Masukan no hp pengirim" />
           <ErrorMessage name="no_hp_penerima" class="text-danger small" />
         </div>
-        
+
         <!-- Provinsi Tujuan -->
-        <div class="col-md-4 mb-7 mt-4">
+        <div class="col-md-4 mb-7 mt-4 position-relative">
           <label class="form-label required fw-bold">Provinsi Tujuan</label>
-          <Field as="select" name="provinceDestination" v-model="provinceDestination" class="form-control"
-            @change="fetchCities('destination')">
-            <option value="0">-- Pilih Provinsi Tujuan --</option>
-            <option v-for="(name, id) in provinces" :key="id" :value="id">{{ name }}</option>
-          </Field as="select">
+
+          <Field name="provinceDestination" v-model="searchProvinceDestination">
+            <input type="text" class="form-control" v-model="searchProvinceDestination"
+              placeholder="Ketik Provinsi Tujuan" @focus="showDropdownDestination = true" @blur="hideDropdownWithDelay"
+              autocomplete="off" />
+          </Field>
           <ErrorMessage name="provinceDestination" class="text-danger small" />
-          <!-- <div v-if="ErrorMessage" name="provinceDestination" class="text-danger">{{ errors.provinceDestination }}</div> -->
+
+          <ul v-if="showDropdownDestination && filteredProvincesDestination.length"
+            class="list-group position-absolute w-100" style="z-index: 1000;">
+            <li v-for="prov in filteredProvincesDestination" :key="prov.id"
+              class="list-group-item list-group-item-action" @mousedown.prevent="selectProvinceDestination(prov)">
+              {{ prov.name }}
+            </li>
+          </ul>
         </div>
 
         <!-- Kota Tujuan -->
-        <div class="col-md-4 mb-7">
+        <div class="col-md-4 mb-7 position-relative">
           <label class="form-label required fw-bold">Kota Tujuan</label>
-          <Field as="select" name="cityDestination" v-model="cityDestination" class="form-control">
-            <option value="">-- Pilih Kota Tujuan --</option>
-            <option v-for="(name, id) in citiesDestination" :key="id" :value="id">{{ name }}</option>
-          </Field as="select">
-          <ErrorMessage name="cityDestination" class="text-danger small" />
-          <!-- <div v-if="ErrorMessage" name="cityDestination" class="text-danger">{{ errors.cityDestination }}</div> -->
+
+          <Field name="citiesDestination" v-model="searchCityDestination">
+            <input type="text" class="form-control" v-model="searchCityDestination" placeholder="Ketik Kota Tujuan"
+              @focus="showCityDropdownDestination = true" @blur="hideCityDropdownWithDelay" autocomplete="off" />
+          </Field>
+          <ErrorMessage name="citiesDestination" class="text-danger small" />
+
+          <ul v-if="showCityDropdownDestination && filteredCitiesDestination.length"
+            class="list-group position-absolute w-100" style="z-index: 1000;">
+            <li v-for="city in filteredCitiesDestination" :key="city.id" class="list-group-item list-group-item-action"
+              @mousedown.prevent="selectCityDestination(city)">
+              {{ city.name }}
+            </li>
+          </ul>
         </div>
+
 
         <!-- Alamat Tujuan -->
         <div class="col-md-4 mb-7">
@@ -335,7 +489,7 @@ onMounted(fetchProvinces);
           <ErrorMessage name="pengirim" class="text-danger small" />
         </div> -->
         <div class="col-md-4 mb-7 mt-4">
-          <label class="form-label required fw-bold">No Hp Penerima</label>
+          <label class="form-label required fw-bold">No Hp Pengirim</label>
           <Field class="form-control" name="no_hp_pengirim" v-model="no_hp_pengirim"
             placeholder="Masukan no hp penerima" />
           <ErrorMessage name="no_hp_pengirim" class="text-danger small" />
@@ -358,7 +512,7 @@ onMounted(fetchProvinces);
         </div>
 
         <!-- Provinsi Asal -->
-        <div class="col-md-4 mb-7 ">
+        <!-- <div class="col-md-4 mb-7 ">
           <label class="form-label required fw-bold">Provinsi Asal</label>
           <Field as="select" name="provinceOrigin" v-model="provinceOrigin" class="form-control"
             @change="fetchCities('origin')">
@@ -366,18 +520,57 @@ onMounted(fetchProvinces);
             <option v-for="(name, id) in provinces" :key="id" :value="id">{{ name }}</option>
           </Field as="select">
           <ErrorMessage name="provinceOrigin" class="text-danger small" />
+        </div> -->
+        <!-- Provinsi Asal -->
+        <div class="col-md-4 mb-7 position-relative">
+          <label class="form-label required fw-bold">Provinsi Asal</label>
+
+          <Field name="provinceOrigin" v-model="searchProvinceOrigin">
+            <input type="text" class="form-control" v-model="searchProvinceOrigin" placeholder="Ketik Provinsi Asal"
+              @focus="showProvinceDropdownOrigin = true" @blur="hideProvinceDropdownOriginWithDelay"
+              autocomplete="off" />
+          </Field>
+          <ErrorMessage name="provinceOrigin" class="text-danger small" />
+
+          <ul v-if="showProvinceDropdownOrigin && filteredProvincesOrigin.length"
+            class="list-group position-absolute w-100" style="z-index: 1000;">
+            <li v-for="prov in filteredProvincesOrigin" :key="prov.id" class="list-group-item list-group-item-action"
+              @mousedown.prevent="selectProvinceOrigin(prov)">
+              {{ prov.name }}
+            </li>
+          </ul>
         </div>
 
+
         <!-- Kota Asal -->
-        <div class="col-md-4 mb-7">
+        <!-- <div class="col-md-4 mb-7">
           <label class="form-label required fw-bold">Kota Asal</label>
           <Field as="select" name="cityOrigin" v-model="cityOrigin" class="form-control">
             <option value="">-- Pilih Kota Asal --</option>
             <option v-for="(name, id) in citiesOrigin" :key="id" :value="id">{{ name }}</option>
           </Field as="select">
           <ErrorMessage name="cityOrigin" class="text-danger small" />
-          <!-- <div v-if="ErrorMessage" name="cityOrigin" class="text-danger">{{ errors.cityOrigin }}</div> -->
+          <!-- <div v-if="ErrorMessage" name="cityOrigin" class="text-danger">{{ errors.cityOrigin }}</div> 
+        </div> -->
+        <!-- Kota Asal -->
+        <div class="col-md-4 mb-7 position-relative">
+          <label class="form-label required fw-bold">Kota Asal</label>
+
+          <Field name="citiesOrigin" v-model="searchCityOrigin">
+            <input type="text" class="form-control" v-model="searchCityOrigin" placeholder="Ketik Kota Asal"
+              @focus="showCityDropdownOrigin = true" @blur="hideCityDropdownOriginWithDelay" autocomplete="off" />
+          </Field>
+          <ErrorMessage name="citiesOrigin" class="text-danger small" />
+
+          <ul v-if="showCityDropdownOrigin && filteredCitiesOrigin.length" class="list-group position-absolute w-100"
+            style="z-index: 1000;">
+            <li v-for="city in filteredCitiesOrigin" :key="city.id" class="list-group-item list-group-item-action"
+              @mousedown.prevent="selectCityOrigin(city)">
+              {{ city.name }}
+            </li>
+          </ul>
         </div>
+
 
         <!-- Alamat Asal -->
         <div class="col-md-4 mb-7">
@@ -441,19 +634,19 @@ onMounted(fetchProvinces);
           </button> -->
         </div>
       </div>
-      <ErrorMessage name="nama_barang" class="text-danger small" />
-      <ErrorMessage name="penerima" class="text-danger small" />
-      <ErrorMessage name="alamat_tujuan" class="text-danger small" />
-      <ErrorMessage name="no_hp_penerima" class="text-danger small" />
-      <ErrorMessage name="no_hp_pengirim" class="text-danger small" />
-      <ErrorMessage name="pengirim" class="text-danger small" />
-      <ErrorMessage name="provinceOrigin" class="text-danger small" />
-      <ErrorMessage name="cityOrigin" class="text-danger small" />
-      <ErrorMessage name="provindeDestination" class="text-danger small" />
-      <ErrorMessage name="cityDestination" class="text-danger small" />
-      <ErrorMessage name="kurir" class="text-danger small" />
-      <!-- <ErrorMessage name="layanan" class="text-danger small" /> -->
-      <ErrorMessage name="berat_barang" class="text-danger small" />
+      <ErrorMessage name="nama_barang" class="text-danger" />
+      <ErrorMessage name="penerima" class="text-danger" />
+      <ErrorMessage name="alamat_tujuan" class="text-danger" />
+      <ErrorMessage name="no_hp_penerima" class="text-danger" />
+      <ErrorMessage name="no_hp_pengirim" class="text-danger" />
+      <ErrorMessage name="provinceOrigin" class="text-danger" />
+      <ErrorMessage name="citiesOrigin" class="text-danger" />
+      <ErrorMessage name="provinceDestination" class="text-danger" />
+      <ErrorMessage name="citiesDestination" class="text-danger" />
+      <ErrorMessage name="kurir" class="text-danger" />
+      <ErrorMessage name="layanan" class="text-danger" />
+      <ErrorMessage name="berat_barang" class="text-danger" />
+
 
       <!-- Footer -->
       <div class="card-footer d-flex">

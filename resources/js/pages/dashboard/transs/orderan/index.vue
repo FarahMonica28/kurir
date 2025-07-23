@@ -1,60 +1,57 @@
-// Mengimpor fungsi dan tools dari Vue dan library eksternal
 <script setup lang="ts">
+// ✅ Perbaikan import dan penggunaan
 import { computed, h, ref, watch } from "vue";
-import { useDelete } from "@/libs/hooks"; // (jika digunakan untuk delete data, tapi belum terpakai di sini)
-// import Form from "./Form.vue"; // Komponen form, tidak digunakan sekarang
-import { createColumnHelper } from "@tanstack/vue-table"; // Digunakan untuk membantu definisi kolom table
-import type { transaksii, Pengiriman } from "@/types"; // Tipe data transaksi
-import axios from "axios"; // Untuk request HTTP
-import Swal from "sweetalert2"; // Untuk tampilan modal alert
+import axios from "axios";
+import Swal from "sweetalert2";
+import { createColumnHelper } from "@tanstack/vue-table";
+import type { transaksii } from "@/types";
 
-/* Import store autentikasi dan ambil data kurir yang sedang login */
+// Ambil user (kurir) yang sedang login
 import { useAuthStore } from "@/stores/auth";
 const authStore = useAuthStore();
 const currentKurir = computed(() => authStore.user);
 
-// Membuat column helper untuk tipe data transaksii
+// Column helper untuk tabel
 const column = createColumnHelper<transaksii>();
 
-// Referensi untuk pagination dan form state
+// State dan referensi
 const paginateRef = ref<any>(null);
 const selected = ref<string>("");
 const openForm = ref<boolean>(false);
 
-// State untuk menampilkan detail transaksi
 const detailData = ref<transaksii | null>(null);
 
-// Fungsi untuk menampilkan rincian transaksi
+// ✅ Fungsi tampil detail transaksi
 const showRincian = (data: transaksii) => {
-    console.log("rincian");
     detailData.value = data;
-    console.log(detailData.value)
 };
 
-// Menutup tampilan detail transaksi
+// ✅ Tutup detail
 const closeDetail = () => {
     detailData.value = null;
 };
 
-// Fungsi untuk menampilkan detail pengguna (pengirim) dalam modal
+// ✅ Tampilkan detail pengguna
 function showPenggunaDetail(pengguna) {
-    if (!pengguna || !pengguna.user) {
-        Swal.fire('Data tidak tersedia', 'pengguna tidak ditemukan', 'warning');
+    if (!pengguna?.user) {
+        Swal.fire('Data tidak tersedia', 'Pengguna tidak ditemukan', 'warning');
         return;
     }
 
     Swal.fire({
         title: pengguna.user.name,
         html: `
-      <img src="${pengguna.user.photo ? "/storage/" + pengguna.user.photo : "/default-avatar.png"}" alt="Foto Kurir" class="rounded-circle" width="110" height="110">
-     <div style="margin-top: 15px;">
-      <p><strong>Email:</strong> ${pengguna.user.email}</p>
-      <p><strong>Telepon:</strong> ${pengguna.user.phone}</p>`,
+            <img src="${pengguna.user.photo ? "/storage/" + pengguna.user.photo : "/default-avatar.png"}" alt="Foto Kurir" class="rounded-circle" width="110" height="110">
+            <div style="margin-top: 15px;">
+                <p><strong>Email:</strong> ${pengguna.user.email}</p>
+                <p><strong>Telepon:</strong> ${pengguna.user.phone}</p>
+            </div>
+        `,
         showCloseButton: true,
     });
 }
 
-// Fungsi untuk mendapatkan class CSS badge berdasarkan status pembayaran
+// ✅ Mapping badge class untuk status pembayaran
 const getPembayaranBadgeClass = (status: string | undefined) => {
     const statusMap: Record<string, string> = {
         settlement: "badge bg-success fw-bold",
@@ -64,89 +61,49 @@ const getPembayaranBadgeClass = (status: string | undefined) => {
         deny: "badge bg-danger fw-bold",
         failure: "badge bg-danger fw-bold",
         refund: "badge bg-info text-dark fw-bold",
-        "belum di bayar": "badge bg-danger fw-bold",
+        "belum dibayar": "badge bg-danger fw-bold",
     };
 
     return statusMap[status?.toLowerCase() ?? ""] || "badge bg-secondary fw-bold";
 };
 
-// Menampilkan informasi kurir pengambil dan pengantar menggunakan computed
-const kurirAmbil = computed(() =>
-    detailData.value?.ambil
-);
+// ✅ Computed info kurir
+const kurirAmbil = computed(() => detailData.value?.ambil);
+const kurirKirim = computed(() => detailData.value?.antar);
 
-const kurirKirim = computed(() =>
-    detailData.value?.antar
-);
-
-// Daftar kolom tabel transaksi
+// ✅ Kolom tabel transaksi
 const columns = [
-    // Kolom nomor urut
-    column.accessor("no", {
-        header: "#",
-    }),
-    // Kolom no resi
-    column.accessor("no_resi", {
-        header: " No Resi",
-    }),
-    // column.accessor("pengguna.name", { header: "Pengirim" }), // (jika ingin tampilkan nama pengirim)
-
-    // Nama barang
-    column.accessor("nama_barang", {
-        header: "Nama Barang",
-    }),
-    // Provinsi tujuan
-    column.accessor("tujuan_provinsi.name", {
-        header: "Provinsi Tujuan",
-    }),
-    // Kota tujuan
-    column.accessor("tujuan_kota.name", {
-        header: "Kota Tujuan",
-    }),
-    // Alamat asal barang
-    column.accessor("alamat_asal", {
-        header: "Alamat Pengmbilan barang",
-    }),
-    // Status transaksi dengan badge dinamis
+    column.accessor("no", { header: "#" }),
+    column.accessor("no_resi", { header: "No Resi" }),
+    column.accessor("nama_barang", { header: "Nama Barang" }),
+    column.accessor("tujuan_provinsi.name", { header: "Provinsi Tujuan" }),
+    column.accessor("tujuan_kota.name", { header: "Kota Tujuan" }),
+    column.accessor("alamat_asal", { header: "Alamat Pengambilan Barang" }),
     column.accessor("status", {
         header: "Status",
         cell: (cell) => {
             const status = cell.getValue();
-            const statusClass =
-                status === "selesai"
-                    ? "badge bg-success fw-bold"
-                    : status === "dikirim"
-                        ? "badge bg-warning text-dark fw-bold"
-                        : status === "diproses"
-                            ? "badge bg-primary text-light fw-bold"
-                            : status === "digudang"
-                                ? "badge bg-secondary fw-bold"
-                                : status === "dikurir"
-                                    ? "badge bg-info text-light fw-bold"
-                                    : status === "diambil kurir"
-                                        ? "badge bg-info text-dark fw-bold"
-                                        : status === "menunggu"
-                                            ? "badge bg-dark text-white fw-bold"
-                                            : "badge bg-secondary fw-bold";
-
-            return h("span", { class: statusClass }, status);
+            const classMap: Record<string, string> = {
+                selesai: "bg-success",
+                dikirim: "bg-warning text-dark",
+                diproses: "bg-primary text-light",
+                digudang: "bg-secondary",
+                dikurir: "bg-info text-light",
+                "diambil kurir": "bg-info text-dark",
+                menunggu: "bg-dark text-white",
+            };
+            const badgeClass = classMap[status] || "bg-secondary";
+            return h("span", { class: `badge fw-bold ${badgeClass}` }, status);
         },
     }),
-    // column.accessor("kurir.user.name", { header: "Kurir" }), // Jika ingin tampilkan kurir
-
-    // Kolom aksi yang berisi tombol dinamis berdasarkan status
     column.accessor("id", {
         header: "Aksi",
         cell: (cell) => {
             const row = cell.row.original;
             const status = row.status;
 
-            let buttonText = "";
-            let nextStatus = "";
-            let swalTitle = "";
-            let swalText = "";
+            let buttonText = "", nextStatus = "", swalTitle = "", swalText = "";
 
-            // Logika perubahan status transaksi berdasarkan status saat ini
             if (status === "menunggu") {
                 buttonText = "Ambil";
                 nextStatus = "diambil kurir";
@@ -168,7 +125,6 @@ const columns = [
                 return h("span", { class: "text-muted fst-italic" }, "-");
             }
 
-            // Handler untuk aksi klik tombol
             const handleClick = async () => {
                 const result = await Swal.fire({
                     title: swalTitle,
@@ -181,82 +137,50 @@ const columns = [
 
                 if (result.isConfirmed) {
                     try {
-                        // Kirim request update status ke server
                         await axios.put(`/transaksii/${cell.getValue()}/ambil`, {
                             status: nextStatus,
                         });
-
-                        // Tunggu sebentar lalu refresh data
                         await new Promise(resolve => setTimeout(resolve, 300));
                         await refresh();
 
-                        Swal.fire({
-                            title: "Berhasil!",
-                            icon: "success",
-                            timer: 1500,
-                            showConfirmButton: false,
-                        });
+                        Swal.fire("Berhasil!", "", "success");
                     } catch (error) {
                         console.error("Gagal update status:", error);
-                        Swal.fire({
-                            title: "Gagal!",
-                            text: "Terjadi kesalahan saat mengubah status.",
-                            icon: "error",
-                        });
+                        Swal.fire("Gagal!", "Terjadi kesalahan saat mengubah status.", "error");
                     }
                 }
-            };
+            }
 
-            // Tampilkan tombol aksi dan tombol "Detail"
             return h("div", { class: "d-flex gap-2" }, [
-                h(
-                    "button",
-                    {
-                        class: "btn btn-sm btn-primary",
-                        onClick: handleClick,
-                    },
-                    buttonText
-                ),
-                h(
-                    "button",
-                    {
-                        class: "btn btn-sm btn-info d-flex align-items-center gap-1",
-                        onClick: () => showRincian(cell.row.original),
-                    },
-                    [
-                        h("i", { class: "bi bi-eye" }),
-                        "Detail"
-                    ]
-                ),
+                h("button", { class: "btn btn-sm btn-primary", onClick: handleClick }, buttonText),
+                h("button", {
+                    class: "btn btn-sm btn-info d-flex align-items-center gap-1",
+                    onClick: () => showRincian(cell.row.original),
+                }, [h("i", { class: "bi bi-eye" }), "Detail"])
             ]);
         }
     }),
 ];
 
-// URL API transaksi yang akan di-fetch, disaring agar tidak termasuk status tertentu
+// ✅ URL fetch data, hanya status tertentu dan pembayaran settled
 const url = computed(() => {
     const params = new URLSearchParams();
-
     ['digudang', 'tiba digudang', 'diproses', 'dikirim', 'selesai'].forEach(status => {
-        params.append('exclude_status[]', status);
+        params.append("exclude_status[]", status);
     });
-
-    // Hanya ambil transaksi yang sudah dibayar
-    params.append('status_pembayaran', 'settlement');
-
+    params.append("status_pembayaran", "settlement");
     return `/transaksii?${params.toString()}`;
 });
 
-// Fungsi untuk me-refresh data
+// ✅ Refresh paginate
 const refresh = () => paginateRef.value.refetch();
 
-// Reset form ketika ditutup
+// ✅ Reset selected ketika form ditutup
 watch(openForm, (val) => {
-    if (!val) {
-        selected.value = "";
-    }
+    if (!val) selected.value = "";
     window.scrollTo(0, 0);
 });
+
 </script>
 
 

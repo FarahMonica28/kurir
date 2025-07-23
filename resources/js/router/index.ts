@@ -16,6 +16,15 @@ declare module "vue-router" {
 }
 
 const routes: Array<RouteRecordRaw> = [
+    {
+    path: "/dashboard_pengguna",
+    name: "dashboard_pengguna",
+    component: () => import("@/pages/dashboard_pengguna/index.vue"),
+    meta: {
+        pageTitle: "Dashboard Pengguna",
+        breadcrumbs: ["Halaman Dashboard Pengguna"],
+    },
+    },
     //pengguna
     {
     path: "/dashboardk",
@@ -286,6 +295,16 @@ const routes: Array<RouteRecordRaw> = [
                 },
             },
             {
+                path: '/dashboard/master/users//OtpPage.vue',
+                name: 'dashboard.master.users/OtpPage.vue',
+                component: () => import('@/pages/dashboard/master/users/OtpPage.vue'),
+            },
+            {
+                path: '/dashboard/master/users/verify-otp',
+                name: 'dashboard.master.users.VerifyOtp',
+                component: () => import('@/pages/dashboard/master/users/VerifyOtp.vue'),
+            },
+            {
                 path: "/payment/success",
                 name: "PaymentSuccess",
                 component: () => import("@/views/PaymentSuccess.vue"),
@@ -347,6 +366,36 @@ const routes: Array<RouteRecordRaw> = [
         ],
     },
     {
+        path: "/dashboark",
+        component: () => import("@/layouts/AuthLayout.vue"),
+        children: [
+            {
+                path: "/sign-up",
+                name: "sign-up",
+                component: () => import("@/pages/auth/sign-up/Index.vue"),
+                meta: {
+                    pageTitle: "Sign Up",
+                    middleware: "guest",
+                },
+            },
+        ],
+    },
+    {
+        path: "/dashboar_pengguna",
+        component: () => import("@/layouts/AuthLayout.vue"),
+        children: [
+            {
+                path: "/sign-up",
+                name: "sign-up",
+                component: () => import("@/pages/auth/sign-up/Index.vue"),
+                meta: {
+                    pageTitle: "Sign Up",
+                    middleware: "guest",
+                },
+            },
+        ],
+    },
+    {
         path: "/",
         component: () => import("@/layouts/SystemLayout.vue"),
         children: [
@@ -373,6 +422,8 @@ const routes: Array<RouteRecordRaw> = [
         path: "/:pathMatch(.*)*",
         redirect: "/404",
     },
+
+
 ];
 
 const router = createRouter({
@@ -423,10 +474,12 @@ router.beforeEach(async (to, from, next) => {
     if (to.meta.middleware == "auth") {
         if (authStore.isAuthenticated) {
             if (
-                to.meta.permission &&
+                to.meta.permission &&  
                 !authStore.user.permission.includes(to.meta.permission)
             ) {
                 next({ name: "404" });
+            } else if (to.name === "dashboard" && authStore.user.role?.name === "pengguna") {
+                next({ name: "dashboard_pengguna" });
             } else if (to.meta.checkDetail == false) {
                 next();
             }

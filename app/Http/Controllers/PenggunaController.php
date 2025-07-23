@@ -44,6 +44,17 @@ class PenggunaController extends Controller
     /**
      * Store a newly created pengguna
      */
+
+    public function getVerifiedUsers()
+    {
+        $pengguna = Pengguna::with('user')
+            ->whereHas('user', function ($query) {
+                $query->whereNotNull('email_verified_at');
+            })
+            ->get();
+
+        return response()->json($pengguna);
+    }
     public function store(StorePenggunaRequest $request)
     {
         $validatedData = $request->validated();

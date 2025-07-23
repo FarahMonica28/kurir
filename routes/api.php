@@ -4,6 +4,7 @@
 // use App\Http\Controllers\tidakdipakai\PengirimanController;
 // use App\Http\Controllers\Api\PengirimansController;
 use App\Http\Controllers\MidtransController;
+use App\Http\Controllers\OtpController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PengirimanController;
 use App\Http\Controllers\AuthController;
@@ -24,6 +25,7 @@ use App\Http\Controllers\RajaOngkirController;
 
 use App\Http\Controllers\BinderbyteController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ShippingController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -102,15 +104,9 @@ Route::post('/manual-update-status', [Paymentcontroller::class, 'manualUpdateSta
 
 // Route::post('/payment/callback', [paymentController::class, 'callback']);
 
-
-
-// Route::post('/payment', [PaymentController::class, 'create']);
-// Route::post('/payment', [PaymentController::class, 'pay']);
-// Route::post('/payment/callback', [MidtransController::class, 'handleCallback']);
-
-
-// Route::post('/payment', [PembayaranController::class, 'createPayment']);
-// Route::post('/xendit/invoice', [XenditController::class, 'buatInvoice']);
+Route::post('/verify-email', [AuthController::class, 'verifyEmailOtp']);
+// Route::post('/verify-email', [AuthController::class, 'verifyEmailOtp']);
+ 
 
 
 Route::get('/tracking/{no_resi}', [TrackingController::class, 'track']);
@@ -120,13 +116,28 @@ Route::get('/tracking/{no_resi}', [TrackingController::class, 'track']);
 
 Route::get('/cek-ongkir', [BinderbyteController::class, 'cekOngkir']);
 Route::get('/cek-resi', [BinderbyteController::class, 'cekResi']);
-Route::post('/ongkir', [BinderbyteController::class, 'cekOngkir']);
+Route::get('/ongkir', [ShippingController::class, 'checkOngkir']);
 
+Route::get('/cek-ongkir', function (Request $request, ShippingController $controller) {
+    return $controller->getShippingCost(
+        $request->input('origin'),
+        $request->input('destination'),
+        $request->input('weight'),
+        $request->input('courier')
+    );
+});
+
+
+Route::post('/ongkirr', [BinderbyteController::class, 'cekOngkir']);
+
+Route::post('/otp/send/{uuid}', [OtpController::class, 'send']);
+// Verifikasi OTP
+Route::post('/otp/verify/{uuid}', [OtpController::class, 'verify']);
 
 // Route::get('/checkout', 'PaymentController@checkout');
 
 //semua masuk ke sini
-Route::middleware(['auth', 'verified', 'json'])->group(function () {
+Route::middleware(['auth', 'json'])->group(function () {
     Route::prefix('setting')->middleware('can:setting')->group(function () {
         Route::post('', [SettingController::class, 'update']);
     });
@@ -135,14 +146,26 @@ Route::middleware(['auth', 'verified', 'json'])->group(function () {
         Route::middleware('can:master-user')->group(function () {
             Route::get('users', [UserController::class, 'get']);
             Route::get('/users/{user}', [UserController::class, 'show']);
-            Route::post('users', [UserController::class, 'index']);
+            Route::post('/users', [UserController::class, 'index']);
+            Route::get('master/users', [UserController::class, 'index']);
             Route::post('users/store', [UserController::class, 'store']);
             // routes/api.php
             Route::get('/me', [UserController::class, 'me']);
             Route::get('/admin/dashboard-summary', [UserController::class, 'dashboardSummary']);
+            Route::post('/master/users/request-otp', [UserController::class, 'requestOtp']);
+            Route::post('/master/users/verify-otp', [UserController::class, 'verifyOtp']);
+            // Kirim OTP
+            
+            // Route::post('/otp/send', [OtpController::class, 'send']);
+            Route::post('/otp/send/{uuid}', [OtpController::class, 'send']);
+            // Verifikasi OTP
+            // Route::post('/otp/verify', [OtpController::class, 'verify']);
+            Route::post('/otp/verify/{uuid}', [OtpController::class, 'verify']);
+            
+            
             Route::apiResource('users', UserController::class)
-                ->except(['index', 'store'])->scoped(['user' => 'uuid']);
-
+            ->except(['index', 'store'])->scoped(['user' => 'uuid']);
+            
         });
 
         Route::middleware('can:master-role')->group(function () {

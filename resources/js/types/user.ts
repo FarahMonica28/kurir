@@ -4,6 +4,7 @@ export interface User {
     name: string;
     email: string;
     password?: string;
+    email_verified_at: string,
     phone?: BigInteger;
     role_id: BigInteger;
 }

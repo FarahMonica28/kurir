@@ -1,145 +1,151 @@
 <template>
   <div class="container">
-    <h2 class="text-xl font-semibold mb-4 mt-8">Lacak Pengiriman</h2>
+    <h2 class="text-xl font-semibold mb-4 mt-" id="la">Lacak Pengiriman</h2>
     <div class="mb-4" id="no">
       <h3>
-        <label for="noResi" class="block mb-1 mt-6">Nomor Resi :</label>
-        <input v-model="noResi" id="noResi" type="text" class="form-input w-full border rounded"
+        <label for="noResi" class="block mb-1 mt-6" id="">Nomor Resi : </label>
+        <input v-model="noResi" id="noResi" type="text" class="form-input border rounded"
           placeholder="Contoh: ABC-123456" />
       </h3>
     </div>
+    <div class="but">
+      <button class="px-4 py-2 mt-5 rounded" id="lacak" @click="trackResi" :disabled="loading">
+        {{ loading ? 'Memuat...' : 'Lacak' }}
+      </button>
+    </div>
 
-    <button class="px-4 py-2 rounded" id="lacak" @click="trackResi" :disabled="loading">
-      {{ loading ? 'Memuat...' : 'Lacak' }}
-    </button>
-
-    <div v-if="error" class="text-red-600 mt-4">{{ error }}</div>
+    <div v-if="error" class="text-red-600 mt-8">{{ error }}</div>
 
     <div v-if="data" class="mt-6 border rounded p-4 bg-gray-50">
-      <p class="mt-5"><strong>Status : </strong> {{ data.status }}</p>
-      <p class="mt-5">
-        <strong>Ekspedisi : </strong> <span class="text-info">{{ data.ekspedisi }}</span>
-      </p>
-      <p class="mt-5">
-        <strong>Status Pembayaran : </strong> <span class="text-primary">{{ data.status_pembayaran }}</span>
-      </p>
-
-      <!-- Paket dibuat -->
-      <div class="tracking-header">
-        <p class="tracking-date">{{ formatDate(data.waktu) }}</p>
-        <div class="tracking-timeline mt-6">
-          <div class="tracking-item">
-            <div class="dot"></div>
-            <div class="content">
-              <div class="time">{{ data.waktu.slice(11, 16) }}</div>
-              <!-- <div class="desc">Paket dibuat oleh {{ data.pengguna?.name || 'pengirim' }}</div> -->
-               <div class="desc">Paket dibuat oleh {{ namaPengguna }}</div>
-            </div>
-          </div>
-        </div>
+      <div class="des">
+        <p class="mt-5"><strong>Status : </strong> {{ data.status }}</p>
+        <p class="mt-5">
+          <strong>Ekspedisi : </strong> <span class="text-info">{{ data.ekspedisi }}</span>
+        </p>
+        <p class="mt-5">
+          <strong>Status Pembayaran : </strong> <span class="text-primary">{{ data.status_pembayaran }}</span>
+        </p>
       </div>
 
-      <!-- Kurir menuju ke rumah -->
-      <div v-if="data.waktu_diambil" class="tracking-header">
-        <p class="tracking-date">{{ formatDate(data.waktu_diambil) }}</p>
-        <div class="tracking-timeline mt-6">
-          <div class="tracking-item">
-            <div class="dot"></div>
-            <div class="content">
-              <div class="time">{{ data.waktu_diambil.slice(11, 16) }}</div>
-              <div class="desc">
-                Kurir <strong>{{ data?.ambil?.name || 'Kurir' }}</strong> sedang menuju ke rumahmu {{
-                  data.alamat_asal }}
+      <div class="box">
+        <!-- Paket dibuat -->
+        <div class="tracking-header">
+          <p class="tracking-date">{{ formatDate(data.waktu) }}</p>
+          <div class="tracking-timeline mt-6">
+            <div class="tracking-item">
+              <div class="dot"></div>
+              <div class="content">
+                <div class="time">{{ data.waktu.slice(11, 16) }}</div>
+                <!-- <div class="desc">Paket dibuat oleh {{ data.pengguna?.name || 'pengirim' }}</div> -->
+                <div class="desc">Paket dibuat oleh {{ namaPengguna }}</div>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- Diambil -->
-      <div v-if="data.waktu_dikurir" class="tracking-header">
-        <p class="tracking-date">{{ formatDate(data.waktu_dikurir) }}</p>
-        <div class="tracking-timeline mt-6">
-          <div class="tracking-item">
-            <div class="dot"></div>
-            <div class="content">
-              <div class="time">{{ data.waktu_dikurir.slice(11, 16) }}</div>
-              <div class="desc">Kurir <strong>{{ data?.ambil?.name || 'Kurir' }}</strong> menuju gudang penempatan paket
+        <!-- Kurir menuju ke rumah -->
+        <div v-if="data.waktu_diambil" class="tracking-header">
+          <p class="tracking-date">{{ formatDate(data.waktu_diambil) }}</p>
+          <div class="tracking-timeline mt-6">
+            <div class="tracking-item">
+              <div class="dot"></div>
+              <div class="content">
+                <div class="time">{{ data.waktu_diambil.slice(11, 16) }}</div>
+                <div class="desc">
+                  Kurir <strong>{{ data?.ambil?.name || 'Kurir' }}</strong> sedang menuju ke rumahmu {{
+                    data.alamat_asal }}
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- Di Gudang -->
-      <div v-if="data.waktu_digudang" class="tracking-header">
-        <p class="tracking-date">{{ formatDate(data.waktu_digudang) }}</p>
-        <div class="tracking-timeline mt-6">
-          <div class="tracking-item">
-            <div class="dot"></div>
-            <div class="content">
-              <div class="time">{{ data.waktu_digudang.slice(11, 16) }}</div>
-              <div class="desc">Paket telah sampai di gudang</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Proses -->
-      <div v-if="data.waktu_proses" class="tracking-header">
-        <p class="tracking-date">{{ formatDate(data.waktu_proses) }}</p>
-        <div class="tracking-timeline mt-6">
-          <div class="tracking-item">
-            <div class="dot"></div>
-            <div class="content">
-              <div class="time">{{ data.waktu_proses.slice(11, 16) }}</div>
-              <div class="desc">
-                Paket akan dikirim ke provinsi {{ data.tujuan_provinsi.name }} dan ke kota
-                {{ data.asal_kota.name }}
+        <!-- Diambil -->
+        <div v-if="data.waktu_dikurir" class="tracking-header">
+          <p class="tracking-date">{{ formatDate(data.waktu_dikurir) }}</p>
+          <div class="tracking-timeline mt-6">
+            <div class="tracking-item">
+              <div class="dot"></div>
+              <div class="content">
+                <div class="time">{{ data.waktu_dikurir.slice(11, 16) }}</div>
+                <div class="desc">Kurir <strong>{{ data?.ambil?.name || 'Kurir' }}</strong> menuju gudang penempatan
+                  paket
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- tiba digudang -->
-      <div v-if="data.waktu_tiba" class="tracking-header">
-        <p class="tracking-date">{{ formatDate(data.waktu_tiba) }}</p>
-        <div class="tracking-timeline mt-6">
-          <div class="tracking-item">
-            <div class="dot"></div>
-            <div class="content">
-              <div class="time">{{ data.waktu_tiba.slice(11, 16) }}</div>
-              <div class="desc">Paket telah tiba digudang kota {{ data.asal_kota.name }}</div>
+        <!-- Di Gudang -->
+        <div v-if="data.waktu_digudang" class="tracking-header">
+          <p class="tracking-date">{{ formatDate(data.waktu_digudang) }}</p>
+          <div class="tracking-timeline mt-6">
+            <div class="tracking-item">
+              <div class="dot"></div>
+              <div class="content">
+                <div class="time">{{ data.waktu_digudang.slice(11, 16) }}</div>
+                <div class="desc">Paket telah sampai di gudang</div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- Dikirim -->
-      <div v-if="data.waktu_kirim" class="tracking-header">
-        <p class="tracking-date">{{ formatDate(data.waktu_kirim) }}</p>
-        <div class="tracking-timeline mt-6">
-          <div class="tracking-item">
-            <div class="dot"></div>
-            <div class="content">
-              <div class="time">{{ data.waktu_kirim.slice(11, 16) }}</div>
-              <div class="desc">Paket menuju ke alamat tujuan {{ data.alamat_tujuan }}</div>
-              <!-- <div class="desc">Kurir <strong>{{ data?.antar?.name || 'Kurir' }}</strong> menuju ke alamat tujuan {{ data.alamat_tujuan }}</div> -->
+        <!-- Proses -->
+        <div v-if="data.waktu_proses" class="tracking-header">
+          <p class="tracking-date">{{ formatDate(data.waktu_proses) }}</p>
+          <div class="tracking-timeline mt-6">
+            <div class="tracking-item">
+              <div class="dot"></div>
+              <div class="content">
+                <div class="time">{{ data.waktu_proses.slice(11, 16) }}</div>
+                <div class="desc">
+                  Paket akan dikirim ke provinsi {{ data.tujuan_provinsi.name }} dan ke kota
+                  {{ data.asal_kota.name }}
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- Selesai -->
-      <div v-if="data.status.toLowerCase() === 'selesai'" class="tracking-header">
-        <p class="tracking-date">{{ formatDate(data.waktu_selesai) }}</p>
-        <div class="tracking-timeline mt-6">
-          <div class="tracking-item">
-            <div class="dot"></div>
-            <div class="content">
-              <div class="time">{{ data.waktu_selesai.slice(11, 16) }}</div>
-              <div class="desc">Paket telah sampai ke tujuan</div>
+        <!-- tiba digudang -->
+        <div v-if="data.waktu_tiba" class="tracking-header">
+          <p class="tracking-date">{{ formatDate(data.waktu_tiba) }}</p>
+          <div class="tracking-timeline mt-6">
+            <div class="tracking-item">
+              <div class="dot"></div>
+              <div class="content">
+                <div class="time">{{ data.waktu_tiba.slice(11, 16) }}</div>
+                <div class="desc">Paket telah tiba digudang kota {{ data.asal_kota.name }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dikirim -->
+        <div v-if="data.waktu_kirim" class="tracking-header">
+          <p class="tracking-date">{{ formatDate(data.waktu_kirim) }}</p>
+          <div class="tracking-timeline mt-6">
+            <div class="tracking-item">
+              <div class="dot"></div>
+              <div class="content">
+                <div class="time">{{ data.waktu_kirim.slice(11, 16) }}</div>
+                <div class="desc">Paket menuju ke alamat tujuan {{ data.alamat_tujuan }}</div>
+                <!-- <div class="desc">Kurir <strong>{{ data?.antar?.name || 'Kurir' }}</strong> menuju ke alamat tujuan {{ data.alamat_tujuan }}</div> -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Selesai -->
+        <div v-if="data.status.toLowerCase() === 'selesai'" class="tracking-header">
+          <p class="tracking-date">{{ formatDate(data.waktu_selesai) }}</p>
+          <div class="tracking-timeline mt-6">
+            <div class="tracking-item">
+              <div class="dot"></div>
+              <div class="content">
+                <div class="time">{{ data.waktu_selesai.slice(11, 16) }}</div>
+                <div class="desc">Paket telah sampai ke tujuan</div>
+              </div>
             </div>
           </div>
         </div>
@@ -253,9 +259,9 @@ input {
   border-radius: 5%;
 }
 
-.container {
+/* .container {
   /* text-align: center; */
-  /* border: 1px solid; */
+/* border: 1px solid; *
   width: 60%;
 }
 
@@ -264,11 +270,41 @@ input {
   margin-left: 1%;
   border-radius: 1px solid;
 
+} */
+.container {
+  width: 60%;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+#la {
+  text-align: center;
+}
+
+#no {
+  margin-left: 20%;
+}
+
+#noResi {
+  width: 50%;
+  margin: 0;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  margin-left: 3%;
+}
+
+.but {
+  text-align: center;
 }
 
 #lacak:hover {
   background-color: #a855f7;
   color: white;
+}
+
+.box,
+.des {
+  margin-left: 15%;
 }
 
 .tracking-header {
@@ -334,5 +370,41 @@ input {
 .tracking-item .desc {
   margin-top: 0.25rem;
   color: #4b5563;
+}
+
+@media (max-width: 768px) {
+  .container {
+    width: 100%;
+    padding: 1rem;
+  }
+
+  #noResi {
+    width: 100%;
+    margin: 0;
+  }
+
+  .tracking-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .tracking-date {
+    margin-bottom: 0.5rem;
+    margin-left: 0;
+  }
+
+  .tracking-timeline {
+    margin-left: 1.5rem;
+    padding-left: 1rem;
+  }
+
+  .tracking-item .dot {
+    left: -1.5rem;
+  }
+
+  #lacak {
+    width: 100%;
+    margin-top: 1rem;
+  }
 }
 </style>

@@ -1,12 +1,13 @@
 <script setup lang="ts">
 // Import library Vue dan lainnya
-import { h, ref, watch, computed, onMounted } from "vue";
+import { h, ref, watch, computed, onMounted, nextTick } from "vue";
 import { useDelete } from "@/libs/hooks"; // Hook untuk hapus data (tidak digunakan dalam skrip ini)
 import Form from "./Form.vue"; // Komponen form transaksi
 import { createColumnHelper } from "@tanstack/vue-table"; // Helper kolom untuk tabel TanStack
 import type { transaksii, Pengiriman } from "@/types"; // Tipe data transaksi dan pengiriman
 import Swal from "sweetalert2"; // Library pop-up alert
 import axios from "axios"; // HTTP client
+import html2pdf from "html2pdf.js";
 
 // ===[1]=== VARIABEL DASAR
 // Helper kolom TanStack Table bertipe transaksii
@@ -21,6 +22,65 @@ const openForm = ref<boolean>(false);
 // ===[2]=== DETAIL DATA
 // Menyimpan data detail transaksi yang sedang ditampilkan
 const detailData = ref<transaksii | null>(null);
+const printData = ref<transaksii | null>(null); // Data yang akan dicetak sebagai resi
+
+const printResi = async (data: transaksii) => {
+    const result = await Swal.fire({
+        title: "Cetak Resi?",
+        text: "Apakah Anda ingin mengunduh resi ini?",
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonText: "Ya, Cetak",
+        cancelButtonText: "Batal",
+        reverseButtons: true,
+    });
+
+    if (result.isConfirmed) {
+        try {
+            // Isi data yang akan dicetak
+            printData.value = data;
+
+            // Tunggu hingga data ter-render di DOM
+            await nextTick();
+
+            const element = document.getElementById("print-resi");
+            if (!element) {
+                throw new Error("Elemen #print-resi tidak ditemukan.");
+            }
+
+            // Opsi konfigurasi cetak PDF
+            const opt = {
+                margin: 0.5,
+                filename: `resi-${data.no_resi}.pdf`,
+                image: { type: "jpeg", quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: "in", format: "letter", orientation: "portrait" },
+            };
+
+            // Cetak menggunakan html2pdf
+            await html2pdf().set(opt).from(element).save();
+
+            // Tampilkan alert sukses
+            Swal.fire({
+                title: "Berhasil",
+                text: "Resi berhasil diunduh.",
+                icon: "success",
+                timer: 1500,
+                showConfirmButton: false,
+            });
+
+        } catch (error) {
+            console.error("Gagal mengunduh resi:", error);
+            Swal.fire({
+                title: "Gagal",
+                text: "Terjadi kesalahan saat mengunduh resi.",
+                icon: "error",
+            });
+        }
+    }
+};
+
+
 
 // Fungsi untuk menampilkan rincian transaksi
 const showRincian = (data: transaksii) => {
@@ -32,7 +92,6 @@ const showRincian = (data: transaksii) => {
 const closeDetail = () => {
     detailData.value = null;
 };
-
 // ===[3]=== MODAL KURIR DETAIL
 // Menampilkan detail kurir dalam pop-up Swal
 function showKurirDetail(kurir: any) {
@@ -168,7 +227,6 @@ const getPembayaranBadgeClass = (status: string | undefined) => {
 
     return statusMap[status?.toLowerCase() ?? ""] || "badge bg-secondary fw-bold";
 };
-
 // ===[5]=== KOLUMN
 // Definisi kolom-kolom tabel transaksi
 const columns = [
@@ -219,6 +277,7 @@ const columns = [
         header: "Aksi",
         cell: (cell) => {
             const row = cell.row.original;
+            const data = cell.row.original;
             const status = row.status_pembayaran?.toLowerCase();
             const buttons = [];
 
@@ -235,6 +294,11 @@ const columns = [
                 class: "btn btn-sm btn-info d-flex align-items-center gap-1",
                 onClick: () => showRincian(row),
             }, [h("i", { class: "bi bi-eye" }), " Detail"]));
+
+            buttons.push(h("button", {
+                class: "btn btn-sm btn-secondary",
+                onClick: () => printResi(data),
+            }, [h("i", { class: "bi bi-printer" }), " Resi"]));
 
             return h("div", { class: "d-flex gap-1" }, buttons);
         }
@@ -290,6 +354,53 @@ onMounted(() => {
             <paginate ref="paginateRef" id="table-transaksii" url="/transaksii?exclude_status=selesai"
                 :columns="columns" />
 
+            <!-- Area Resi untuk PDF -->
+            <div id="print-resi" v-if="printData" class="print-preview">
+                <div class="resi-container">
+                    <div class="resi-header">
+                        No Resi: {{ printData?.no_resi }}
+                    </div>
+
+                    <div class="resi-content">
+                        <div class="resi-left">
+                            <div class="mb-2 text-center mt-4">
+                                <strong>Ekspedisi:</strong><br />
+                                <h1><strong>{{ printData?.ekspedisi || 'JNE / J&T' }}</strong></h1>
+                            </div>
+                            <strong>
+                                <hr />
+                            </strong>
+                            <div class="mt-4">
+                                <strong>DARI</strong><br />
+                                <!-- <p  -4">Nama Pengirim : {{ printData?.pengirim || '-' }}</p> -->
+                                <!-- <p><strong>Pengirim:</strong> {{detailData.pengguna?.user.name  || '-' }}</p> -->
+                                {{ printData?.pengguna?.user.name || '-' }}<br />
+                                    {{ printData?.no_hp_pengirim || '-' }}
+                            </div>
+                        </div>
+
+                        <div class="resi-right">
+                            <div class="mb-2">
+                                <strong>Tanggal:</strong> {{ printData?.waktu }}<br />
+                                <strong>Jumlah:</strong> {{ printData?.berat_barang }} kg<br />
+                                <strong>Biaya:</strong> Rp{{ printData?.biaya?.toLocaleString() || '-' }} <br />
+                                
+                            </div>
+                            <div class="mt-8">
+                                <strong>KE</strong><br />
+                                 {{ printData?.penerima }}<br />
+                                 {{ printData?.alamat_tujuan }},
+                                 {{ printData?.tujuan_kota?.name }},
+                                 {{ printData?.tujuan_provinsi?.name }}.
+                                <!-- <p class="mt-2"> {{ printData?.penerima }}</p>
+                                <p>{{ printData?.alamat_tujuan }}</p>
+                                <p>{{ printData?.tujuan_provinsi?.name }}</p>
+                                <p>{{ printData?.tujuan_kota?.name }}</p> -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <!-- DETAIL -->
             <div v-if="detailData" class="card mt-5">
@@ -419,3 +530,73 @@ onMounted(() => {
         </div>
     </div>
 </template>
+
+<style>
+.print-preview {
+    color: #000;
+    background-color: #fff;
+    margin-top: 4%;
+}
+
+.resi-container {
+    width: 600px;
+    border: 3px solid #000;
+    padding: 16px;
+    background-color: #fff;
+    font-family: "times new roman";
+}
+
+.resi-header {
+    border-bottom: 3px solid #000;
+    padding-bottom: 8px;
+    margin-bottom: 12px;
+    text-align: center;
+    font-weight: bold;
+    font-size: 18px;
+}
+
+.resi-content {
+    display: flex;
+    border-top: 3px solid #000;
+}
+
+.resi-left {
+    width: 40%;
+    border-right: 3px solid #000;
+    padding-right: 12px;
+}
+
+.resi-right {
+    width: 60%;
+    padding-left: 12px;
+}
+
+p {
+    margin: 4px 0;
+}
+
+/* hr{
+    border: 1px solid #000;
+} */
+
+@media print {
+    body * {
+        visibility: hidden;
+    }
+
+    #print-resi,
+    #print-resi * {
+        visibility: visible;
+    }
+
+    #print-resi {
+        position: absolute;
+        left: 0;
+        top: 0;
+    }
+
+    .d-print-none {
+        display: none !important;
+    }
+}
+</style>

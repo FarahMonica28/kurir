@@ -23,6 +23,9 @@ class EventServiceProvider extends ServiceProvider
         UserRoleUpdated::class => [
             UserRoleUpdateListener::class,
         ],
+        UserRegistered::class => [
+        SendEmailVerificationNotification::class,
+        ],
     ];
 
     /**

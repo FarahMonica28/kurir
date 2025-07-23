@@ -18,6 +18,7 @@ class UserSeeder extends Seeder
             'email' => 'admin@gmail.com',
             'password' => bcrypt('12345678'),
             'phone' => '08123456789',
+            'email_verified_at' => now(), // ✅ ini penting agar dianggap sudah verifikasi
         ])->assignRole('admin');
     }
 }
