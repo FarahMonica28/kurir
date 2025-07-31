@@ -17,6 +17,8 @@
         <div class="fv-row mb-7">
             <label class="form-label fw-bold text-dark fs-6 d-flex align-items-center justify-content-between">Kode OTP
             </label>
+            <p style="color:red">INI HARUS MUNCUL</p>
+
             <v-otp-input input-classes="form-control form-control-lg form-control-solid text-center" name="otp_phone"
                 separator="-" :num-inputs="6" :should-auto-focus="true" input-type="numeric"
                 v-model:value="formData.otp_phone" @on-change="handleOtp" @on-complete="handleOtp" />
@@ -42,9 +44,13 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { useOtpIntervalStore } from '../Index.vue';
+import VOtpInput from "vue3-otp-input"; // sudah ada import ini
 
 export default defineComponent({
     name: 'VerifyPhone',
+    components: {
+        VOtpInput // ✅ ini penting agar <v-otp-input> dikenali
+    },
     props: {
         formData: {
             type: Object,

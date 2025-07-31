@@ -30,6 +30,13 @@ return [
     'max_age' => 0,
 
     'supports_credentials' => false,
+    
+    // app/Http/Middleware/HandleCors.php (jika pakai Laravel 10 ke atas)
+    'headers' => function ($request, $next) {
+        return $next($request)
+        ->header('Access-Control-Allow-Origin', '*')
+        ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+        ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    }
 
-
-];
+];    

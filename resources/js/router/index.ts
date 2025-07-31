@@ -7,6 +7,7 @@ import { useAuthStore } from "@/stores/auth";
 import { useConfigStore } from "@/stores/config";
 import NProgress from "nprogress";
 import "nprogress/nprogress.css";
+// import DashboardLay from '@/pages/dashboard_pengguna/app.vue';
 
 declare module "vue-router" {
     interface RouteMeta {
@@ -16,35 +17,88 @@ declare module "vue-router" {
 }
 
 const routes: Array<RouteRecordRaw> = [
-    {
-    path: "/dashboard_pengguna",
-    name: "dashboard_pengguna",
-    component: () => import("@/pages/dashboard_pengguna/index.vue"),
-    meta: {
-        pageTitle: "Dashboard Pengguna",
-        breadcrumbs: ["Halaman Dashboard Pengguna"],
-    },
-    },
+    // {
+    // path: "/dashboard_pengguna",
+    // name: "dashboard_pengguna",
+    // component: () => import("@/pages/dashboard_pengguna/index.vue"),
+    // meta: {
+    //     pageTitle: "Dashboard Pengguna",
+    //     breadcrumbs: ["Halaman Dashboard Pengguna"],
+    // },
+    // },
     //pengguna
     {
-    path: "/dashboardk",
-    name: "dashboardk",
-    component: () => import("@/pages/dashboardk/index.vue"),
-    meta: {
-        pageTitle: "Dashboardk",
-        breadcrumbs: ["Halaman Dashboardk"],
-    },
+        path: "/",
+        redirect: "/dashboard_pengguna",// component: DashboardLay, // ✅ Gunakan layout
+        component: () => import("@/pages/dashboard_pengguna/app.vue"),
+        children: [
+                {
+                    path: "/dashboard_pengguna", // akan render Index.vue sebagai default child
+                    name: "dashboard_pengguna",
+                    component: () => import("@/pages/dashboard_pengguna/index.vue"),
+                    meta: {
+                    pageTitle: "Dashboard Pengguna",
+                    breadcrumbs: ["Halaman Dashboard Pengguna"],
+                    },
+                },
+                {
+                    path: "/dashboard_pengguna/ongkir",
+                    name: "dashboard_pengguna.ongkir",
+                    component: () =>import ("@/pages/dashboard/transaksii/ongkir/ongkir.vue"),
+                    meta: {
+                        pageTitle: "Ongkir",
+                        breadcrumbs: ["Transaksii", "Ongkir"],
+                    },
+                },
+                {
+                    path: "/dashboard_pengguna/order",
+                    name: "dashboard_pengguna.order",
+                    component: () =>import ("@/pages/dashboard/transaksii/order/index.vue"),
+                    meta: {
+                        pageTitle: "Riwayat",
+                        breadcrumbs: ["Transaksii", "Riwayat"],
+                    },
+                },
+                {
+                    path: "/dashboard_pengguna/riwayat",
+                    name: "dashboard_pengguna.riwayat",
+                    component: () =>import ("@/pages/dashboard/transaksii/riwayat/index.vue"),
+                    meta: {
+                        pageTitle: "Riwayat",
+                        breadcrumbs: ["Transaksii", "Riwayat"],
+                    },
+                },
+                {
+                    path: "/dashboard_pengguna/tracking",
+                    name: "dashboard_pengguna.tracking",
+                    component: () =>import ("@/pages/dashboard/tracking/index.vue"),
+                    meta: {
+                        pageTitle: "Riwayat",
+                        breadcrumbs: ["Transaksii", "Riwayat"],
+                    },
+                },
+
+        ],
     },
     {
-                path: "/dashboard/transaksii/ongkir",
-                name: "dashboard.transaksii.ongkir",
-                component: () =>
-                    import("@/pages/dashboard/transaksii/ongkir/ongkir.vue"),
-                meta: {
-                    pageTitle: "Ongkir",
-                    breadcrumbs: ["Transaksii", "Ongkir"],
-                },
+        path: "/dashboardk",
+        name: "dashboardk",
+        component: () => import("@/pages/dashboardk/index.vue"),
+        meta: {
+            pageTitle: "Dashboardk",
+            breadcrumbs: ["Halaman Dashboardk"],
+        },
     },
+    // {
+    //             path: "/dashboard/transaksii/ongkir",
+    //             name: "dashboard.transaksii.ongkir",
+    //             component: () =>
+    //                 import("@/pages/dashboard/transaksii/ongkir/ongkir.vue"),
+    //             meta: {
+    //                 pageTitle: "Ongkir",
+    //                 breadcrumbs: ["Transaksii", "Ongkir"],
+    //             },
+    // },
     {
                 path: "/dashboard/transaksii/order",
                 name: "dashboard.transaksii.order",
@@ -304,11 +358,11 @@ const routes: Array<RouteRecordRaw> = [
                 name: 'dashboard.master.users.VerifyOtp',
                 component: () => import('@/pages/dashboard/master/users/VerifyOtp.vue'),
             },
-            {
-                path: "/payment/success",
-                name: "PaymentSuccess",
-                component: () => import("@/views/PaymentSuccess.vue"),
-            },
+            // {
+            //     path: "/payment/success",
+            //     name: "PaymentSuccess",
+            //     component: () => import("@/views/PaymentSuccess.vue"),
+            // },
         ],
     },
     
@@ -363,27 +417,6 @@ const routes: Array<RouteRecordRaw> = [
                     middleware: "guest",
                 },
             },
-        ],
-    },
-    {
-        path: "/dashboark",
-        component: () => import("@/layouts/AuthLayout.vue"),
-        children: [
-            {
-                path: "/sign-up",
-                name: "sign-up",
-                component: () => import("@/pages/auth/sign-up/Index.vue"),
-                meta: {
-                    pageTitle: "Sign Up",
-                    middleware: "guest",
-                },
-            },
-        ],
-    },
-    {
-        path: "/dashboar_pengguna",
-        component: () => import("@/layouts/AuthLayout.vue"),
-        children: [
             {
                 path: "/sign-up",
                 name: "sign-up",

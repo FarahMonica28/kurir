@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\OtpMail;
 use App\Models\User;
+use Cache;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use Mail;
 
 class AuthController extends Controller
 {
@@ -74,6 +77,96 @@ class AuthController extends Controller
         auth()->logout();
         return response()->json(['success' => true]);
     }
+
+    public function sendEmailOtp(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+            'nama'  => 'required|string|max:100',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validasi gagal',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $email = $request->email;
+        // $nama = $request->nama;
+
+        // Cek rate limit: 1x per 30 detik (optional)
+        if (Cache::has("otp_email_block:$email")) {
+            return response()->json([
+                'message' => 'Silakan tunggu beberapa saat sebelum mengirim ulang OTP.',
+            ], 429);
+        }
+
+        // Generate OTP 6 digit
+        $otp = rand(100000, 999999);
+
+        // Simpan OTP ke cache selama 5 menit
+        Cache::put("otp_email:$email", $otp, now()->addMinutes(5));
+
+        // Blokir permintaan OTP selama 30 detik
+        Cache::put("otp_email_block:$email", true, now()->addSeconds(30));
+
+        // Kirim email menggunakan Mail
+        try {
+            Mail::to($email)->send(new OtpMail($otp));
+            // Mail::to($email)->send(new OtpMail($otp, $nama));
+
+            return response()->json([
+                'message' => 'OTP berhasil dikirim ke email Anda.',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Gagal mengirim OTP. Silakan coba lagi.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function checkEmailOtp(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+            'otp'   => 'required|digits:6',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validasi gagal',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $email = $request->email;
+        $otpInput = $request->otp;
+
+        // Ambil OTP yang tersimpan di cache
+        $cachedOtp = Cache::get("otp_email:$email");
+
+        if (!$cachedOtp) {
+            return response()->json([
+                'message' => 'Kode OTP sudah kedaluwarsa atau belum dikirim.',
+            ], 410); // 410 Gone
+        }
+
+        if ($otpInput != $cachedOtp) {
+            return response()->json([
+                'message' => 'Kode OTP tidak sesuai.',
+            ], 400);
+        }
+
+        // Hapus OTP setelah berhasil diverifikasi (opsional)
+        Cache::forget("otp_email:$email");
+
+        return response()->json([
+            'message' => 'OTP email berhasil diverifikasi.',
+        ]);
+    }
+
 }
 
 //     public function verifyEmailOtp(Request $request)

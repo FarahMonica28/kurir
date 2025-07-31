@@ -1,6 +1,6 @@
 <template>
-  <div class="container">
-    <h2 class="text-xl font-semibold mb-4 mt-" id="la">Lacak Pengiriman</h2>
+  <div class="container mt-15">
+    <h1 class="text-xl font-semibold mb-4 mt-" id="la">Lacak Pengiriman</h1>
     <div class="mb-4" id="no">
       <h3>
         <label for="noResi" class="block mb-1 mt-6" id="">Nomor Resi : </label>
@@ -43,17 +43,16 @@
           </div>
         </div>
 
-        <!-- Kurir menuju ke rumah -->
+        <!-- Kurir menuju rumah -->
         <div v-if="data.waktu_diambil" class="tracking-header">
           <p class="tracking-date">{{ formatDate(data.waktu_diambil) }}</p>
           <div class="tracking-timeline mt-6">
             <div class="tracking-item">
-              <div class="dot"></div>
+              <img class="dot-img" src="/public/storage/photo/gudang.jpgyyyy" alt="Kurir Ambil" />
               <div class="content">
                 <div class="time">{{ data.waktu_diambil.slice(11, 16) }}</div>
                 <div class="desc">
-                  Kurir <strong>{{ data?.ambil?.name || 'Kurir' }}</strong> sedang menuju ke rumahmu {{
-                    data.alamat_asal }}
+                  Kurir sedang menuju ke rumahmu {{ data.alamat_asal }}
                 </div>
               </div>
             </div>
@@ -112,7 +111,8 @@
           <p class="tracking-date">{{ formatDate(data.waktu_tiba) }}</p>
           <div class="tracking-timeline mt-6">
             <div class="tracking-item">
-              <div class="dot"></div>
+              <!-- <div class="dot"></div> -->
+              <img class="dot-img" :src="data?.ambil?.photo || '/img/default-user.png'" alt="Kurir" />
               <div class="content">
                 <div class="time">{{ data.waktu_tiba.slice(11, 16) }}</div>
                 <div class="desc">Paket telah tiba digudang kota {{ data.asal_kota.name }}</div>
@@ -257,6 +257,19 @@ const namaPengguna = computed(() => {
 <style scoped>
 input {
   border-radius: 5%;
+}
+
+.dot-img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  position: absolute;
+  left: -4.3rem;
+  top: 0.25rem;
+  z-index: 1;
+  border: 2px solid white;
+  background-color: #f3f4f6;
 }
 
 /* .container {

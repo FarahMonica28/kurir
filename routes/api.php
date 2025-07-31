@@ -37,6 +37,9 @@ use App\Http\Controllers\ShippingController;
 |
 */
 
+Route::post('/auth/register/get/email/otp', [AuthController::class, 'sendEmailOtp']);
+Route::post('/auth/register/check/email/otp', [AuthController::class, 'checkEmailOtp']);
+
 // Authentication Route
 Route::middleware(['auth', 'json'])->prefix('auth')->group(function () {
     Route::post('login', [AuthController::class, 'login'])->withoutMiddleware('auth');
@@ -58,12 +61,9 @@ Route::post('/ongkir', [CheckOngkirController::class, 'checkOngkir']);
     
 Route::post('/transaksii', [TransaksiiController::class, 'index']);
 Route::get('/transaksii/{id}', [TransaksiiController::class, 'get']);
-    // Route::post('/transaksii', [TransaksiiController::class, 'store']);
-    // Route::put('/transaksii/{id}', [TransaksiiController::class, 'store']);
 Route::post('/transaksii/store', [TransaksiiController::class, 'store']);
 Route::get('/provinces', [TransaksiiController::class, 'getProvinces']);
 Route::get('/cities/{provinceId}', [TransaksiiController::class, 'getCities']);
-    // Route::post('/transaksii/{id}', [TransaksiiController::class, 'store']); // Untuk 
 Route::post('/cost', [TransaksiiController::class, 'hitungOngkir']);
     // routes/api.php
 Route::put('/transaksii/{id}/antar', [TransaksiiController::class, 'antar']);
@@ -84,14 +84,6 @@ Route::get('/payment/success', function () {
 })->withoutMiddleware(['auth', 'permission']); // atau 'web' saja
 // Route::post('/midtrans/notification', [MidtransController::class, 'handleNotification']);
 
-
-
-// Route::post('/payment-temp', [TransaksiiController::class, 'paymentTemp']);
-// Route::post('/payment', [PembayaranController::class, 'payment']);
-// });
-
-// Route::post('/payment', [PaymentController::class, 'payment']);
-// Route::post('/payment/callback', [PaymentController::class, 'handleCallback']);
 // Route::post('/midtrans/notification', [PaymentController::class, 'handleNotification']);
 Route::get('/payment/{id}', [PaymentController::class, 'show'])->name('payment.show');
 // Route::post('/pay', [PaymentController::class, 'pay']);
@@ -109,9 +101,9 @@ Route::post('/verify-email', [AuthController::class, 'verifyEmailOtp']);
  
 
 
-Route::get('/tracking/{no_resi}', [TrackingController::class, 'track']);
-// Route::get('/tracking/{no_resi}', [TrackingController::class, 'track'])->withoutMiddleware(['auth']);
-// Route::get('/tracking/{no_resi}', [TrackingController::class, 'show']);
+Route::get('/tracking/{no_resi}', [TrackingController::class, 'tracking']);
+// routes/api.php
+// Route::get('/tracking/{no_resi}', [TransaksiController::class, 'tracking']);
 
 
 Route::get('/cek-ongkir', [BinderbyteController::class, 'cekOngkir']);

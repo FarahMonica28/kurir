@@ -59,6 +59,7 @@ class Transaksii extends Model
     {
         return $this->hasMany(Pengiriman::class, 'transaksii_id', 'id');
     }
+    
 
 }
 

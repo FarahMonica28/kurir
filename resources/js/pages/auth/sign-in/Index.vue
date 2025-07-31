@@ -52,6 +52,14 @@
                 {{ $t('login.daftar') }}
             </router-link>
         </div> -->
+                    <!--begin::Link-->
+            <div class="text-gray-400 fw-semobold fs-4 text-center">
+                Belum memiliki akun?
+
+                <router-link to="/sign-up" class="link-primary fw-bold">
+                    Daftar
+                </router-link>
+            </div>
         <!--end::Link-->
     </div>
     <!--end::Form-->

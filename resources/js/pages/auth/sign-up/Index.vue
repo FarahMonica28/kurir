@@ -6,11 +6,7 @@
             <!--begin::Heading-->
             <div class="mb-10 text-center">
                 <router-link to="/">
-                    <img
-                        :src="setting?.logo_depan"
-                        alt="Logo Jombang"
-                        class="w-100px mb-8"
-                    />
+                    <img :src="setting?.logo_depan" alt="Logo Jombang" class="w-100px mb-8" />
                 </router-link>
                 <!--begin::Title-->
                 <h1 class="text-dark mb-3">
@@ -20,18 +16,12 @@
             </div>
             <!--end::Heading-->
 
-            <div
-                class="stepper stepper-links d-flex flex-column"
-                id="kt_create_account_stepper"
-                ref="horizontalWizardRef"
-            >
+            <div class="stepper stepper-links d-flex flex-column" id="kt_create_account_stepper"
+                ref="horizontalWizardRef">
                 <!--begin::Nav-->
                 <div class="stepper-nav py-5 mt-5 d-none">
                     <!--begin::Step 1-->
-                    <div
-                        class="stepper-item current"
-                        data-kt-stepper-element="nav"
-                    >
+                    <div class="stepper-item current" data-kt-stepper-element="nav">
                         <h3 class="stepper-title">Akun</h3>
                     </div>
                     <!--end::Step 1-->
@@ -57,12 +47,8 @@
                 <!--end::Nav-->
 
                 <!--begin::Form-->
-                <form
-                    class="mx-auto mw-600px w-100 pt-15 pb-10"
-                    novalidate
-                    id="kt_create_account_form"
-                    @submit="handleStep"
-                >
+                <form class="mx-auto mw-600px w-100 pt-15 pb-10" novalidate id="kt_create_account_form"
+                    @submit="handleStep">
                     <!--begin::Step 1-->
                     <div class="current" data-kt-stepper-element="content">
                         <Credential :formData="formData"></Credential>
@@ -71,21 +57,15 @@
 
                     <!--begin::Step 2-->
                     <div data-kt-stepper-element="content">
-                        <VerifyEmail
-                            :formData="formData"
-                            @on-complete="handleOtpEmail"
-                            @send-otp="sendOtpEmail"
-                        ></VerifyEmail>
+                        <VerifyEmail :formData="formData" @on-complete="handleOtpEmail" @send-otp="sendOtpEmail">
+                        </VerifyEmail>
                     </div>
                     <!--end::Step 2-->
 
                     <!--begin::Step 3-->
                     <div data-kt-stepper-element="content">
-                        <VerifyPhone
-                            :formData="formData"
-                            @on-complete="handleOtpPhone"
-                            @send-otp="sendOtpPhone"
-                        ></VerifyPhone>
+                        <VerifyPhone :formData="formData" @on-complete="handleOtpPhone" @send-otp="sendOtpPhone">
+                        </VerifyPhone>
                     </div>
                     <!--end::Step 3-->
 
@@ -99,16 +79,9 @@
                     <div class="d-flex flex-stack pt-15">
                         <!--begin::Wrapper-->
                         <div class="mr-2">
-                            <button
-                                type="button"
-                                class="btn btn-lg btn-light-primary me-3"
-                                data-kt-stepper-action="previous"
-                                @click="previousStep"
-                            >
-                                <KTIcon
-                                    icon-name="arrow-left"
-                                    icon-class="fs-4 me-1"
-                                />
+                            <button type="button" class="btn btn-lg btn-light-primary me-3"
+                                data-kt-stepper-action="previous" @click="previousStep">
+                                <KTIcon icon-name="arrow-left" icon-class="fs-4 me-1" />
                                 Kembali
                             </button>
                         </div>
@@ -116,45 +89,25 @@
 
                         <!--begin::Wrapper-->
                         <div>
-                            <button
-                                type="submit"
-                                id="submit-form"
-                                class="btn btn-lg btn-primary me-3"
-                                data-kt-stepper-action="submit"
-                                v-if="currentStepIndex === totalSteps - 1"
-                            >
+                            <button type="submit" id="submit-form" class="btn btn-lg btn-primary me-3"
+                                data-kt-stepper-action="submit" v-if="currentStepIndex === totalSteps - 1">
                                 <span class="indicator-label">
                                     Daftar
-                                    <KTIcon
-                                        icon-name="arrow-right"
-                                        icon-class="fs-3 ms-2 me-0"
-                                    />
+                                    <KTIcon icon-name="arrow-right" icon-class="fs-3 ms-2 me-0" />
                                 </span>
                                 <span class="indicator-progress">
                                     Memproses...
-                                    <span
-                                        class="spinner-border spinner-border-sm align-middle ms-2"
-                                    ></span>
+                                    <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
                                 </span>
                             </button>
 
-                            <button
-                                v-else
-                                type="submit"
-                                id="next-form"
-                                class="btn btn-lg btn-primary"
-                            >
+                            <button v-else type="submit" id="next-form" class="btn btn-lg btn-primary">
                                 <span class="indicator-label">
                                     Selanjutnya
-                                    <KTIcon
-                                        icon-name="arrow-right"
-                                        icon-class="fs-4 ms-2 me-0"
-                                    />
+                                    <KTIcon icon-name="arrow-right" icon-class="fs-4 ms-2 me-0" />
                                 </span>
                                 <span class="indicator-progress">
-                                    <span
-                                        class="spinner-border spinner-border-sm align-middle ms-2"
-                                    ></span>
+                                    <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
                                 </span>
                             </button>
                         </div>
@@ -171,7 +124,7 @@
             <div class="text-gray-400 fw-semobold fs-4 text-center">
                 Sudah memiliki akun?
 
-                <router-link to="/auth/sign-in" class="link-primary fw-bold">
+                <router-link to="/sign-in" class="link-primary fw-bold">
                     Masuk
                 </router-link>
             </div>
@@ -204,6 +157,7 @@ interface ICredential {
     nama?: string;
     email?: string;
     phone?: string;
+    
 }
 
 interface IVerifyEmail {
@@ -221,9 +175,9 @@ interface IPassword {
 
 interface CreateAccount
     extends ICredential,
-        IVerifyEmail,
-        IVerifyPhone,
-        IPassword {}
+    IVerifyEmail,
+    IVerifyPhone,
+    IPassword { }
 
 interface IOtpInterval {
     otpInterval: number;
