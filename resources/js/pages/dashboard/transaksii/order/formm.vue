@@ -7,7 +7,6 @@ import { block, unblock } from "@/libs/utils";
 import { useAuthStore } from "@/stores/auth";
 import { useForm } from "vee-validate";
 import type { transaksii } from "@/types";
-import { useField, } from "vee-validate";
 
 // ==========================
 // Auth Store
@@ -30,6 +29,20 @@ const transaksi = ref<transaksii>({} as transaksii);
 // ==========================
 // Lokasi dan Alamat
 // ==========================
+const provinces = ref<Record<string, string>>({});
+const provinceOrigin = ref("0");
+const citiesOrigin = ref<Record<string, string>>({});
+const citiesDestination = ref<Record<string, string>>({});
+const cityOrigin = ref("");
+// const provinceDestination = ref("0");
+const cityDestination = ref("");
+
+
+const districtsOrigin = ref<Record<string, string>>({});
+const districtsDestination = ref<{ id: string; name: string }[]>([]);
+const districtOrigin = ref("");
+const districtDestination = ref("");
+
 
 // ==========================
 // Input Pengguna
@@ -69,7 +82,6 @@ const formSchema = Yup.object({
   nama_barang: Yup.string().required(),
   penerima: Yup.string().required(),
   alamat_tujuan: Yup.string().required(),
-  alamat_asal: Yup.string().required(),
   no_hp_penerima: Yup.string().required(),
   no_hp_pengirim: Yup.string().required(),
   provinceOrigin: Yup.string().required().notOneOf(["0"]),
@@ -103,237 +115,36 @@ const { handleSubmit, errors, resetForm, setFieldValue } = useForm({
   },
 });
 
-const provinces = ref<Record<string, string>>({});
-
-
-// // asal rovinsi
-
-const provinceOrigin = ref("0");
-const searchProvinceOrigin = ref("");
-const showProvinceDropdownOrigin = ref(false);
-const filteredProvincesOrigin = computed(() => {
-  return provinceOrigin.value.filter((prov) =>
-    prov.name.toLowerCase().includes(searchProvinceOrigin.value.toLowerCase())
-  );
-});
-const selectProvinceOrigin = (prov: { id: string; name: string }) => {
-  searchProvinceOrigin.value = prov.name;
-  provinceOrigin.value = prov.id;
-  // setFieldValue("provinceOrigin", prov.id); // sync ke VeeValidate
-  fetchCities("origin");
-  showProvinceDropdownOrigin.value = false;
-};
-// const hideProvinceDropdownOriginWithDelay = () => {
-//   setTimeout(() => {
-//     showProvinceDropdownOrigin.value = false;
-//   }, 200);
-// };
-const limitProvinceOrigin = ref(10);
-const displayedProvincesOrigin = computed(() =>
-  filteredProvincesOrigin.value.slice(0, limitProvinceOrigin.value)
-);
-const loadMoreProvincesOrigin = () => {
-  if (limitProvinceOrigin.value < filteredProvincesOrigin.value.length) {
-    limitProvinceOrigin.value += 10;
-  }
-};
-watch(searchProvinceOrigin, () => {
-  limitProvinceOrigin.value = 10;
-});
 
 
 
-// asal kota
-// const citiesOrigin = ref<any[]>([]) // langsung array kosong di awal
-// const citiesDestination = ref<any[]>([])
-const cityOrigin = ref("");
-const citiesOrigin = ref<Record<string, string>>({});
-const searchCityOrigin = ref("");
-const showCityDropdownOrigin = ref(false);
-const filteredCitiesOrigin = computed(() => {
-  return citiesOrigin.value.filter((city) =>
-    city.name.toLowerCase().includes(searchCityOrigin.value.toLowerCase())
-  );
-});
-const selectCityOrigin = (city: { id: string; name: string }) => {
-  searchCityOrigin.value = city.name;
-  cityOrigin.value = city.id;
-  setFieldValue("cityOrigin", city.id); // sync ke VeeValidate
-  showCityDropdownOrigin.value = false;
-  fetchDistricts("origin");
-};
-// const hideCityDropdownOriginWithDelay = () => {
-//   setTimeout(() => {
-//     showCityDropdownOrigin.value = false;
-//   }, 200);
-// };
-
-
-//asal kecamatan
-
-// const districtOrigin = ref<any[]>([]) // langsung array kosong di awal
-const districtOrigin = ref("");
-const districtsOrigin = ref<{ id: string; name: string }[]>([]);
-// const districtsOrigin = ref<Record<string, string>>({});
-const searchDistrictOrigin = ref("");
-const showDistrictDropdownOrigin = ref(false);
-const selectDistrictOrigin = (d: { id: string; name: string }) => {
-  searchDistrictOrigin.value = d.name;
-  districtOrigin.value = d.id;
-  setFieldValue("districtOrigin", d.id);
-  showDistrictDropdownOrigin.value = false;
-};
-// const hideDistrictDropdownOriginWithDelay = () => {
-//   setTimeout(() => {
-//     showDistrictDropdownOrigin.value = false;
-//   }, 200);
-// };
-const filteredDistrictsOrigin = computed(() => {
-  return districtsOrigin.value.filter((d) =>
-    d.name.toLowerCase().includes(searchDistrictOrigin.value.toLowerCase())
-  );
-});
-const limitCityOrigin = ref(10);
-const displayedCitiesOrigin = computed(() => {
-  return filteredCitiesOrigin.value.slice(0, limitCityOrigin.value);
-});
-const displayedDistrictsOrigin = computed(() => {
-  return filteredDistrictsOrigin.value.slice(0, limitCityOrigin.value);
-});
-const loadMoreCitiesOrigin = () => {
-  if (limitCityOrigin.value < filteredCitiesOrigin.value.length) {
-    limitCityOrigin.value += 10;
-  }
-};
-const loadMoreDistrictsOrigin = () => {
-  if (limitDistrictOrigin.value < filteredDistrictsOrigin.value.length) {
-    limitDistrictOrigin.value += 10;
-  }
-};
-
-
-
-
-
-
-// tujuan provinsi 
-const provinceDestination = ref("0");
-// const provinceDestination = ref<any[]>([]) // langsung array kosong di awal
+// provinsi untuk tujuan
 const searchProvinceDestination = ref("");
-const showProvinceDropdownDestination = ref(false);
+// const provinceDestination = ref("");
+const showDropdownDestination = ref(false);
+
 const filteredProvincesDestination = computed(() => {
   return provinceDestination.value.filter((prov) =>
     prov.name.toLowerCase().includes(searchProvinceDestination.value.toLowerCase())
   );
 });
+
+const hideDropdownWithDelay = () => {
+  setTimeout(() => {
+    showDropdownDestination.value = false;
+  }, 200);
+};
+import { useField, } from "vee-validate";
+
+// const { setFieldValue } = useForm();
+
 const selectProvinceDestination = (prov: { id: string; name: string }) => {
-  // console.log("select: ", prov);
   searchProvinceDestination.value = prov.name;
   provinceDestination.value = prov.id;
-  // setFieldValue("provinceDestination", prov.id); // sync ke VeeValidate
+  setFieldValue("provinceDestination", prov.id); // agar tersimpan di form
+  showDropdownDestination.value = false;
   fetchCities("destination");
-  showProvinceDropdownDestination.value = false;
 };
-// const hideProvinceDropdownDestinationWithDelay = () => {
-//   setTimeout(() => {
-//     showProvinceDropdownDestination.value = false;
-//   }, 200);
-// };
-const limitProvinceDestination = ref(10);
-const displayedProvincesDestination = computed(() =>
-  filteredProvincesDestination.value.slice(0, limitProvinceDestination.value)
-);
-const loadMoreProvincesDestination = () => {
-  if (limitProvinceDestination.value < filteredProvincesDestination.value.length) {
-    limitProvinceDestination.value += 10;
-  }
-};
-watch(searchProvinceDestination, () => {
-  limitProvinceDestination.value = 10;
-});
-
-
-
-// tujuan kota
-const citiesDestination = ref<Record<string, string>>({})
-const cityDestination = ref("");
-const searchCityDestination = ref("");
-const showCityDropdownDestination = ref(false);
-const filteredCitiesDestination = computed(() => {
-  return citiesDestination.value.filter((city) =>
-    city.name.toLowerCase().includes(searchCityDestination.value.toLowerCase())
-  );
-});
-const selectCityDestination = (city: { id: string; name: string }) => {
-  searchCityDestination.value = city.name;
-  cityDestination.value = city.id;
-  setFieldValue("cityDestination", city.id); // sync ke VeeValidate
-  showCityDropdownDestination.value = false;
-  fetchDistricts("destination");
-};
-// const hideCityDropdownDestinationWithDelay = () => {
-//   setTimeout(() => {
-//     showCityDropdownDestination.value = false;
-//   }, 200);
-// };
-watch(searchCityDestination, () => {
-  limitCityDestination.value = 10;
-});
-
-
-// tujuan kecamatan
-const districtsDestination = ref<{ id: string; name: string }[]>([]);
-const districtDestination = ref("");
-const searchDistrictDestination = ref("");
-const showDistrictDropdownDestination = ref(false);
-
-
-const filteredDistrictsDestination = computed(() => {
-  return districtsDestination.value.filter((d) =>
-    d.name.toLowerCase().includes(searchDistrictDestination.value.toLowerCase())
-  );
-});
-const limitDistrictDestination = ref(10);
-const selectDistrictDestination = (d: { id: string; name: string }) => {
-  searchDistrictDestination.value = d.name;
-  districtDestination.value = d.id;
-  setFieldValue("districtDestination", d.id);
-  showDistrictDropdownDestination.value = false;
-};
-// const hideDistrictDropdownDestinationWithDelay = () => {
-//   setTimeout(() => {
-//     showDistrictDropdownDestination.value = false;
-//   }, 200);
-// };
-const limitCityDestination = ref(10);
-const displayedCitiesDestination = computed(() => {
-  return filteredCitiesDestination.value.slice(0, limitCityDestination.value);
-});
-const loadMoreCitiesDestination = () => {
-  if (limitCityDestination.value < filteredCitiesDestination.value.length) {
-    limitCityDestination.value += 10;
-  }
-};
-const displayedDistrictsDestination = computed(() => {
-  return filteredDistrictsDestination.value.slice(0, limitDistrictDestination.value);
-});
-
-const loadMoreDistrictsDestination = () => {
-  if (limitDistrictDestination.value < filteredDistrictsDestination.value.length) {
-    limitDistrictDestination.value += 10;
-  }
-};
-
-
-
-
-
-
-// const selectProvinceDestination = (p) => {
-//   searchProvinceDestination.value = p.name
-//   setFieldValue('provinceDestination', p.name)
-//   showProvinceDropdownDestination.value = false
-// }
 
 // ==========================
 // API Lokasi
@@ -347,38 +158,108 @@ const loadMoreDistrictsDestination = () => {
 //   }
 // };
 // kota untuk tujuan
+const searchCityDestination = ref("");
+// const cityDestination = ref("");
+const showCityDropdownDestination = ref(false);
 
+const filteredCitiesDestination = computed(() => {
+  return citiesDestination.value.filter((city) =>
+    city.name.toLowerCase().includes(searchCityDestination.value.toLowerCase())
+  );
+});
+
+const selectCityDestination = (city: { id: string; name: string }) => {
+  searchCityDestination.value = city.name;
+  cityDestination.value = city.id;
+  setFieldValue("cityDestination", city.id); // sync ke VeeValidate
+  showCityDropdownDestination.value = false;
+  fetchDistricts("destination");
+};
+
+const hideCityDropdownWithDelay = () => {
+  setTimeout(() => {
+    showCityDropdownDestination.value = false;
+  }, 200);
+};
 
 // ==========================
 // Kecamatan untuk tujuan
 // ==========================
+const searchDistrictDestination = ref("");
+const showDistrictDropdownDestination = ref(false);
 
-// const displayedDistrictsDestination = computed(() =>
-//   filteredDistrictsDestination.value.slice(0, limitDistrictDestination.value)
-// );
-// const loadMoreDistrictsDestination = () => {
-//   if (
-//     limitDistrictDestination.value < filteredDistrictsDestination.value.length
-//   ) {
-//     limitDistrictDestination.value += 10;
-//   }
-// };
+const filteredDistrictsDestination = computed(() => {
+  return districtsDestination.value.filter((d) =>
+    d.name.toLowerCase().includes(searchDistrictDestination.value.toLowerCase())
+  );
+});
 
+const selectDistrictDestination = (d: { id: string; name: string }) => {
+  searchDistrictDestination.value = d.name;
+  districtDestination.value = d.id;
+  setFieldValue("districtDestination", d.id);
+  showDistrictDropdownDestination.value = false;
+};
 
+const hideDistrictDropdownDestinationWithDelay = () => {
+  setTimeout(() => {
+    showDistrictDropdownDestination.value = false;
+  }, 200);
+};
 
-// const searchProvinceDestination = ref('')
-// const filteredProvincesDestination = ref([])
-// const displayedProvincesDestination = ref([])
 
 // ini untuk provinsi asal
 // const provinceOrigin = ref("");
+const searchProvinceOrigin = ref("");
+const showProvinceDropdownOrigin = ref(false);
 
+const filteredProvincesOrigin = computed(() => {
+  return provinceOrigin.value.filter((prov) =>
+    prov.name.toLowerCase().includes(searchProvinceOrigin.value.toLowerCase())
+  );
+});
+
+const selectProvinceOrigin = (prov: { id: string; name: string }) => {
+  searchProvinceOrigin.value = prov.name;
+  provinceOrigin.value = prov.id;
+  setFieldValue("provinceOrigin", prov.id); // sync ke VeeValidate
+  fetchCities("origin");
+  showProvinceDropdownOrigin.value = false;
+};
+
+const hideProvinceDropdownOriginWithDelay = () => {
+  setTimeout(() => {
+    showProvinceDropdownOrigin.value = false;
+  }, 200);
+};
 
 // kota untuk asal
-watch(provinceDestination, () => {
-  console.log(provinceDestination.value);
-})
-// ngambil data provinsi dari tabel
+const searchCityOrigin = ref("");
+// const cityOrigin = ref("");
+const showCityDropdownOrigin = ref(false);
+
+const filteredCitiesOrigin = computed(() => {
+  return citiesOrigin.value.filter((city) =>
+    city.name.toLowerCase().includes(searchCityOrigin.value.toLowerCase())
+  );
+});
+
+const selectCityOrigin = (city: { id: string; name: string }) => {
+  searchCityOrigin.value = city.name;
+  cityOrigin.value = city.id;
+  setFieldValue("cityOrigin", city.id); // sync ke VeeValidate
+  showCityDropdownOrigin.value = false;
+  fetchDistricts("origin");
+};
+
+const hideCityDropdownOriginWithDelay = () => {
+  setTimeout(() => {
+    showCityDropdownOrigin.value = false;
+  }, 200);
+};
+
+const provinceDestination = ref<{ id: string; name: string }[]>([])
+
 const fetchProvinces = async () => {
   try {
     const res = await axios.get("/provinces");
@@ -397,8 +278,6 @@ const fetchProvinces = async () => {
     toast.error("Gagal mengambil provinsi");
   }
 };
-
-// ngambil data kota dari database
 const fetchCities = async (type: "origin" | "destination") => {
   const provId = type === "origin" ? provinceOrigin.value : provinceDestination.value;
   if (provId === "0") return;
@@ -411,7 +290,7 @@ const fetchCities = async (type: "origin" | "destination") => {
     //   citiesDestination.value = res.data;
     //   cityDestination.value = "";
     // }
-    //f Di fetchCities
+    // Di fetchCities
     if (type === "origin") {
       citiesOrigin.value = Object.entries(res.data).map(([id, name]) => ({
         id,
@@ -423,13 +302,13 @@ const fetchCities = async (type: "origin" | "destination") => {
         id,
         name,
       }));
+
     }
+
   } catch {
     toast.error("Gagal mengambil kota");
   }
 };
-
-//ngambil data kecamatan dari tabel
 const fetchDistricts = async (type: "origin" | "destination") => {
   const cityId = type === "origin" ? cityOrigin.value : cityDestination.value;
   if (!cityId) return;
@@ -448,8 +327,32 @@ const fetchDistricts = async (type: "origin" | "destination") => {
   }
 };
 
+// ==========================
+// Kecamatan untuk asal
+// ==========================
+const searchDistrictOrigin = ref("");
+const showDistrictDropdownOrigin = ref(false);
 
-// perbaiki ini
+const filteredDistrictsOrigin = computed(() => {
+  return districtsOrigin.value.filter((d) =>
+    d.name.toLowerCase().includes(searchDistrictOrigin.value.toLowerCase())
+  );
+});
+
+const selectDistrictOrigin = (d: { id: string; name: string }) => {
+  searchDistrictOrigin.value = d.name;
+  districtOrigin.value = d.id;
+  setFieldValue("districtOrigin", d.id);
+  showDistrictDropdownOrigin.value = false;
+};
+
+const hideDistrictDropdownOriginWithDelay = () => {
+  setTimeout(() => {
+    showDistrictDropdownOrigin.value = false;
+  }, 200);
+};
+
+
 
 const fetchOngkir = async () => {
   // Validasi input ongkir
@@ -467,20 +370,19 @@ const fetchOngkir = async () => {
   try {
     block(document.getElementById("form-transaksii"));
     const res = await axios.post("/cost", {
-      // origin: cityOrigin.value,
-      // destination: cityDestination.value,
+      origin: cityOrigin.value,
+      destination: cityDestination.value,
       origin: districtOrigin.value,
       destination: districtDestination.value,
       weight: Math.round(berat_barang.value * 1000),
       courier: selectedCourier.value,
-      price: "lowest" // default sesuai backend
     });
 
     services.value = res.data.map((s: any) => ({
       service: s.service,
       description: s.description,
-      cost: s.cost,
-      etd: s.cost,
+      cost: s.cost[0].value,
+      etd: s.cost[0].etd,
     }));
 
     selectedService.value = "";
@@ -533,7 +435,7 @@ const onSubmit = () => {
   formData.append("asal_provinsi_id", provinceOrigin.value);
   formData.append("asal_kota_id", cityOrigin.value);
   formData.append("asal_kecamatan_id", districtOrigin.value);
-  formData.append("alamat_asal", transaksi.value.alamat_asal);
+  formData.append("alamat_asal", transaksi.value.alamat_asal || "");
   formData.append("ekspedisi", selectedCourier.value);
   formData.append("layanan", selectedService.value);
   formData.append("berat_barang", berat_barang.value?.toString() || "0");
@@ -609,35 +511,24 @@ onMounted(fetchProvinces);
         </div>
 
         <!-- Provinsi Tujuan -->
-        <!-- Provinsi Tujuan -->
-        <div class="col-md-4 mb-7 position-relative mt-4">
+        <div class="col-md-4 mb-7 mt-4 position-relative">
           <label class="form-label required fw-bold">Provinsi Tujuan</label>
 
           <Field name="provinceDestination" v-model="searchProvinceDestination">
             <input type="text" class="form-control" v-model="searchProvinceDestination"
-              placeholder="Ketik Provinsi Tujuan" @focus="showProvinceDropdownDestination = true"
-              @blur="hideProvinceDropdownDestinationWithDelay" autocomplete="off" />
+              placeholder="Ketik Provinsi Tujuan" @focus="showDropdownDestination = true" @blur="hideDropdownWithDelay"
+              autocomplete="off" />
           </Field>
-
           <ErrorMessage name="provinceDestination" class="text-danger small" />
 
-          <ul v-if="showProvinceDropdownDestination && filteredProvincesDestination.length"
-            class="list-group position-absolute w-100" style="z-index: 2000; max-height: 200px; overflow-y: auto;"
-            @scroll.passive="(e) => {
-              const el = e.target;
-              if (el.scrollTop + el.clientHeight >= el.scrollHeight) {
-                loadMoreProvincesDestination();
-              }
-            }">
-            <li v-for="p in displayedProvincesDestination" :key="p.id" class="list-group-item list-group-item-action"
-              @mousedown.prevent="selectProvinceDestination(p)">
-              {{ p.name }}
+          <ul v-if="showDropdownDestination && filteredProvincesDestination.length"
+            class="list-group position-absolute w-100" style="z-index: 1000;">
+            <li v-for="prov in filteredProvincesDestination" :key="prov.id"
+              class="list-group-item list-group-item-action" @mousedown.prevent="selectProvinceDestination(prov)">
+              {{ prov.name }}
             </li>
           </ul>
         </div>
-
-
-
 
         <!-- Kota Tujuan -->
         <div class="col-md-4 mb-7 position-relative">
@@ -645,26 +536,18 @@ onMounted(fetchProvinces);
 
           <Field name="citiesDestination" v-model="searchCityDestination">
             <input type="text" class="form-control" v-model="searchCityDestination" placeholder="Ketik Kota Tujuan"
-              @focus="showCityDropdownDestination = true" @blur="hideCityDropdownDestinationWithDelay"
-              autocomplete="off" />
+              @focus="showCityDropdownDestination = true" @blur="hideCityDropdownWithDelay" autocomplete="off" />
           </Field>
           <ErrorMessage name="citiesDestination" class="text-danger small" />
 
           <ul v-if="showCityDropdownDestination && filteredCitiesDestination.length"
-            class="list-group position-absolute w-100" style="z-index: 1000; max-height: 200px; overflow-y: auto;"
-            @scroll.passive="(e) => {
-              const el = e.target;
-              if (el.scrollTop + el.clientHeight >= el.scrollHeight) {
-                loadMoreCitiesDestination();
-              }
-            }">
-            <li v-for="c in displayedCitiesDestination" :key="c.id" class="list-group-item list-group-item-action"
-              @mousedown.prevent="selectCityDestination(c)">
-              {{ c.name }}
+            class="list-group position-absolute w-100" style="z-index: 1000;">
+            <li v-for="city in filteredCitiesDestination" :key="city.id" class="list-group-item list-group-item-action"
+              @mousedown.prevent="selectCityDestination(city)">
+              {{ city.name }}
             </li>
           </ul>
         </div>
-
 
         <!-- Kecamatan Tujuan -->
         <div class="col-md-4 mb-7 position-relative">
@@ -678,20 +561,13 @@ onMounted(fetchProvinces);
           <ErrorMessage name="districtDestination" class="text-danger small" />
 
           <ul v-if="showDistrictDropdownDestination && filteredDistrictsDestination.length"
-            class="list-group position-absolute w-100" style="z-index: 1000; max-height: 200px; overflow-y: auto;"
-            @scroll.passive="(e) => {
-              const el = e.target;
-              if (el.scrollTop + el.clientHeight >= el.scrollHeight) {
-                loadMoreDistrictsDestination();
-              }
-            }">
-            <li v-for="d in displayedDistrictsDestination" :key="d.id" class="list-group-item list-group-item-action"
+            class="list-group position-absolute w-100" style="z-index: 1000;">
+            <li v-for="d in filteredDistrictsDestination" :key="d.id" class="list-group-item list-group-item-action"
               @mousedown.prevent="selectDistrictDestination(d)">
               {{ d.name }}
             </li>
           </ul>
         </div>
-
 
 
 
@@ -744,6 +620,16 @@ onMounted(fetchProvinces);
         </div>
 
         <!-- Provinsi Asal -->
+        <!-- <div class="col-md-4 mb-7 ">
+          <label class="form-label required fw-bold">Provinsi Asal</label>
+          <Field as="select" name="provinceOrigin" v-model="provinceOrigin" class="form-control"
+            @change="fetchCities('origin')">
+            <option value="0">-- Pilih Provinsi Asal --</option>
+            <option v-for="(name, id) in provinces" :key="id" :value="id">{{ name }}</option>
+          </Field as="select">
+          <ErrorMessage name="provinceOrigin" class="text-danger small" />
+        </div> -->
+        <!-- Provinsi Asal -->
         <div class="col-md-4 mb-7 position-relative">
           <label class="form-label required fw-bold">Provinsi Asal</label>
 
@@ -755,22 +641,25 @@ onMounted(fetchProvinces);
           <ErrorMessage name="provinceOrigin" class="text-danger small" />
 
           <ul v-if="showProvinceDropdownOrigin && filteredProvincesOrigin.length"
-            class="list-group position-absolute w-100" style="z-index: 1000; max-height: 200px; overflow-y: auto;"
-            @scroll.passive="(e) => {
-              const el = e.target;
-              if (el.scrollTop + el.clientHeight >= el.scrollHeight) {
-                loadMoreProvincesOrigin();
-              }
-            }">
-            <li v-for="p in displayedProvincesOrigin" :key="p.id" class="list-group-item list-group-item-action"
-              @mousedown.prevent="selectProvinceOrigin(p)">
-              {{ p.name }}
+            class="list-group position-absolute w-100" style="z-index: 1000;">
+            <li v-for="prov in filteredProvincesOrigin" :key="prov.id" class="list-group-item list-group-item-action"
+              @mousedown.prevent="selectProvinceOrigin(prov)">
+              {{ prov.name }}
             </li>
           </ul>
         </div>
 
 
-
+        <!-- Kota Asal -->
+        <!-- <div class="col-md-4 mb-7">
+          <label class="form-label required fw-bold">Kota Asal</label>
+          <Field as="select" name="cityOrigin" v-model="cityOrigin" class="form-control">
+            <option value="">-- Pilih Kota Asal --</option>
+            <option v-for="(name, id) in citiesOrigin" :key="id" :value="id">{{ name }}</option>
+          </Field as="select">
+          <ErrorMessage name="cityOrigin" class="text-danger small" />
+          <!-- <div v-if="ErrorMessage" name="cityOrigin" class="text-danger">{{ errors.cityOrigin }}</div> 
+        </div> -->
         <!-- Kota Asal -->
         <div class="col-md-4 mb-7 position-relative">
           <label class="form-label required fw-bold">Kota Asal</label>
@@ -782,19 +671,13 @@ onMounted(fetchProvinces);
           <ErrorMessage name="citiesOrigin" class="text-danger small" />
 
           <ul v-if="showCityDropdownOrigin && filteredCitiesOrigin.length" class="list-group position-absolute w-100"
-            style="z-index: 1000; max-height: 200px; overflow-y: auto;" @scroll.passive="(e) => {
-              const el = e.target;
-              if (el.scrollTop + el.clientHeight >= el.scrollHeight) {
-                loadMoreCitiesOrigin();
-              }
-            }">
-            <li v-for="c in displayedCitiesOrigin" :key="c.id" class="list-group-item list-group-item-action"
-              @mousedown.prevent="selectCityOrigin(c)">
-              {{ c.name }}
+            style="z-index: 1000;">
+            <li v-for="city in filteredCitiesOrigin" :key="city.id" class="list-group-item list-group-item-action"
+              @mousedown.prevent="selectCityOrigin(city)">
+              {{ city.name }}
             </li>
           </ul>
         </div>
-
 
 
         <!-- Kecamatan Asal -->
@@ -809,14 +692,8 @@ onMounted(fetchProvinces);
           <ErrorMessage name="districtOrigin" class="text-danger small" />
 
           <ul v-if="showDistrictDropdownOrigin && filteredDistrictsOrigin.length"
-            class="list-group position-absolute w-100" style="z-index: 1000; max-height: 200px; overflow-y: auto;"
-            @scroll.passive="(e) => {
-              const el = e.target;
-              if (el.scrollTop + el.clientHeight >= el.scrollHeight) {
-                loadMoreDistrictsOrigin();
-              }
-            }">
-            <li v-for="d in displayedDistrictsOrigin" :key="d.id" class="list-group-item list-group-item-action"
+            class="list-group position-absolute w-100" style="z-index: 1000;">
+            <li v-for="d in filteredDistrictsOrigin" :key="d.id" class="list-group-item list-group-item-action"
               @mousedown.prevent="selectDistrictOrigin(d)">
               {{ d.name }}
             </li>
@@ -824,11 +701,10 @@ onMounted(fetchProvinces);
         </div>
 
 
-
         <!-- Alamat Asal -->
         <div class="col-md-4 mb-7">
           <label class="form-label required fw-bold">Alamat Pengambilan Barang</label>
-          <Field type="text" name="alamat_asal" v-model="alamat_asal" class="form-control"
+          <Field type="text" name="alamat_asal" v-model="transaksi.alamat_asal" class="form-control"
             placeholder="Masukan Alamat Lengkap" />
           <ErrorMessage name="alamat_asal" class="text-danger small" />
         </div>
@@ -897,8 +773,7 @@ onMounted(fetchProvinces);
       <ErrorMessage name="provinceDestination" class="text-danger" />
       <ErrorMessage name="citiesDestination" class="text-danger" />
       <ErrorMessage name="kurir" class="text-danger" />
-      <ErrorMessage name="alamat_asal" class="text-danger" />
-      <!-- <ErrorMessage name="layanan" class="text-danger" /> -->
+      <ErrorMessage name="layanan" class="text-danger" />
       <ErrorMessage name="berat_barang" class="text-danger" />
 
 

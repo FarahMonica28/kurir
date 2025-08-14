@@ -50,13 +50,21 @@ Route::middleware(['auth', 'json'])->prefix('auth')->group(function () {
 Route::prefix('setting')->group(function () {
     Route::get('', [SettingController::class, 'index']);
 });
-Route::get('/rajaongkir/provinces', [RajaOngkirController::class, 'getProvinces']);
-Route::get('/rajaongkir/cities', [RajaOngkirController::class, 'getCities']);
-Route::get('/province', [CheckOngkirController::class, 'getProvinces']);
-Route::get('/cities/{province_id}', [CheckOngkirController::class, 'getCities']);
-Route::post('/ongkir', [CheckOngkirController::class, 'checkOngkir']);
+// Route::get('/rajaongkir/provinces', [RajaOngkirController::class, 'getProvinces']);
+// Route::get('/rajaongkir/cities', [RajaOngkirController::class, 'getCities']);
+// Route::get('/province', [CheckOngkirController::class, 'getProvinces']);
+// Route::get('/cities/{province_id}', [CheckOngkirController::class, 'getCities']);
+// Route::post('/ongkir', [CheckOngkirController::class, 'checkOngkir']);
     // Route::post('/track-waybill', [CheckOngkirController::class, 'trackWaybill']);
 
+
+// baru
+// Route::get('/provinces', [RajaOngkirController::class, 'index']);
+// //route to get cities based on province ID
+// Route::get('/cities/{provinceId}', [RajaOngkirController::class, 'getCities']);
+// Route::get('/districts/{cityId}', [RajaOngkirController::class, 'getDistricts']);
+// //route to post shipping cost
+// Route::post('/check-ongkir', [RajaOngkirController::class, 'checkOngkir']);
     
     
 Route::post('/transaksii', [TransaksiiController::class, 'index']);
@@ -64,7 +72,10 @@ Route::get('/transaksii/{id}', [TransaksiiController::class, 'get']);
 Route::post('/transaksii/store', [TransaksiiController::class, 'store']);
 Route::get('/provinces', [TransaksiiController::class, 'getProvinces']);
 Route::get('/cities/{provinceId}', [TransaksiiController::class, 'getCities']);
-Route::post('/cost', [TransaksiiController::class, 'hitungOngkir']);
+Route::get('/districts/{cityId}', [TransaksiiController::class, 'getDistricts']);
+Route::post('/cost', [TransaksiiController::class, 'checkOngkir']);
+Route::post('/cek-ongkir', [TransaksiiController::class, 'cekOngkir']);
+
     // routes/api.php
 Route::put('/transaksii/{id}/antar', [TransaksiiController::class, 'antar']);
 Route::put('/transaksii/{id}/ambil', action: [TransaksiiController::class, 'ambil']);
@@ -110,14 +121,14 @@ Route::get('/cek-ongkir', [BinderbyteController::class, 'cekOngkir']);
 Route::get('/cek-resi', [BinderbyteController::class, 'cekResi']);
 Route::get('/ongkir', [ShippingController::class, 'checkOngkir']);
 
-Route::get('/cek-ongkir', function (Request $request, ShippingController $controller) {
-    return $controller->getShippingCost(
-        $request->input('origin'),
-        $request->input('destination'),
-        $request->input('weight'),
-        $request->input('courier')
-    );
-});
+// Route::get('/cek-ongkir', function (Request $request, ShippingController $controller) {
+//     return $controller->getShippingCost(
+//         $request->input('origin'),
+//         $request->input('destination'),
+//         $request->input('weight'),
+//         $request->input('courier')
+//     );
+// });
 
 
 Route::post('/ongkirr', [BinderbyteController::class, 'cekOngkir']);

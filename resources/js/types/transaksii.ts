@@ -27,11 +27,19 @@ export interface transaksii {
         id: number;
         name: string;
     }
+    asal_kecamatan_id: {
+        id: number;
+        name: string;
+    }
     tujuan_provinsi_id: {
         id: number;
         name: string;
     }
     tujuan_kota_id: {
+        id: number;
+        name: string;v
+    }
+    tujuan_kecamatan_id: {
         id: number;
         name: string;v
     }

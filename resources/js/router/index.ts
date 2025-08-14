@@ -31,6 +31,9 @@ const routes: Array<RouteRecordRaw> = [
         path: "/",
         redirect: "/dashboard_pengguna",// component: DashboardLay, // ✅ Gunakan layout
         component: () => import("@/pages/dashboard_pengguna/app.vue"),
+        meta: {
+            middleware: "auth",
+        },
         children: [
                 {
                     path: "/dashboard_pengguna", // akan render Index.vue sebagai default child
@@ -55,7 +58,7 @@ const routes: Array<RouteRecordRaw> = [
                     name: "dashboard_pengguna.order",
                     component: () =>import ("@/pages/dashboard/transaksii/order/index.vue"),
                     meta: {
-                        pageTitle: "Riwayat",
+                        pageTitle: "Order",
                         breadcrumbs: ["Transaksii", "Riwayat"],
                     },
                 },
@@ -73,8 +76,8 @@ const routes: Array<RouteRecordRaw> = [
                     name: "dashboard_pengguna.tracking",
                     component: () =>import ("@/pages/dashboard/tracking/index.vue"),
                     meta: {
-                        pageTitle: "Riwayat",
-                        breadcrumbs: ["Transaksii", "Riwayat"],
+                        pageTitle: "Tracking",
+                        breadcrumbs: ["Transaksii", "Tracking"],
                     },
                 },
 

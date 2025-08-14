@@ -3,7 +3,7 @@ import { ref } from 'vue';
 
 // Komponen halaman
 import DashboardHome from '@/pages/dashboardk/beranda.vue' // ← Tambahkan file ini
-import Check from "@/pages/dashboard/transaksii/ongkir/ongkir.vue";
+import Check from "@/pages/dashboard/transaksii/ongkir/ongkir.vu";
 // import OrderPage from "@/pages/dashboard/transaksi/order/index.vue";
 import RiwayatPage from "@/pages/dashboard/transaksii/riwayat/index.vue";
 import OrdePage from "@/pages/dashboard/transaksii/order/index.vue";
@@ -28,7 +28,7 @@ const currentTab = ref<'dashboard' | 'ongkir' | 'order' | 'orde' | 'riwayat' | '
         <div class="d-flex align-items-center gap-2">
           <button class="btn btn-outline-light" :class="{ 'fw-bold': currentTab === 'dashboard' }"
             @click="currentTab = 'dashboard'">
-            Dashboard 
+            Dashboard
           </button>
           <!-- <button
         class="btn btn-outline-light"
@@ -63,8 +63,8 @@ const currentTab = ref<'dashboard' | 'ongkir' | 'order' | 'orde' | 'riwayat' | '
         </div>
 
         <!-- Tambahkan bagian login di kanan -->
-         <!-- gunakan ml-auto untuk Bootstrap 4 -->
-        <ul class="navbar-nav ms-auto"> 
+        <!-- gunakan ml-auto untuk Bootstrap 4 -->
+        <ul class="navbar-nav ms-auto">
           <li class="nav-item">
             <router-link to="/" class="nav-link">
               Login
@@ -109,7 +109,7 @@ body {
 /* button{
    background-color: blue; 
 } */
- .navbar {
+.navbar {
   padding-left: 1rem;
   padding-right: 1rem;
 }
@@ -132,6 +132,6 @@ body {
 }
 
 .navbar .nav-link.btn-login:hover {
-  background-color: rgba(255,255,255,0.2);
+  background-color: rgba(255, 255, 255, 0.2);
 }
 </style>

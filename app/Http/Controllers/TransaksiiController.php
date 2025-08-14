@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\City;
+use App\Models\District;
 use App\Models\Pembayaran;
 use App\Models\Pengguna;
 use App\Models\Province;
@@ -40,44 +42,84 @@ class TransaksiiController extends Controller
         // Ambil daftar kota berdasarkan provinsi
         public function getCities($provinceId)
         {
-            $response = Http::withHeaders([
-                'key' => env('RAJAONGKIR_API_KEY'),
-            ])->get('https://api.rajaongkir.com/starter/city?province=' . $provinceId);
+            // $response = Http::withHeaders([
+            //     'key' => env('RAJAONGKIR_API_KEY'),
+            // ])->get('https://api.rajaongkir.com/starter/city?province=' . $provinceId);
 
-            $cities = collect($response['rajaongkir'])
-                ->pluck('city_name', 'city_id');
+            // $cities = collect($response['rajaongkir'])
+            //     ->pluck('name', 'id');
+            // $cities = City::all()->pluck('name','id');
+            $cities = City::where('province_id', $provinceId)->pluck('name', 'id');
+
 
             return response()->json($cities);
         }
 
-        public function hitungOngkir(Request $request)
+        public function getDistricts($cityId)
         {
-            $response = Http::withHeaders([
-                'key' => config('services.rajaongkir.key')
-            ])->post('https://api.rajaongkir.com/starter/cost', [
-                'origin' => $request->origin,
-                'destination' => $request->destination,
-                'weight' => $request->weight, // dalam gram
-                'courier' => $request->courier, // jne / tiki / pos
+            // $response = Http::withHeaders([
+            //     'key' => env('RAJAONGKIR_API_KEY'),
+            // ])->get('https://pro.rajaongkir.com/api/subdistrict?city=' . $cityId);
+
+            // $districts = collect($response['rajaongkir']['results'])
+            //     ->pluck('name', 'id');
+            // $districts = District::all()->pluck('name','id');
+            $districts = District::where('city_id', $cityId)->pluck('name', 'id');
+
+            
+
+            return response()->json($districts);
+        }
+
+
+        public function checkOngkir(Request $request)
+        {
+            Log::info('Check Ongkir', [
+                'origin' => $request->input('origin'),
+                'destination' => $request->input('destination'),
+                'weight' => $request->input('weight'),
+                'courier' => $request->input('courier'),
             ]);
 
-            Log::info("Cost", $response['rajaongkir']);
+            //tambahkan ini
+            $response = Http::asForm()->withHeaders([
+                'key' => 'Iq46S5Xid89d001ddb978fd9VRa0Z0bw', // Ambil dari config/ENV
+                'Accept' => 'application/json',
+            ])->post('https://rajaongkir.komerce.id/api/v1/calculate/domestic-cost', [
+            // ])->post('https://rajaongkir.komerce.id/api/v1/calculate/district/domestic-cost', [
+                'origin'      => $request->input('origin'),       // ID kecamatan asal  
+                'destination' => $request->input('destination'),  // ID kecamatan tujuan
+                'weight'      => $request->input('weight'),       // Berat gram
+                'courier'     => $request->input('courier'),      // jne, tiki, pos
+                'price'       => "lowest", // lowest / highest, default lowest 
+            ]);
 
-            $cost = $response['rajaongkir']['results'][0]['costs'];
+            $data = $response->json();
 
-            return response()->json($cost);
+            if ($response->successful() && isset($data['data'])) {
+                return response()->json($data['data'], 200);
+            }
+
+            return response()->json([
+                'error' => 'Gagal mengambil data ongkir',
+                'response' => $data
+            ], 500);
         }
+
+
+
 
 
     
     public function get($id)
     {
-        $transaksii = Transaksii::with(['asalProvinsi', 'asalKota', 'tujuanProvinsi', 'tujuanKota'])->with('pengiriman.kurir.user')
+        $transaksii = Transaksii::with(['asalProvinsi', 'asalKota', 'tujuanProvinsi', 'tujuanKota', 'asalKecamatan', 'tujuanKecamatan'])->with('pengiriman.kurir.user')
         // $transaksii = Transaksii::with(['asalProvinsi', 'asalKota', 'tujuanProvinsi', 'tujuanKota', 'pengguna'])
             ->findOrFail($id);
 
         return response()->json($transaksii);
     }
+
     public function show($id)
     {
         $transaksii = Transaksii::with(['pengiriman.kurir.user'])->find($id);
@@ -100,7 +142,7 @@ class TransaksiiController extends Controller
 
         // Ambil data transaksi lengkap dengan relasi: provinsi/kota asal-tujuan, pengiriman, pengguna, dan kurir
         $data = Transaksii::with([
-                'asalProvinsi', 'asalKota', 'tujuanProvinsi', 'tujuanKota',
+                'asalProvinsi', 'asalKota', 'tujuanProvinsi', 'tujuanKota', 'asalKecamatan', 'tujuanKecamatan',
                 'pengiriman.kurir.user', // relasi ke kurir pengiriman
                 'pengguna.user', 'kurir'
             ])
@@ -188,6 +230,7 @@ class TransaksiiController extends Controller
             'no_hp_pengirim' => 'required|string',
             'tujuan_provinsi_id' => 'required|exists:provinces,id',
             'tujuan_kota_id' => 'required|exists:cities,id',
+            'tujuan_kecamatan_id' => 'required|exists:districts,id',
             'alamat_tujuan' => 'required|string',
             'nama_barang' => 'required|string',
             'berat_barang' => 'required|numeric|min:0.01',
@@ -196,6 +239,7 @@ class TransaksiiController extends Controller
             'biaya' => 'required|integer',
             'asal_provinsi_id' => 'required|exists:provinces,id',
             'asal_kota_id' => 'required|exists:cities,id',
+            'asal_kecamatan_id' => 'required|exists:districts,id',
             'alamat_asal' => 'required|string',
             'waktu' => 'nullable|date|before_or_equal:now',
             'rating' => 'nullable|integer|min:1|max:5',
@@ -232,8 +276,10 @@ class TransaksiiController extends Controller
             'waktu' => now(),
             'asal_provinsi_id' => $validated['asal_provinsi_id'],
             'asal_kota_id' => $validated['asal_kota_id'],
+            'asal_kecamatan_id' => $validated['asal_kecamatan_id'],
             'tujuan_provinsi_id' => $validated['tujuan_provinsi_id'],
             'tujuan_kota_id' => $validated['tujuan_kota_id'],
+            'tujuan_kecamatan_id' => $validated['tujuan_kecamatan_id'],
             'status_pembayaran' => 'pending',
             'pengguna_id' => $pengguna->pengguna_id
         ]);

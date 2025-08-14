@@ -10,6 +10,7 @@ class Province extends Model
     use HasFactory;
 
     protected $guarded = [];
+        protected $table = 'provinces';
 
     /**
      * Relasi: Province memiliki banyak kota.

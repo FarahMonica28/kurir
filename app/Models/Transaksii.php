@@ -17,7 +17,7 @@ class Transaksii extends Model
         'no_resi', 'penerima', 'pengirim', 'no_hp_penerima', 'status', 'alamat_asal', 'alamat_tujuan', 'nama_barang',
         'berat_barang', 'ekspedisi', 'layanan', 'biaya', 'waktu',
         'status', 'rating', 'komentar',
-        'asal_provinsi_id', 'asal_kota_id', 'tujuan_provinsi_id', 'tujuan_kota_id',
+        'asal_provinsi_id', 'asal_kota_id', 'tujuan_provinsi_id', 'tujuan_kota_id', 'asal_kecamatan_id', 'tujuan_kecamatan_id',
         'pengguna_id', 'pernah_digudang', 'status_pembayaran', 'no_hp_pengirim',
     ];
 
@@ -43,6 +43,12 @@ class Transaksii extends Model
 
     public function tujuanKota() {
         return $this->belongsTo(City::class, 'tujuan_kota_id');
+    }
+    public function asalKecamatan() {
+        return $this->belongsTo(District::class, 'asal_kecamatan_id');
+    }
+    public function tujuanKecamatan() {
+        return $this->belongsTo(District::class, 'tujuan_kecamatan_id');
     }
 
     // public function pengguna() {

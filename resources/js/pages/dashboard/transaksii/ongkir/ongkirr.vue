@@ -69,7 +69,7 @@ onMounted(() => {
 // Fungsi hitung ongkir
 const cekOngkir = async () => {
   try {
-    const res = await axios.post('/ongkir', form.value)
+    const res = await axios.post('/cost', form.value)
     const data = res.data
 
     if (data.status === 200 && data.results.length) {

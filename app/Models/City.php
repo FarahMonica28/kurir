@@ -9,7 +9,14 @@ class City extends Model
 {
     use HasFactory;
 
-    protected $guarded = [];
+    protected $table = 'cities';
+
+    protected $fillable = [
+        'province_id',
+        // 'city_id',
+        'name',
+        'id'
+    ];
 
     /**
      * Relasi: City milik sebuah Province.
