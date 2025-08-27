@@ -29,7 +29,7 @@ class PengirimanController extends Controller
         DB::statement(query: 'set @no=0+' . $page * $per);
         // $pengiriman = Pengiriman::with('user')
         // Pengiriman::with('kurir.user');
-       $data = Pengiriman::with('transaksii.pengguna.user')->with('kurir.user')->with('transaksii.asalProvinsi', 'transaksii.asalKota', 'transaksii.tujuanProvinsi', 'transaksii.tujuanKota', )// tambahkan ini
+       $data = Pengiriman::with('transaksii.pengguna.user')->with('kurir.user')->with('transaksii.asalProvinsi', 'transaksii.asalKota','transaksii.asalKecamatan', 'transaksii.tujuanProvinsi', 'transaksii.tujuanKota', 'transaksii.tujuanKecamatan' )// tambahkan ini
         ->when($request->search, function (Builder $query, string $search) {
             $query->where('kurir_id', 'like', "%$search%")
                 ->orWhere('deskripsi', 'like', "%$search%")

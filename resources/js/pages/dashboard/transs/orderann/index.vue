@@ -187,6 +187,7 @@ watch(openForm, (val) => {
                             <p><strong>Nama Barang:</strong> {{ detailData.nama_barang }}</p>
                             <p><strong>Berat:</strong> {{ detailData.berat_barang }} kg</p>
                             <p><strong>Alamat Asal:</strong> {{ detailData.alamat_asal }}</p>
+                            <p><strong>Kecamatan Asal:</strong> {{ detailData.asal_kecamatan.name || '-' }}</p>
                             <p><strong>Kota Asal:</strong> {{ detailData.asal_kota.name || '-' }}</p>
                             <p><strong>Provinsi Asal:</strong> {{ detailData.asal_provinsi.name || '-' }}</p>
                         </div>
@@ -195,6 +196,7 @@ watch(openForm, (val) => {
                             <p><strong>Penerima:</strong> {{ detailData.penerima || '-' }}</p>
                             <p><strong>No HP:</strong> {{ detailData.no_hp_penerima }}</p>
                             <p><strong>Alamat Tujuan:</strong> {{ detailData.alamat_tujuan }}</p>
+                            <p><strong>Kecamatan Tujuan:</strong> {{ detailData.tujuan_ecamatan.name || '-' }}</p>
                             <p><strong>Kota Tujuan:</strong> {{ detailData.tujuan_kota.name || '-' }}</p>
                             <p><strong>Provinsi Tujuan:</strong> {{ detailData.tujuan_provinsi.name || '-' }}</p>
                             <p><strong>Status:</strong> {{ detailData.status }}</p>

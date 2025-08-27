@@ -3,6 +3,8 @@
 // use App\Http\Controllers\TrackingController;
 // use App\Http\Controllers\tidakdipakai\PengirimanController;
 // use App\Http\Controllers\Api\PengirimansController;
+use App\Http\Controllers\BarangController;
+use App\Http\Controllers\KategoriController;
 use App\Http\Controllers\MidtransController;
 use App\Http\Controllers\OtpController;
 use App\Http\Controllers\PaymentController;
@@ -63,7 +65,7 @@ Route::prefix('setting')->group(function () {
 // //route to get cities based on province ID
 // Route::get('/cities/{provinceId}', [RajaOngkirController::class, 'getCities']);
 // Route::get('/districts/{cityId}', [RajaOngkirController::class, 'getDistricts']);
-// //route to post shipping cost
+// //route to post shipping [][][pnmnnnnnl/]]
 // Route::post('/check-ongkir', [RajaOngkirController::class, 'checkOngkir']);
     
     
@@ -112,7 +114,11 @@ Route::post('/verify-email', [AuthController::class, 'verifyEmailOtp']);
  
 
 
-Route::get('/tracking/{no_resi}', [TrackingController::class, 'tracking']);
+Route::get('/tracking/{resi}', [TrackingController::class, 'tracking']); 
+// Route::get('/tracking/{no_resi}', [TrackingController::class, 'tracking']); 
+// Route::get('/tracking/{noResi}', [TrackingController::class, 'track']);
+Route::get('/tracking', [TrackingController::class, 'findByPhone']);
+
 // routes/api.php
 // Route::get('/tracking/{no_resi}', [TransaksiController::class, 'tracking']);
 
@@ -130,6 +136,25 @@ Route::get('/ongkir', [ShippingController::class, 'checkOngkir']);
 //     );
 // });
 
+
+ Route::prefix('tambah')->group(function () {
+        Route::middleware('can:tambah-kategori')->group(function () {
+            Route::get('kategori', [KategoriController::class, 'get']);
+            Route::post('kategori', [KategoriController::class, 'index']);
+            Route::post('kategori/store', [KategoriController::class, 'store']);
+            Route::apiResource('kategori', KategoriController::class)
+                ->except(['index', 'store']);
+        });
+
+        Route::middleware('can:tambah-barang')->group(function () {
+            Route::get('barang', [BarangController::class, 'get'])->withoutMiddleware('can:master-role');
+            Route::post('barang', [BarangController::class, 'index']);
+            Route::get('barang', [BarangController::class, 'show']); 
+            Route::post('barang/store', [BarangController::class, 'store']);
+            Route::apiResource('barang', BarangController::class)
+                ->except(['index', 'store']);
+        });
+    });
 
 Route::post('/ongkirr', [BinderbyteController::class, 'cekOngkir']);
 

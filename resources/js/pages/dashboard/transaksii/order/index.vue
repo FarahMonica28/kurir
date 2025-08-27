@@ -392,6 +392,7 @@ onMounted(() => {
                                  {{ printData?.alamat_tujuan }},
                                  {{ printData?.tujuan_kota?.name }},
                                  {{ printData?.tujuan_provinsi?.name }}.
+                                 {{ printData?.tujuan_kecamatan?.name }}.
                                 <!-- <p class="mt-2"> {{ printData?.penerima }}</p>
                                 <p>{{ printData?.alamat_tujuan }}</p>
                                 <p>{{ printData?.tujuan_provinsi?.name }}</p>
@@ -434,6 +435,7 @@ onMounted(() => {
                                 <p><strong>Berat Barang:</strong> {{ detailData.berat_barang }} kg</p>
                                 <p><strong>Provinsi Asal:</strong> {{ detailData.asal_provinsi.name || '-' }}</p>
                                 <p><strong>Kota Asal:</strong> {{ detailData.asal_kota.name || '-' }}</p>
+                                <p><strong>Kecamatan Asal:</strong> {{ detailData.asal_kecamatan.name || '-' }}</p>
                                 <p><strong>Alamat Asal:</strong> {{ detailData.alamat_asal }}</p>
                             </div>
 
@@ -443,6 +445,7 @@ onMounted(() => {
                                 <p><strong>Penerima:</strong> {{ detailData.penerima || '-' }}</p>
                                 <p><strong>Provinsi Tujuan:</strong> {{ detailData.tujuan_provinsi.name || '-' }}</p>
                                 <p><strong>Kota Tujuan:</strong> {{ detailData.tujuan_kota.name || '-' }}</p>
+                                <p><strong>Kecamatan Tujuan:</strong> {{ detailData.tujuan_kecamatan.name || '-' }}</p>
                                 <p><strong>Alamat Tujuan:</strong> {{ detailData.alamat_tujuan }}</p>
                             </div>
                         </div>

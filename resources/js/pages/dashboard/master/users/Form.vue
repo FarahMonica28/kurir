@@ -59,7 +59,7 @@ function submit() {
     formData.append("phone", user.value.phone);
     formData.append("role_id", user.value.role_id);
 
-    if (user.value?.password) { ````
+    if (user.value?.password) { ""
         formData.append("password", user.value.password);
         formData.append(
             "password_confirmation",

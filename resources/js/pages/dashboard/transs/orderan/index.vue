@@ -5,6 +5,7 @@ import axios from "axios";
 import Swal from "sweetalert2";
 import { createColumnHelper } from "@tanstack/vue-table";
 import type { transaksii } from "@/types";
+import { nextTick } from "vue";
 
 // Ambil user (kurir) yang sedang login
 import { useAuthStore } from "@/stores/auth";
@@ -18,6 +19,7 @@ const column = createColumnHelper<transaksii>();
 const paginateRef = ref<any>(null);
 const selected = ref<string>("");
 const openForm = ref<boolean>(false);
+const emit = defineEmits(["succes", "refresh"]);
 
 const detailData = ref<transaksii | null>(null);
 
@@ -30,6 +32,7 @@ const showRincian = (data: transaksii) => {
 const closeDetail = () => {
     detailData.value = null;
 };
+
 
 // ✅ Tampilkan detail pengguna
 function showPenggunaDetail(pengguna) {
@@ -140,6 +143,7 @@ const columns = [
                         await axios.put(`/transaksii/${cell.getValue()}/ambil`, {
                             status: nextStatus,
                         });
+                        await nextTick();
                         await new Promise(resolve => setTimeout(resolve, 300));
                         await refresh();
 
@@ -173,7 +177,13 @@ const url = computed(() => {
 });
 
 // ✅ Refresh paginate
-const refresh = () => paginateRef.value.refetch();
+// const refresh = () => paginateRef.value.refetch();
+const refresh = () => {
+    if (paginateRef.value && paginateRef.value.refetch) {
+        paginateRef.value.refetch();
+    }
+};
+
 
 // ✅ Reset selected ketika form ditutup
 watch(openForm, (val) => {
@@ -224,6 +234,7 @@ watch(openForm, (val) => {
                                 <p><strong>Berat Barang:</strong> {{ detailData.berat_barang }} kg</p>
                                 <p><strong>Provinsi Asal:</strong> {{ detailData.asal_provinsi.name || '-' }}</p>
                                 <p><strong>Kota Asal:</strong> {{ detailData.asal_kota.name || '-' }}</p>
+                                <p><strong>Kecamatan Asal:</strong> {{ detailData.asal_kecamatan.name || '-' }}</p>
                                 <p><strong>Alamat Asal:</strong> {{ detailData.alamat_asal }}</p>
                             </div>
 
@@ -233,6 +244,7 @@ watch(openForm, (val) => {
                                 <p><strong>No HP Penerima:</strong> {{ detailData.no_hp_penerima }}</p>
                                 <p><strong>Provinsi Tujuan:</strong> {{ detailData.tujuan_provinsi.name || '-' }}</p>
                                 <p><strong>Kota Tujuan:</strong> {{ detailData.tujuan_kota.name || '-' }}</p>
+                                <p><strong>Kecamatan Tujuan:</strong> {{ detailData.tujuan_kecamatan.name || '-' }}</p>
                                 <p><strong>Alamat Tujuan:</strong> {{ detailData.alamat_tujuan }}</p>
                             </div>
                         </div>
@@ -269,7 +281,7 @@ watch(openForm, (val) => {
                                     style="cursor: pointer; color: yellow;">
                                 </span>
                                 <span v-else>Tidak ada kurir</span> -->
-                                {{ kurirAmbil?.user?.name }}
+                                {{ kurirAmbil?.user?.name || 'Belum ada kurir' }}
                             </p>
 
                             <p><strong>Kurir Pengantar : </strong>
@@ -278,7 +290,7 @@ watch(openForm, (val) => {
                                     {{ kurirKirim.user.name }}
                                 </span>
                                 <span v-else>Tidak ada kurir</span> -->
-                                {{ kurirKirim?.user?.name }}
+                                {{ kurirKirim?.user?.name || 'Belum ada kurir' }}
                             </p>
 
 

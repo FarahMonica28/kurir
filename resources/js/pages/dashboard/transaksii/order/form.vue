@@ -25,7 +25,7 @@ const emit = defineEmits(["close", "refresh"]);
 // Form State
 // ==========================
 const formRef = ref();
-const transaksi = ref<transaksii>({} as transaksii);
+const transaksii = ref<transaksii>({} as transaksii);
 
 // ==========================
 // Lokasi dan Alamat
@@ -40,6 +40,7 @@ const pengirim = ref(""); // Optional
 const alamat_tujuan = ref("");
 const no_hp_penerima = ref("");
 const no_hp_pengirim = ref("");
+const alamat_asal = ref("");
 
 // ==========================
 // Ekspedisi dan Layanan
@@ -326,54 +327,6 @@ const loadMoreDistrictsDestination = () => {
 
 
 
-
-
-
-// const selectProvinceDestination = (p) => {
-//   searchProvinceDestination.value = p.name
-//   setFieldValue('provinceDestination', p.name)
-//   showProvinceDropdownDestination.value = false
-// }
-
-// ==========================
-// API Lokasi
-// ==========================
-// const fetchProvinces = async () => {
-//   try {
-//     const res = await axios.get("/provinces");
-//     provinces.value = res.data;
-//   } catch {
-//     toast.error("Gagal mengambil provinsi");
-//   }
-// };
-// kota untuk tujuan
-
-
-// ==========================
-// Kecamatan untuk tujuan
-// ==========================
-
-// const displayedDistrictsDestination = computed(() =>
-//   filteredDistrictsDestination.value.slice(0, limitDistrictDestination.value)
-// );
-// const loadMoreDistrictsDestination = () => {
-//   if (
-//     limitDistrictDestination.value < filteredDistrictsDestination.value.length
-//   ) {
-//     limitDistrictDestination.value += 10;
-//   }
-// };
-
-
-
-// const searchProvinceDestination = ref('')
-// const filteredProvincesDestination = ref([])
-// const displayedProvincesDestination = ref([])
-
-// ini untuk provinsi asal
-// const provinceOrigin = ref("");
-
-
 // kota untuk asal
 watch(provinceDestination, () => {
   console.log(provinceDestination.value);
@@ -533,7 +486,7 @@ const onSubmit = () => {
   formData.append("asal_provinsi_id", provinceOrigin.value);
   formData.append("asal_kota_id", cityOrigin.value);
   formData.append("asal_kecamatan_id", districtOrigin.value);
-  formData.append("alamat_asal", transaksi.value.alamat_asal);
+  formData.append("alamat_asal", alamat_asal.value);
   formData.append("ekspedisi", selectedCourier.value);
   formData.append("layanan", selectedService.value);
   formData.append("berat_barang", berat_barang.value?.toString() || "0");
@@ -616,7 +569,7 @@ onMounted(fetchProvinces);
           <Field name="provinceDestination" v-model="searchProvinceDestination">
             <input type="text" class="form-control" v-model="searchProvinceDestination"
               placeholder="Ketik Provinsi Tujuan" @focus="showProvinceDropdownDestination = true"
-              @blur="hideProvinceDropdownDestinationWithDelay" autocomplete="off" />
+              @blur="hideProvinceDropdownDestinationWithDelay" autocomplete="off" @change="fetchProvinces('destination')"/>
           </Field>
 
           <ErrorMessage name="provinceDestination" class="text-danger small" />
@@ -646,7 +599,7 @@ onMounted(fetchProvinces);
           <Field name="citiesDestination" v-model="searchCityDestination">
             <input type="text" class="form-control" v-model="searchCityDestination" placeholder="Ketik Kota Tujuan"
               @focus="showCityDropdownDestination = true" @blur="hideCityDropdownDestinationWithDelay"
-              autocomplete="off" />
+              autocomplete="off" @change="fetchCities('destination')"/>
           </Field>
           <ErrorMessage name="citiesDestination" class="text-danger small" />
 
@@ -673,7 +626,7 @@ onMounted(fetchProvinces);
           <Field name="districtDestination" v-model="searchDistrictDestination">
             <input type="text" class="form-control" v-model="searchDistrictDestination"
               placeholder="Ketik Kecamatan Tujuan" @focus="showDistrictDropdownDestination = true"
-              @blur="hideDistrictDropdownDestinationWithDelay" autocomplete="off" />
+              @blur="hideDistrictDropdownDestinationWithDelay" autocomplete="off" @change="fetchDistricts('destination')"/>
           </Field>
           <ErrorMessage name="districtDestination" class="text-danger small" />
 
@@ -750,7 +703,7 @@ onMounted(fetchProvinces);
           <Field name="provinceOrigin" v-model="searchProvinceOrigin">
             <input type="text" class="form-control" v-model="searchProvinceOrigin" placeholder="Ketik Provinsi Asal"
               @focus="showProvinceDropdownOrigin = true" @blur="hideProvinceDropdownOriginWithDelay"
-              autocomplete="off" />
+              autocomplete="off" @change="fetchProvinces('origin')"/>
           </Field>
           <ErrorMessage name="provinceOrigin" class="text-danger small" />
 
@@ -777,7 +730,7 @@ onMounted(fetchProvinces);
 
           <Field name="citiesOrigin" v-model="searchCityOrigin">
             <input type="text" class="form-control" v-model="searchCityOrigin" placeholder="Ketik Kota Asal"
-              @focus="showCityDropdownOrigin = true" @blur="hideCityDropdownOriginWithDelay" autocomplete="off" />
+              @focus="showCityDropdownOrigin = true" @blur="hideCityDropdownOriginWithDelay" autocomplete="off" @change="fetchCities('origin')"/>
           </Field>
           <ErrorMessage name="citiesOrigin" class="text-danger small" />
 
@@ -804,7 +757,7 @@ onMounted(fetchProvinces);
           <Field name="districtOrigin" v-model="searchDistrictOrigin">
             <input type="text" class="form-control" v-model="searchDistrictOrigin" placeholder="Ketik Kecamatan Asal"
               @focus="showDistrictDropdownOrigin = true" @blur="hideDistrictDropdownOriginWithDelay"
-              autocomplete="off" />
+              autocomplete="off" @change="fetchDistricts('origin')"/>
           </Field>
           <ErrorMessage name="districtOrigin" class="text-danger small" />
 

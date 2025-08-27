@@ -1,21 +1,78 @@
 <template>
-  <div class="container mt-15">
-    <h1 class="text-xl font-semibold mb-4 mt-" id="la">Lacak Pengiriman</h1>
-    <div class="mb-4" id="no">
-      <h3>
-        <label for="noResi" class="block mb-1 mt-6" id="">Nomor Resi : </label>
-        <input v-model="noResi" id="noResi" type="text" class="form-input border rounded"
-          placeholder="Contoh: ABC-123456" />
-      </h3>
-    </div>
-    <div class="but">
-      <button class="px-4 py-2 mt-5 rounded" id="lacak" @click="openPhonePrompt" :disabled="loading">
-        {{ loading ? 'Memuat...' : 'Lacak' }}
+  <div class="container mx-auto px-4 py-10">
+    <h1 class="text-2xl font-bold text-center mb-8">📦 Lacak Pengiriman</h1>
+
+    <!-- Input Resi -->
+    <div class="flex justify-center mb-6 gap-2">
+      <input v-model="noResi" type="text" placeholder="Masukkan Nomor Resi" class="border rounded-lg px-4 py-2 w-72" />
+      <button @click="askLast4" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+        Cari
       </button>
     </div>
 
+    <div class="mt-">
+      <div class="tracking-container ">
+
+        <div class="tracking-step">
+          <div class="circle">
+            <img src="/storage/photo/pakett.png" alt="Pick Up" />
+          </div>
+          <br>
+          <p>Packing</p>
+        </div>
+
+        <div class="line"></div>
+        <div class="tracking-step">
+          <div class="circle">
+            <img src="/storage/photo/pickupp.png" alt="On Transit" />
+          </div>
+          <br>
+          <p>Pick Up</p>
+        </div>
+
+        <div class="line"></div>
+        <div class="tracking-step">
+          <div class="circle">
+            <img src="/storage/photo/transitt.png" alt="On Transit" />
+          </div>
+          <br>
+          <p>On Transit</p>
+        </div>
+
+        <div class="line"></div>
+        <div class="tracking-step">
+          <div class="circle">
+            <img src="/storage/photo/ondeliveryy.png" alt="On Delivery" />
+          </div>
+          <br>
+          <p>On Delivery</p>
+        </div>
+
+        <div class="line"></div>
+        <div class="tracking-step">
+          <div class="circle">
+            <img src="/storage/photo/deliveredd.png" alt="Delivered" />
+          </div>
+          <br>
+          <p>Delivered</p>
+        </div>
+
+      </div>
+    </div>
+    <!-- Error -->
+    <div v-if="error" class="text-red-500 text-center mb-6">
+      {{ error }}
+    </div>
+
+    <!-- Loading -->
+    <div v-if="loading" class="flex justify-center">
+      <img src="/img/loading.gif" alt="Loading..." class="w-12 h-12 animate-spin" />
+    </div>
+
+
     <div v-if="error" class="text-red-600 mt-8">{{ error }}</div>
 
+    <h1 class="mt-5">Detail</h1>
     <div v-if="data" class="mt-6 border rounded p-4 bg-gray-50">
       <div class="des">
         <p class="mt-5"><strong>Status : </strong> {{ data.status }}</p>
@@ -28,7 +85,7 @@
       </div>
 
       <div class="box">
-        <!-- Paket dibuat -->
+        <!-- Paket dibuat (packing) -->
         <div class="tracking-header">
           <p class="tracking-date">{{ formatDate(data.waktu) }}</p>
           <div class="tracking-timeline mt-6">
@@ -48,7 +105,8 @@
           <p class="tracking-date">{{ formatDate(data.waktu_diambil) }}</p>
           <div class="tracking-timeline mt-6">
             <div class="tracking-item">
-              <img class="dot-img" src="/public/storage/photo/gudang.jpgyyyy" alt="Kurir Ambil" />
+              <div class="dot"></div>
+              <!-- <img class="dot-img" src="/public/storage/photo/gudang.jpgyyyy" alt="Kurir Ambil" /> -->
               <div class="content">
                 <div class="time">{{ data.waktu_diambil.slice(11, 16) }}</div>
                 <div class="desc">
@@ -156,18 +214,15 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import axios from 'axios'
-import { useAuthStore } from '@/stores/auth'
-import Swal from 'sweetalert2'
+import { ref, computed } from "vue";
+import axios from "axios";
+import Swal from "sweetalert2";
 
-// ===============================
-// State & Reference
-// ===============================
-const noResi = ref('')
-const data = ref<any>(null)
-const error = ref('')
-const loading = ref(false)
+const noResi = ref("");
+const last4 = ref("");
+const loading = ref(false);
+const error = ref("");
+const data = ref<any>(null);
 
 // ===============================
 // Fungsi utilitas untuk format tanggal
@@ -180,135 +235,222 @@ function formatDate(dateString: string): string {
     year: 'numeric',
   })
 }
-
-// ===============================
-// Prompt input 4 digit HP penerima
-// ===============================
-const openPhonePrompt = async () => {
+// 🔹 Step 1: Popup minta last4
+const askLast4 = async () => {
   if (!noResi.value) {
-    Swal.fire('Oops!', 'Nomor resi harus diisi terlebih dahulu.', 'warning')
-    return
+    error.value = "Nomor resi harus diisi!";
+    return;
   }
 
-  const { value: last4Digits } = await Swal.fire({
-    title: 'Verifikasi 4 Angka Belakang di Nomor HP Penerima',
-    html: `
-      <div style="display: flex; justify-content: center; gap: 8px;">
-        <input id="digit1" type="text" maxlength="1" pattern="[0-9]*" style="width: 40px; text-align: center; font-size: 20px;">
-        <input id="digit2" type="text" maxlength="1" pattern="[0-9]*" style="width: 40px; text-align: center; font-size: 20px;">
-        <input id="digit3" type="text" maxlength="1" pattern="[0-9]*" style="width: 40px; text-align: center; font-size: 20px;">
-        <input id="digit4" type="text" maxlength="1" pattern="[0-9]*" style="width: 40px; text-align: center; font-size: 20px;">
-      </div>
-    `,
-    focusConfirm: false,
+  const { value: phone } = await Swal.fire({
+    title: "Verifikasi Nomor HP",
+    input: "text",
+    inputPlaceholder: "Masukkan 4 digit terakhir nomor HP",
+    inputAttributes: {
+      maxlength: "4",
+    },
+    confirmButtonText: "Lanjut",
     showCancelButton: true,
-    confirmButtonText: 'Lanjutkan',
-    cancelButtonText: 'Batal',
-    preConfirm: () => {
-      const d1 = (document.getElementById('digit1') as HTMLInputElement)?.value || ''
-      const d2 = (document.getElementById('digit2') as HTMLInputElement)?.value || ''
-      const d3 = (document.getElementById('digit3') as HTMLInputElement)?.value || ''
-      const d4 = (document.getElementById('digit4') as HTMLInputElement)?.value || ''
-      const full = d1 + d2 + d3 + d4
-
-      if (!/^\d{4}$/.test(full)) {
-        Swal.showValidationMessage('Masukkan tepat 4 digit angka')
-        return false
-      }
-      return full
+    cancelButtonText: "Batal",
+    inputValidator: (value) => {
+      if (!value) return "Harus diisi!";
+      if (!/^[0-9]{4}$/.test(value)) return "Harus 4 digit angka!";
+      return null;
     },
-    didOpen: () => {
-      const inputs = document.querySelectorAll<HTMLInputElement>(
-        '#digit1, #digit2, #digit3, #digit4'
-      )
+  });
 
-      inputs.forEach((input, index) => {
-        input.addEventListener('input', () => {
-          if (input.value.length === 1 && index < inputs.length - 1) {
-            (inputs[index + 1] as HTMLInputElement).focus()
-          }
-        })
-
-        input.addEventListener('keydown', (e) => {
-          if (e.key === 'Backspace' && index > 0 && !input.value) {
-            (inputs[index - 1] as HTMLInputElement).focus()
-          }
-        })
-      })
-
-      // Fokus ke input pertama
-      (document.getElementById('digit1') as HTMLInputElement)?.focus()
-    },
-  })
-
-  if (last4Digits) {
-    await trackResi(last4Digits)
+  if (phone) {
+    last4.value = phone;
+    fetchTracking();
   }
-}
+};
 
-// ===============================
-// Fungsi tracking resi
-// ===============================
-const trackResi = async (last4: string) => {
-  loading.value = true
-  error.value = ''
-  data.value = null
+// 🔹 Step 2: Fetch tracking
+const fetchTracking = async () => {
+  loading.value = true;
+  error.value = "";
+  data.value = null;
 
   try {
     const response = await axios.get(`/tracking/${noResi.value}`, {
-      params: { last4 },
-    })
-    data.value = response.data.data
+      params: { last4: last4.value },
+    });
+    data.value = response.data.data;
   } catch (err: any) {
-    const msg = err.response?.data?.message || 'Terjadi kesalahan.'
-    error.value = msg
-    Swal.fire('Gagal!', msg, 'error')
+    error.value = err.response?.data?.message || "Data tidak ditemukan";
   } finally {
-    loading.value = false
+    loading.value = false;
+  }
+};
+
+// 🔹 Step 3: Timeline
+const timeline = computed(() => {
+  if (!data.value) return [];
+
+  return [
+    {
+      date: data.value.waktu,
+      title: "Paket Dibuat",
+      desc: "Paket telah dibuat oleh pengirim",
+      icon: "/storage/photo/made.png",
+    },
+    {
+      date: data.value.waktu_diambil,
+      title: "Kurir Ambil",
+      desc: `Kurir menuju alamat asal ${data.value.alamat_asal}`,
+      icon: "/storage/photo/kurir.png",
+    },
+    {
+      date: data.value.waktu_digudang,
+      title: "Tiba di Gudang",
+      desc: "Paket sudah sampai di gudang",
+      icon: "/storage/photo/gudang.png",
+    },
+    {
+      date: data.value.waktu_selesai,
+      title: "Selesai",
+      desc: "Paket berhasil sampai ke penerima 🎉",
+      icon: "/storage/photo/finish.png",
+    },
+  ].filter((step) => step.date);
+});
+
+
+</script>
+
+<style>
+h1{
+  text-align: center;
+  margin-top: 20px;
+  font-size: 24px;
+  /* color: #4a5568;  */
+}
+.fade-enter-active,
+.fade-leave-active {
+  transition: all 0.5s ease;
+}
+
+.fade-enter-from {
+  opacity: 0;
+  transform: translateX(-20px);
+}
+
+.fade-enter-to {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.tracking-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 40px 0;
+}
+
+/* .tracking-step {
+  border-radius: 60% dashed pink;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+} */
+.tracking-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+
+/* dashed border di luar lingkaran */
+/* .circle::after {
+  content: "";
+  position: absolute;
+  top: -px;
+  left: -px;
+  width: 90px;
+  height: 90px;
+  border: 2px dashed red;
+  border-radius: 50%;
+} */
+ .circle::after {
+  content: "";
+  position: absolute;
+  top: -10px;
+  /* left: -px; */
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  border: 2px dashed red;
+  box-sizing: border-box;
+
+  /* animasi gerakan */
+  /* animation: spin 2s linear infinite; animasi putar */
+    animation: spinStep 2s steps(15) infinite;
+}
+
+@keyframes spinStep {
+  from {
+    transform: rotate(deg);
+  }
+  to {
+    transform: rotate(60deg); /* putar searah jarum jam */
+    /* transform: rotate(60deg); putar searah jarum jam */
   }
 }
 
-// ===============================
-// Kurir yang mengambil barang (status: "ambil")
-// ===============================
-const kurirAmbil = computed(() =>
-  data.value?.pengiriman?.find((p: any) => p.status?.toLowerCase() === 'ambil')?.kurir
-)
-
-// ===============================
-// Kurir yang mengantar barang (status: "antar")
-// ===============================
-const kurirKirim = computed(() =>
-  data.value?.pengiriman?.find((p: any) => p.status?.toLowerCase() === 'antar')?.kurir
-)
-
-// ===============================
-// Data pengguna login (dari store)
-// ===============================
-const auth = useAuthStore()
-const user = computed(() => auth.user)
-
-// ===============================
-// Cek apakah user login adalah pengirim
-// ===============================
-const isPenggunaLogin = computed(() => user.value?.id === data.value?.pengirim?.id)
-
-// ===============================
-// Nama pengguna (fallback ke data pengirim jika belum login)
-// ===============================
-const namaPengguna = computed(() => user.value?.name || data.value?.pengirim?.name || 'pengirim')
-</script>
+.tracking-step p {
+  margin-top: 5px;
+  font-size: 14px;
+  color: red;
+  font-weight: 200;
+}
 
 
+.circle {
+  width: 70px;
+  height: 70px;
+  border: px dashed pink;
+  border-radius: 60%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: pink;
+  /* margin-bottom: 10px; */
+}
 
+.circle img {
+  width: 70px;
+  height: 70px;
+  object-fit: contain;
+}
 
+/* .circle img {
+  width: 50px;
+  height: 50px;
+  object-fit: contain;
+} */
 
-<style scoped>
+/* .tracking-step p {
+  margin-top: 5px;
+  font-size: 14px;
+  color: red;
+  font-weight: 500;
+} */
+
+.line {
+  flex: 1;
+  margin-top: -2.5%;
+  margin-left: -1%;
+  border-top: 2px dashed black;
+  /* margin: 10px; */
+}
+
 input {
   border-radius: 5%;
 }
 
-.dot-img {
+/* .dot-img {
   width: 40px;
   height: 40px;
   border-radius: 50%;
@@ -319,7 +461,7 @@ input {
   z-index: 1;
   border: 2px solid white;
   background-color: #f3f4f6;
-}
+} */
 
 /* .container {
   /* text-align: center; */
@@ -398,7 +540,8 @@ input {
   left: -1.5rem;
   width: 3px;
   height: 100%;
-  background-color: #a855f7;
+  background-color: #f57ce2;
+  /* background-color: #a855f7; */
 }
 
 .tracking-item {
@@ -411,7 +554,8 @@ input {
 .tracking-item .dot {
   width: 12px;
   height: 12px;
-  background-color: #a855f7;
+  background-color: #ff44dd;
+  /* background-color: #a855f7; */
   border-radius: 50%;
   position: absolute;
   left: -3.31rem;

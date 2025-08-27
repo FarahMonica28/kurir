@@ -183,7 +183,7 @@ watch(openForm, (val) => {
                             <div class="col-md-6">
                                 <!-- <h2>Informasi Pengirim</h2> -->
                                 <!-- <p><strong>Pengirim:</strong> {{ detailData.pengirim || '-' }}</p> -->
-                                <!-- <p><strong>Pengirim:</strong> {{ detailData.pengguna?.user.name || '-' }}</p> -->
+                                <!--as <p><strong>Pengirim:</strong> {{ detailData.pengguna?.user.name || '-' }}</p> -->
                                 <p><strong>Pengirim : </strong>
                                     <span @click="showPenggunaDetail(detailData.pengguna)"
                                         style="cursor: pointer; color: blue; text-decoration: underline;">
@@ -195,6 +195,7 @@ watch(openForm, (val) => {
                                 <p><strong>Berat Barang:</strong> {{ detailData.berat_barang }} kg</p>
                                 <p><strong>Provinsi Asal:</strong> {{ detailData.asal_provinsi.name || '-' }}</p>
                                 <p><strong>Kota Asal:</strong> {{ detailData.asal_kota.name || '-' }}</p>
+                                <p><strong>Kecamatan Asal:</strong> {{ detailData.asal_kecamatan.name || '-' }}</p>
                                 <p><strong>Alamat Asal:</strong> {{ detailData.alamat_asal }}</p>
                             </div>
 
@@ -204,6 +205,7 @@ watch(openForm, (val) => {
                                 <p><strong>No HP Penerima:</strong> {{ detailData.no_hp_penerima }}</p>
                                 <p><strong>Provinsi Tujuan:</strong> {{ detailData.tujuan_provinsi.name || '-' }}</p>
                                 <p><strong>Kota Tujuan:</strong> {{ detailData.tujuan_kota.name || '-' }}</p>
+                                <p><strong>Kecamatan Tujuan:</strong> {{ detailData.tujuan_kecamatan.name || '-' }}</p>
                                 <p><strong>Alamat Tujuan:</strong> {{ detailData.alamat_tujuan }}</p>
                             </div>
                         </div>

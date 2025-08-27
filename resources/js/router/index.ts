@@ -38,7 +38,7 @@ const routes: Array<RouteRecordRaw> = [
                 {
                     path: "/dashboard_pengguna", // akan render Index.vue sebagai default child
                     name: "dashboard_pengguna",
-                    component: () => import("@/pages/dashboard_pengguna/index.vue"),
+                    component: () => import("@/pages/dashboardk/beranda.vue"),
                     meta: {
                     pageTitle: "Dashboard Pengguna",
                     breadcrumbs: ["Halaman Dashboard Pengguna"],
@@ -74,7 +74,7 @@ const routes: Array<RouteRecordRaw> = [
                 {
                     path: "/dashboard_pengguna/tracking",
                     name: "dashboard_pengguna.tracking",
-                    component: () =>import ("@/pages/dashboard/tracking/index.vue"),
+                    component: () =>import ("@/pages/dashboard/tracking/asli.vue"),
                     meta: {
                         pageTitle: "Tracking",
                         breadcrumbs: ["Transaksii", "Tracking"],
@@ -83,15 +83,43 @@ const routes: Array<RouteRecordRaw> = [
 
         ],
     },
-    {
+        {
         path: "/dashboardk",
-        name: "dashboardk",
-        component: () => import("@/pages/dashboardk/index.vue"),
+        redirect: "/dashboardk",// component: DashboardLay, // ✅ Gunakan layout
+        component: () => import("@/pages/dashboardk/app.vue"),
         meta: {
-            pageTitle: "Dashboardk",
-            breadcrumbs: ["Halaman Dashboardk"],
+            middleware: "guest",
         },
-    },
+        children: [
+                {
+                    path: "/dashboardk", // akan render Index.vue sebagai default child
+                    name: "dashboardk",
+                    component: () => import("@/pages/dashboardk/beranda.vue"),
+                    meta: {
+                    pageTitle: "Dashboard Pengguna",
+                    breadcrumbs: ["Halaman Dashboard Pengguna"],
+                    },
+                },
+                {
+                    path: "/dashboardk/ongkir",
+                    name: "dashboardk.ongkir",
+                    component: () =>import ("@/pages/dashboard/transaksii/ongkir/ongkir.vue"),
+                    meta: {
+                        pageTitle: "Ongkir",
+                        breadcrumbs: ["Transaksii", "Ongkir"],
+                    },
+                },
+                {
+                    path: "/dashboardk/tracking",
+                    name: "dashboardk.tracking",
+                    component: () =>import ("@/pages/dashboard/tracking/asli.vue"),
+                    meta: {
+                        pageTitle: "Tracking",
+                        breadcrumbs: ["Transaksii", "Tracking"],
+                    },
+                },
+            ],
+        },
     // {
     //             path: "/dashboard/transaksii/ongkir",
     //             name: "dashboard.transaksii.ongkir",
@@ -369,44 +397,58 @@ const routes: Array<RouteRecordRaw> = [
         ],
     },
     
+    {
+        path: "/home",
+        redirect: "/home",
+        component: () => import("@/layouts/default-layout/DefaultLayout.vue"),
+        meta: {
+            middleware: "auth",
+        },
+        children: [
+           {
+                path: "/home",
+                name: "home",
+                component: () =>
+                    import("@/pages/home/Index.vue"),
+                meta: {
+                    pageTitle: "Kategori",
+                    breadcrumbs: ["Tambah", "Kategori"],
+                },
+            },
+           {
+                path: "/home/tambah/kategori",
+                name: "home.tambah.kategori",
+                component: () =>
+                    import("@/pages/home/tambah/kategori/Index.vue"),
+                meta: {
+                    pageTitle: "Kategori",
+                    breadcrumbs: ["Tambah", "Kategori"],
+                },
+            },
+            {
+                path: "/home/tambah/barang",
+                name: "home.tambah.barang",
+                component: () =>
+                    import("@/pages/home/tambah/barang/Index.vue"),
+                meta: {
+                    pageTitle: "Barang",
+                    breadcrumbs: ["Tambah", "Barang"],
+                },
+            },
+            {
+                path: "/home/penyewaan",
+                name: "home.penyewaan",
+                component: () =>
+                    import("@/pages/home/penyewaan/Index.vue"),
+                meta: {
+                    pageTitle: "Penyewaan",
+                    breadcrumbs: ["Penyewaan Barang"],
+                },
+            },
+        ],
+    },
 
 
-    // {
-    //     path: "/dashboard/ongkir",
-    //     name: "dashboard.ongkir",
-    //     component: () => import("@/pages/dashboard/transaksii/ongkir/ongkir.vue"),
-    //     meta: {
-    //         pageTitle: "Halaman Ongkir",
-    //         // breadcrumbs: ["Halaman", "Akun dan Profl"],
-    //     },
-    // },
-    // {
-    //     path: "/dashboard/order",
-    //     name: "dashboard.order",
-    //     component: () => import("@/pages/dashboard/transaksi/idex.vue"),
-    //     meta: {
-    //         pageTitle: "Halaman Order Kurir",
-    //         // breadcrumbs: ["Halaman", "Akun dan Profl"],
-    //     },
-    // },
-    // {
-    //     path: "/dashboard/orderProv",
-    //     name: "dashboard.orderProv",
-    //     component: () => import("@/pages/dashboard/transaksii/order/index.vue"),
-    //     meta: {
-    //         pageTitle: "Halaman Order Kurir",
-    //         // breadcrumbs: ["Halaman", "Akun dan Profl"],
-    //     },
-    // },
-    // {
-    //     path: "/dashboard/riwayatt",
-    //     name: "dashboard.riwayatt",
-    //     component: () => import("@/pages/dashboard/riwayatt/idex.vue"),
-    //     meta: {
-    //         pageTitle: "Riwayat",
-    //         // breadcrumbs: ["Halaman", "Akun dan Profl"],
-    //     },
-    // },
     {
         path: "/",
         component: () => import("@/layouts/AuthLayout.vue"),
@@ -516,6 +558,8 @@ router.beforeEach(async (to, from, next) => {
                 next({ name: "404" });
             } else if (to.name === "dashboard" && authStore.user.role?.name === "pengguna") {
                 next({ name: "dashboard_pengguna" });
+            } else if (to.name === "dashboard" && authStore.user.role?.name === "penjual") {
+                next({ name: "home" });
             } else if (to.meta.checkDetail == false) {
                 next();
             }
@@ -525,7 +569,7 @@ router.beforeEach(async (to, from, next) => {
             next({ name: "sign-in" });
         }
     } else if (to.meta.middleware == "guest" && authStore.isAuthenticated) {
-        next({ name: "dashboard" });
+        next({ name: "dashboardk" });
     } else {
         next();
     }

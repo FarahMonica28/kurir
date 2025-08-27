@@ -11,6 +11,11 @@
 
                 <ul class="navbar-nav mx-auto mb- mb-lg-0">
                     <li class="nav-item px-2">
+                        <router-link :to="{ name: 'dashboard_pengguna' }" class="nav-link fw-bold">
+                            Home
+                        </router-link>
+                    </li>
+                    <li class="nav-item px-2">
                         <router-link :to="{ name: 'dashboard_pengguna.ongkir' }" class="nav-link fw-bold">
                             Check Ongkir
                         </router-link>
@@ -31,12 +36,12 @@
                             Lacak Barang
                         </router-link>
                     </li>
+                    <button class="btn btn-primary text-light fw-semibold " id="keluar" @click="signOut">
+                        Logout
+                    </button>
                 </ul>
 
             </div>
-            <button class="btn btn-primary text-light fw-semibold " id="keluar" @click="signOut">
-                Logout
-            </button>
         </div>
     </nav>
 
@@ -56,7 +61,7 @@ import router from '@/router';
 import { RouterView } from 'vue-router';
 
 
-const emit = defineEmits(["succes", "refresh"]);
+// const emit = defineEmits(["succes", ""]);
 
 const store = useAuthStore();
 const signOut = () => {
@@ -72,14 +77,14 @@ const signOut = () => {
             confirmButton: "btn fw-semibold btn-light-primary",
             cancelButton: "btn fw-semibold btn-light-danger",
         },
-    }).then((result) => {
+    }).then(async (result) => {
         if (result.isConfirmed) {
-            store.logout();
+            await store.logout();
             Swal.fire({
                 icon: "success",
                 text: "Berhasil keluar",
             }).then(() => {
-                router.push({ name: "sign-in" });
+                router.push("/sign-in")
             });
         }
     });
@@ -91,9 +96,11 @@ const signOut = () => {
 li {
     font-size: 1.5rem;
 }
-#keluar{
+
+#keluar {
     /* font-size: large; */
-    width: 10%;
+    /* width: ; */
+    justify-content: right;
     margin-right: auto;
 }
 </style>

@@ -37,11 +37,11 @@ export interface transaksii {
     }
     tujuan_kota_id: {
         id: number;
-        name: string;v
+        name: string;
     }
     tujuan_kecamatan_id: {
         id: number;
-        name: string;v
+        name: string;
     }
 
     pengguna: {

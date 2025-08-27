@@ -92,3 +92,19 @@ const getTrackingData = async () => {
 <style scoped>
 /* optional styling */
 </style>
+
+
+    <!-- Timeline -->
+    <!-- <transition-group name="fade" tag="div" class="relative border-l-4 border-blue-500 pl-6 space-y-10">
+      <div v-for="(item, index) in timeline" :key="index" class="relative flex items-start gap-4">
+        <div
+          class="absolute -left-9 flex items-center justify-center w-10 h-10 rounded-full bg-blue-500 text-white shadow-lg">
+          <img :src="item.icon" alt="step" class="w-6 h-6" />
+        </div>
+        <div class="bg-white shadow-md rounded-xl p-4 w-full hover:shadow-lg transition transform hover:scale-[1.02]">
+          <p class="text-sm text-gray-500">{{ item.date }}</p>
+          <p class="font-semibold text-lg">{{ item.title }}</p>
+          <p class="text-gray-600 mt-1">{{ item.desc }}</p>
+        </div>
+      </div>
+    </transition-group> -->

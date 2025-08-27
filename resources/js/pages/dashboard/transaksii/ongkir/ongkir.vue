@@ -112,16 +112,16 @@
         </div>
 
         <!-- HASIL -->
-        <div class="row mt-3" v-if="ongkirResults.length > 0">
+        <div class="row mt-3" v-if="ongkirResults">
             <div class="col-md-12">
                 <div class="card">
                     <div class="card-body">
                         <ul class="list-group">
-                            <li class="list-group-item" v-for="(cost, index) in ongkirResults" :key="index"
-                                v-if="cost?.cost && cost.cost.length > 0">
-                                <strong>{{ cost.service }}</strong> -
-                                Rp. {{ formatRupiah(cost.cost[0].value) }}
-                                ({{ cost.cost[0].etd }} hari)
+                            <li class="list-group-item" v-for="(ongkir, index) in ongkirResults" :key="index"
+                                v-if="ongkirResults">
+                                <strong>{{ ongkir.service }}</strong> -
+                                Rp. {{ formatRupiah(ongkir.cost) }}
+                                ({{ ongkir.etd }})
                             </li>
                             <li class="list-group-item text-muted" v-else>
                                 Data ongkir tidak tersedia
@@ -230,13 +230,16 @@ export default {
                     destination: this.districtDestination,
                     courier: this.courier,
                     weight: this.weight,
+                    price: "lowest",
                 });
 
                 // Pastikan format response benar
                 if (res.data && Array.isArray(res.data)) {
                     this.ongkirResults = res.data;
+                    console.log("Hasil ongkir1:", this.ongkirResults);
                 } else if (res.data && res.data.results) {
                     this.ongkirResults = res.data.results;
+                    console.log("Hasil ongkir2:", this.ongkirResults);
                 } else {
                     this.ongkirResults = [];
                     console.warn("Format data ongkir tidak sesuai:", res.data);

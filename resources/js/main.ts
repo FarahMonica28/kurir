@@ -5,6 +5,8 @@ import { Tooltip } from "bootstrap";
 import App from "./App.vue";
 import 'leaflet/dist/leaflet.css';
 import VueGoogleMaps from '@fawmi/vue-google-maps';
+import { MotionPlugin } from "@vueuse/motion";
+
 
 
 /*
@@ -116,6 +118,8 @@ initKtIcon(app);
 initVeeValidate();
 
 app.use(i18n);
+
+app.use(MotionPlugin);
 
 app.directive("tooltip", (el) => {
     new Tooltip(el);

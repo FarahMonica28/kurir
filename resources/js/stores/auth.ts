@@ -38,14 +38,16 @@ export const useAuthStore = defineStore("auth", () => {
 
     function setAuth(authUser: User, token = "") {
         isAuthenticated.value = true;
-        user.value = 
-            authUser, authUser.kurir,
-            authUser, authUser.pengguna,
-            // kurir: authUser.kurir}; // ini penting!
+        user.value = {
+            ...authUser,
+            kurir: authUser.kurir,
+            pengguna: authUser.pengguna,
+        };
         error.value = null;
 
         if (token) {
             JwtService.saveToken(token);
+            ApiService.setHeader(); // <- supaya header Authorization otomatis ada setelah login
         }
     }
 
@@ -60,6 +62,7 @@ export const useAuthStore = defineStore("auth", () => {
         return ApiService.post("auth/login", credentials)
             .then(({ data }) => {
                 setAuth(data.user, data.token);
+                console.log("set Auth", )
                 // await verifyAuth(); // fetch ulang data lengkap termasuk `kurir`
             })
             .catch(({ response }) => {
@@ -71,9 +74,9 @@ export const useAuthStore = defineStore("auth", () => {
         if (JwtService.getToken()) {
             ApiService.setHeader();
             await ApiService.delete("auth/logout");
-            purgeAuth();
+            await purgeAuth();
         } else {
-            purgeAuth();
+            await purgeAuth();
         }
     }
 

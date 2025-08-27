@@ -9,16 +9,47 @@ const MainMenuConfig: Array<MenuItem> = [
                 route: "/dashboard",
                 keenthemesIcon: "element-11",
             },
-            // {
-            //     heading: "Dashboardk", // ditampilan
-            //     name: "dashboardk", // di role
-            //     route: "/dashboardk",
-            //     keenthemesIcon: "element-11",
-            // },
+            {
+                heading: "Dashboardk", // ditampilan
+                name: "dashboardk", // di role
+                route: "/dashboardk",
+                keenthemesIcon: "element-11",
+            },
+            {
+                heading: "Home", // ditampilan
+                name: "home", // di role
+                route: "/home",
+                keenthemesIcon: "element-11",
+            },
         ],
     },
 
     // WEBSITE
+    {
+        heading: "Web",
+        route: "/home/web",
+        name: "web",
+        pages: [
+                {
+                sectionTitle: "Tambah",
+                route: "/tambah",
+                keenthemesIcon: "plus",
+                name: "tambah",
+                sub:[
+                        {
+                            heading: "Kategori",
+                            name: "tambah-kategori",
+                            route: "/home/tambah/kategori",
+                        },
+                        {
+                            heading: "Barang",
+                            name: "tambah-barang",
+                            route: "/home/tambah/barang",
+                        },
+                ],
+            },
+        ]
+    },
     {
         heading: "Website",
         route: "/dashboard/website",
@@ -131,31 +162,6 @@ const MainMenuConfig: Array<MenuItem> = [
                 ],
             },
 
-            // {
-            //     heading: "Ongkir",
-            //     route: "/dashboard/ongkir",
-            //     name: "ongkir",
-            //     keenthemesIcon: "bi bi-bookmark-plus",
-            // },
-            // {
-            //     heading: "Order",
-            //     route: "/dashboard/order",
-            //     name: "transaksi",
-            //     keenthemesIcon: "bi bi-bookmark-plus",
-            // },
-            // {
-            //     heading: "Order Antar Provinsi",
-            //     route: "/dashboard/orderProv",
-            //     name: "transaksii",
-            //     keenthemesIcon: "bi bi-bookmark-plus",
-            // },
-            // {
-            //     heading: "Riwayatt",
-            //     route: "/dashboard/riwayatt",
-            //     name: "riwayatt",
-            //     keenthemesIcon: "bi bi-bookmark-check",
-            // },
-            
             //kurir
             {
                 heading: "Akun",
@@ -163,18 +169,7 @@ const MainMenuConfig: Array<MenuItem> = [
                 name: "akun",
                 keenthemesIcon: "bi bi-person-circle",
             },
-            // {
-            //     heading: "Orderr",
-            //     route: "/dashboard/orderr",
-            //     name: "trans",
-            //     keenthemesIcon: "bi bi-bookmark-plus",
-            // },
-            // {
-            //     heading: "Riwayat",
-            //     route: "/dashboard/riwayat",
-            //     name: "riwayat",
-            //     keenthemesIcon: "bi bi-bookmark-check",
-            // },
+ 
             {
                 sectionTitle: "Orderan",
                 route: "/transs",

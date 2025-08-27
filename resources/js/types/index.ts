@@ -8,3 +8,5 @@ export type { Pesanan } from "./pesanan";
 export type { transaksi } from "./transaksi";
 export type { transaksii } from "./transaksii";
 export type { pengguna } from "./pengguna";
+export type { Kategori } from "./kategori";
+export type { Barang } from "./barang";

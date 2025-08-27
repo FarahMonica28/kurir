@@ -203,6 +203,8 @@ watch(openForm, (val) => {
                                 <p><strong>Provinsi Asal:</strong> {{ detailData.transaksii.asal_provinsi.name || '-' }}
                                 </p>
                                 <p><strong>Kota Asal:</strong> {{ detailData.transaksii.asal_kota.name || '-' }}</p>
+                                <p><strong>Kecamatan Asal:</strong> {{ detailData.transaksii.asal_kecamatan.name ||
+                                    '-' }}</p>
                                 <p><strong>Alamat Asal:</strong> {{ detailData.transaksii.alamat_asal }}</p>
                             </div>
 
@@ -213,6 +215,8 @@ watch(openForm, (val) => {
                                 <p><strong>Provinsi Tujuan:</strong> {{ detailData.transaksii.tujuan_provinsi.name ||
                                     '-' }}</p>
                                 <p><strong>Kota Tujuan:</strong> {{ detailData.transaksii.tujuan_kota.name || '-' }}</p>
+                                <p><strong>Kecamatan Tujuan:</strong> {{ detailData.transaksii.tujuan_kecamatan.name
+                                    || '-' }}</p>
                                 <p><strong>Alamat Tujuan:</strong> {{ detailData.transaksii.alamat_tujuan }}</p>
                             </div>
                         </div>
@@ -249,7 +253,7 @@ watch(openForm, (val) => {
                                     {{ kurirAmbil?.user?.name }}          
                                 </span>
                                 <span v-else>Tidak ada kurir</span> -->
-                                {{ transaksii.kurirAmbil.name }}       
+                                {{ detailData.kurir.user.name }}
                             </p>
 
                             <p><strong>Kurir Pengantar : </strong>
@@ -258,7 +262,7 @@ watch(openForm, (val) => {
                                     {{ kurirKirim.user.name }}
                                 </span>
                                 <span v-else>Tidak ada kurir</span> -->
-                                {{ transaksii.kurirKirim.name }}
+                                -
                             </p>
 
 

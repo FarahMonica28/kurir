@@ -151,6 +151,7 @@ class TransaksiiController extends Controller
                 $query->where('no_resi', 'like', "%$search%")
                     ->orWhere('penerima', 'like', "%$search%")
                     ->orWhere('alamat_tujuan', 'like', "%$search%")
+                    ->orWhere('alamat_asal', 'like', "%$search%")
                     ->orWhere('ekspedisi', 'like', "%$search%")
                     ->orWhere('layanan', 'like', "%$search%");
             })
@@ -297,7 +298,7 @@ class TransaksiiController extends Controller
         ]);
 
         // $transaksii = Transaksii::find($id);
-        $transaksii = Transaksii::with(['pengguna'])->findOrFail($id);
+        $transaksii = Transaksii::with(['pengguna',])->findOrFail($id);
 
         if (!$transaksii) {
             return response()->json(['message' => 'Transaksi tidak ditemukan'], 404);
@@ -305,19 +306,20 @@ class TransaksiiController extends Controller
 
         // Ambil kurir dari user yang login
         $user = auth()->user();
+        Log::info("user ",["user"=>$user]);
         $kurir = $user->kurir;
-
         if (!$kurir) {
             return response()->json(['message' => 'Kurir belum terdaftar atau tidak punya relasi.'], 403);
         }
-
+        
         // Update status transaksi ke 'diambil kurir'
         $transaksii->kurir_id = $kurir->kurir_id;
         $transaksii->status = 'diambil kurir';
         $transaksii->waktu_diambil = now();
         $transaksii->save();
-
+        
         $statusBaru = $request->status;
+
 
         // Tindakan berdasarkan status
         switch ($statusBaru) {
